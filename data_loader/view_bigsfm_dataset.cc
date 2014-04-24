@@ -70,6 +70,7 @@ float rot_x = 0.0f, rot_y = 0.0f;
 float distance = 100.0;
 Eigen::Vector3d origin = Eigen::Vector3d::Zero();
 bool mouse_rotates = false;
+bool draw_cameras = true;
 
 float point_size = 1.0;
 float camera_scale = 1.0;
@@ -189,9 +190,9 @@ void RenderScene() {
 
   glPointSize(point_size);
   glPointParameterf(GL_POINT_SIZE_MIN, 0.1f);
-  glPointParameterf(GL_POINT_SIZE_MAX,8.0f);
+  glPointParameterf(GL_POINT_SIZE_MAX, 8.0f);
 
-  //the coordinates for calcluting point atenuation:
+  // the coordinates for calcluting point attenuation:
   GLfloat point_size_coords[3];
   point_size_coords[0] = 1.0f;
   point_size_coords[1] = 0.055f;
@@ -209,10 +210,11 @@ void RenderScene() {
   glDisableClientState(GL_COLOR_ARRAY);
 
   // Draw the cameras.
-  for (int i = 0; i < cameras.size(); i++) {
-    DrawCamera(cameras[i].pose_.transformation_matrix());
+  if (draw_cameras) {
+    for (int i = 0; i < cameras.size(); i++) {
+      DrawCamera(cameras[i].pose_.transformation_matrix());
+    }
   }
-
   glFlush();
   glutSwapBuffers();
 }
@@ -288,6 +290,9 @@ void Keyboard(unsigned char key, int x, int y) {
       break;
     case 'I':
       origin[2] -= 10.0;
+      break;
+    case 'c':
+      draw_cameras = !draw_cameras;
       break;
   }
 }

@@ -63,7 +63,8 @@ namespace theia {
 //       represented as doubles)
 //     3D point id (uint64_t, the id of the corresponding 3D point in the list
 //       of 3D points loaded before)
-//     128-float SIFT descriptor of the feature.
+//     128-uint8 SIFT descriptor of the feature. When normalized, this will
+//       be the standard 128-float SIFT descriptor.
 bool ReadBigSfMBinary(const std::string& binary_file,
                       std::vector<theia::Camera>* cameras,
                       std::vector<Eigen::Vector3d>* world_points,
@@ -165,9 +166,11 @@ bool ReadBigSfMBinary(const std::string& binary_file,
       camera.feature_3D_ids_[i] = feature_3D_id;
 
       // SIFT descriptor.
-      ifs.read(
-          reinterpret_cast<char*>(camera.descriptors_[i].data()),
-          camera.descriptors_[i].size() * sizeof(camera.descriptors_[i][0]));
+      Eigen::Matrix<uint8_t, Eigen::Dynamic, 1> int_desc(128);
+      ifs.read(reinterpret_cast<char*>(int_desc.data()),
+               int_desc.size() * sizeof(int_desc[0]));
+      camera.descriptors_[i] = int_desc.cast<float>();
+      camera.descriptors_[i].normalize();
     }
 
     if ((cam_index + 1) % 100 == 0 || cam_index == num_cameras - 1) {

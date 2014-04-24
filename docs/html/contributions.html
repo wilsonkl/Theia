@@ -134,7 +134,15 @@ chmod +x .git/hooks/commit-msg
 </pre></div>
 </div>
 </li>
+<li><p class="first">Configure your GerritHub password.</p>
+</li>
 </ol>
+<blockquote>
+<div>Sign into <a class="reference external" href="https://review.gerrithub.io">https://review.gerrithub.io</a>, go to
+<tt class="docutils literal"><span class="pre">Settings</span></tt> then <tt class="docutils literal"><span class="pre">HTTP</span> <span class="pre">Password</span></tt>. If no password exists, select <tt class="docutils literal"><span class="pre">Generate</span>
+<span class="pre">Password</span></tt>. The username and password listed on this page will need to be
+entered when pushing your changes to the repo for review (see instructions
+below).</div></blockquote>
 </div>
 <div class="section" id="submitting-a-change-to-theia">
 <h2>Submitting a change to Theia<a class="headerlink" href="#submitting-a-change-to-theia" title="Permalink to this headline">¶</a></h2>
@@ -148,8 +156,9 @@ Gerrit.</p>
 <div class="highlight-bash"><div class="highlight"><pre>git push origin HEAD:refs/for/master
 </pre></div>
 </div>
-<p>When the push succeeds, the console will display a URL showing the address of
-the review. Go to the URL and add reviewers; at this point this is only Chris.</p>
+<p>You will likely have to enter your GerritHub username and password. When the
+push succeeds, the console will display a URL showing the address of the
+review. Go to the URL and add reviewers; at this point this is only Chris.</p>
 </li>
 <li><p class="first">Wait for a review.</p>
 </li>

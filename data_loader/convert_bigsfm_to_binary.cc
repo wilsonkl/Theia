@@ -160,9 +160,11 @@ bool OutputBinaryFile(const std::vector<theia::Camera>& cameras,
                 sizeof(feature_3D_id));
 
       // SIFT descriptor.
-      ofs.write(
-          reinterpret_cast<const char*>(camera.descriptors_[i].data()),
-          camera.descriptors_[i].size() * sizeof(camera.descriptors_[i][0]));
+      const Eigen::VectorXf float_scaled_desc = camera.descriptors_[i] * 255.0;
+      const Eigen::Matrix<uint8_t, Eigen::Dynamic, 1> int_desc =
+          float_scaled_desc.cast<uint8_t>();
+      ofs.write(reinterpret_cast<const char*>(int_desc.data()),
+                int_desc.size() * sizeof(int_desc[0]));
     }
 
     if ((cam_index + 1) % 100 == 0 || cam_index == num_cameras - 1) {
