@@ -32,10 +32,13 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#include "theia/data_loader/read_bundler_file.h"
+#include "theia/data_loader/bundler_text_file.h"
 
 #include <Eigen/Core>
+#include <glog/logging.h>
 #include <theia/theia.h>
+
+#include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <string>
@@ -105,57 +108,65 @@ bool ReadListsFile(const std::string& list_filename,
 //     length will yield the true sift descriptor.
 // NOTE: We use getline and strtof which should be much faster than letting the
 // stream parse the string with operator >>.
-bool ReadSiftKeyfile(const std::string& sift_key_file,
-                     std::vector<Eigen::Vector2d>* feature_position,
-                     std::vector<Eigen::VectorXf>* descriptor) {
-  std::ifstream ifs(sift_key_file.c_str(), std::ios::in);
-  if (!ifs.is_open()) {
-    LOG(ERROR) << "Cannot read the sift key file from " << sift_key_file;
-    return false;
+bool ReadSiftKeyTextFile(const std::string& sift_key_file,
+                         std::vector<Eigen::Vector2d>* feature_position,
+                         std::vector<Eigen::VectorXf>* descriptor,
+                         std::vector<Keypoint>* keypoint) {
+  FILE* fp = fopen(sift_key_file.c_str(), "r");
+  int num_descriptors, len;
+
+  if (fscanf(fp, "%d %d", &num_descriptors, &len) != 2) {
+    printf("Invalid keypoint file\n");
+    return 0;
   }
 
-  std::string header_string;
-  std::getline(ifs, header_string);
-  const char* p = header_string.c_str();
-  char* p2;
-  int num_descriptors = strtol(p, &p2, 10);
-  p = p2;
-  int num_dimensions = strtol(p, &p2, 10);
-  CHECK_EQ(num_dimensions, 128);
+  CHECK_EQ(len, 128);
 
-  // Read each descriptor one by one.
   feature_position->reserve(num_descriptors);
   descriptor->reserve(num_descriptors);
-  for (int i = 0; i < num_descriptors; i++) {
-    // Read in row col scale.
-    Eigen::Vector2d feature_pos;
-    std::string feature_header;
-    std::getline(ifs, feature_header);
-    p = feature_header.c_str();
-    feature_pos.x() = strtof(p, &p2);
-    p = p2;
-    feature_pos.y() = strtof(p, &p2);
-    feature_position->push_back(feature_pos);
-
-    // Read in descriptor values.
-    Eigen::VectorXf sift_descriptor(128);
-    int dimension = 0;
-    while (dimension < num_dimensions) {
-      std::string descriptor_string;
-      std::getline(ifs, descriptor_string);
-      p = descriptor_string.c_str();
-      float val;
-      while (val = std::strtof(p, &p2), p != p2) {
-        sift_descriptor(dimension) = val;
-        p = p2;
-        dimension++;
-      }
-    }
-    sift_descriptor.normalize();
-    descriptor->push_back(sift_descriptor);
+  if (keypoint != nullptr) {
+    keypoint->reserve(num_descriptors);
   }
-  ifs.close();
 
+  for (int i = 0; i < num_descriptors; i++) {
+    float x, y, scale, ori;
+
+    if (fscanf(fp, "%f %f %f %f\n", &y, &x, &scale, &ori) != 4) {
+      printf("Invalid keypoint file format.");
+      return 0;
+    }
+
+    feature_position->push_back(Eigen::Vector2d(x, y));
+    if (keypoint != nullptr) {
+      Keypoint kp(x, y, Keypoint::SIFT);
+      kp.set_scale(scale);
+      kp.set_orientation(ori);
+      keypoint->push_back(kp);
+    }
+
+    char buf[1024];
+    Eigen::Matrix<uint8_t, Eigen::Dynamic, 1> int_descriptor(128);
+    uint8_t* p = int_descriptor.data();
+    for (int line = 0; line < 6; line++) {
+      fgets(buf, 1024, fp);
+      sscanf(buf, "%hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu "
+             "%hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu",
+             p + 0, p + 1, p + 2, p + 3, p + 4, p + 5, p + 6, p + 7, p + 8,
+             p + 9, p + 10, p + 11, p + 12, p + 13, p + 14, p + 15, p + 16,
+             p + 17, p + 18, p + 19);
+
+      p += 20;
+    }
+    fgets(buf, 1024, fp);
+    sscanf(buf, "%hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu", p + 0, p + 1,
+           p + 2, p + 3, p + 4, p + 5, p + 6, p + 7);
+
+    Eigen::VectorXf float_descriptor = int_descriptor.cast<float>();
+    float_descriptor /= 255.0;
+    descriptor->push_back(float_descriptor);
+  }
+
+  fclose(fp);
   return true;
 }
 
@@ -196,15 +207,15 @@ bool ReadSiftKeyfile(const std::string& sift_key_file,
 // towards the top of the image. Thus, (-w/2, -h/2) is the lower-left corner of
 // the image, and (w/2, h/2) is the top-right corner (where w and h are the
 // width and height of the image).
-bool ReadBundlerFile(const std::string& bundler_file,
-                     std::vector<theia::Camera>* camera,
-                     std::vector<Eigen::Vector3d>* world_points,
-                     std::vector<Eigen::Vector3f>* world_points_color,
-                     std::vector<BundlerViewList>* view_list) {
+bool ReadBundleTextFile(const std::string& bundle_file,
+                        std::vector<theia::Camera>* camera,
+                        std::vector<Eigen::Vector3d>* world_points,
+                        std::vector<Eigen::Vector3f>* world_points_color,
+                        std::vector<BundleViewList>* view_list) {
   // Read in num cameras, num points.
-  std::ifstream ifs(bundler_file.c_str(), std::ios::in);
+  std::ifstream ifs(bundle_file.c_str(), std::ios::in);
   if (!ifs.is_open()) {
-    LOG(ERROR) << "Cannot read the bundler file from " << bundler_file;
+    LOG(ERROR) << "Cannot read the bundler file from " << bundle_file;
     return false;
   }
 
@@ -324,7 +335,7 @@ bool ReadBundlerFile(const std::string& bundler_file,
 
       // Push the sift key correspondence to the view list.
       view_list->at(i).push_back(
-          BundlerSiftKeyReference(camera_index, sift_key_index, x_pos, y_pos));
+          BundleSiftKeyReference(camera_index, sift_key_index, x_pos, y_pos));
     }
 
     if ((i + 1) % 100 == 0 || i == num_points - 1) {

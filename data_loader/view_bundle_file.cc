@@ -56,8 +56,7 @@
 #include <GL/glut.h>
 #endif
 
-DEFINE_string(bigsfm_binary, "", "Filepath for the bigsfm binary file to be "
-                                 "read. This file may be massive!");
+DEFINE_string(bundle_file, "", "Bundle file to be loaded.");
 
 // Containers for the data.
 std::vector<theia::Camera> cameras;
@@ -315,15 +314,27 @@ int main(int argc, char* argv[]) {
   google::InitGoogleLogging(argv[0]);
 
   // Output as a binary file.
-  CHECK(theia::ReadBigSfMBinary(FLAGS_bigsfm_binary, &cameras, &world_points,
-                                &world_points_color));
+  static const std::string extension = ".bin";
+  const size_t ext_loc = FLAGS_bundle_file.rfind(extension);
+  std::vector<theia::BundleViewList> unused_view_list;
+  // Read the file as a binary file if the extension is .bin, read it as a text
+  // file otherwise.
+  if (ext_loc != std::string::npos) {
+    CHECK(
+        theia::ReadBundleBinaryFile(FLAGS_bundle_file, &cameras, &world_points,
+                                    &world_points_color, &unused_view_list));
+  } else {
+    CHECK(
+        theia::ReadBundleTextFile(FLAGS_bundle_file, &cameras, &world_points,
+                                  &world_points_color, &unused_view_list));
+  }
 
   // Set up opengl and glut.
   glutInit(&argc, argv);
   glutInitWindowPosition(600, 600);
   glutInitWindowSize(1200, 800);
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-  glutCreateWindow("Big SfM data viewer");
+  glutCreateWindow("Bundler Reconstruction Viewer");
 
   // Set the camera
   gluLookAt(0.0f, 0.0f, -6.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);

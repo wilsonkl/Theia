@@ -32,42 +32,37 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_DATA_LOADER_READ_BUNDLER_FILE_H_
-#define THEIA_DATA_LOADER_READ_BUNDLER_FILE_H_
+#ifndef THEIA_DATA_LOADER_BUNDLER_BINARY_FILE_H_
+#define THEIA_DATA_LOADER_BUNDLER_BINARY_FILE_H_
 
 #include <Eigen/Core>
 #include <theia/theia.h>
 #include <string>
 #include <vector>
 
+#include "theia/data_loader/bundler_text_file.h"
+#include "theia/image/keypoint_detector/keypoint.h"
+
 namespace theia {
-
-// Utility struct to help contain the view list information that Bundler files
-// provide.
-struct BundlerSiftKeyReference {
-  BundlerSiftKeyReference(const int ci, const int ski, const float xp,
-                          const float yp)
-      : camera_index(ci), sift_key_index(ski), x_pos(xp), y_pos(yp) {}
-  int camera_index;
-  int sift_key_index;
-  float x_pos;
-  float y_pos;
-};
-
-// A set of sift key reference is referred to as a BundlerViewList.
-typedef std::vector<BundlerSiftKeyReference> BundlerViewList;
-
-// Loads the list of image names from the given bundler list file. Sets the
-// focal length value to the given EXIF value if provided, and 0 otherwise.
-bool ReadListsFile(const std::string& list_filename,
-                   std::vector<std::string>* image_name,
-                   std::vector<double>* exif_focal_length);
 
 // Reads a SIFT key files as computed by Lowe's SIFT software:
 // http://www.cs.ubc.ca/~lowe/keypoints/
-bool ReadSiftKeyfile(const std::string& sift_key_file,
-                     std::vector<Eigen::Vector2d>* feature_position,
-                     std::vector<Eigen::VectorXf>* descriptor);
+//
+// The vector keypoint will contain the x and y position, as well as the scale
+// and orientation of each feature. This variable may be set to NULL, in which
+// case the method ignores the keypoint vector.
+bool ReadSiftKeyBinaryFile(const std::string& input_sift_key_file,
+                           std::vector<Eigen::Vector2d>* feature_position,
+                           std::vector<Eigen::VectorXf>* descriptor,
+                           std::vector<Keypoint>* keypoint);
+
+// Outputs the SIFT features in the same format as Lowe's sift key files, but
+// stores it as a binary file for faster loading.
+bool WriteSiftKeyBinaryFile(
+    const std::string& output_sift_key_file,
+    const std::vector<Eigen::Vector2d>& feature_position,
+    const std::vector<Eigen::VectorXf>& descriptor,
+    const std::vector<Keypoint>& keypoint);
 
 // Loads all information from a bundler file. The bundler file includes 3D
 // points, camera poses, camera intrinsics, descriptors, and 2D-3D matches. This
@@ -85,12 +80,21 @@ bool ReadSiftKeyfile(const std::string& sift_key_file,
 //   world_points_color: The RGB color of the world points (0 to 1 float).
 //   view_list: The view list for each 3D point. The view list is a container
 //       where each element has a camera index, sift key index, and x,y pos.
-bool ReadBundlerFile(const std::string& bundler_file,
-                     std::vector<theia::Camera>* camera,
-                     std::vector<Eigen::Vector3d>* world_points,
-                     std::vector<Eigen::Vector3f>* world_points_color,
-                     std::vector<BundlerViewList>* view_list);
+bool ReadBundleBinaryFile(const std::string& input_bundle_file,
+                          std::vector<Camera>* camera,
+                          std::vector<Eigen::Vector3d>* world_points,
+                          std::vector<Eigen::Vector3f>* world_points_color,
+                          std::vector<BundleViewList>* view_list);
+
+// Outputs the reconstruction contents as a Bundler file in binary format. This
+// is so that it may be loaded more quickly.
+bool WriteBundleBinaryFile(
+    const std::string& output_bundle_file,
+    const std::vector<Camera>& camera,
+    const std::vector<Eigen::Vector3d>& world_points,
+    const std::vector<Eigen::Vector3f>& world_points_color,
+    const std::vector<BundleViewList>& view_list);
 
 }  // namespace theia
 
-#endif  // THEIA_DATA_LOADER_READ_BUNDLER_FILE_H_
+#endif  // THEIA_DATA_LOADER_BUNDLER_BINARY_FILE_H_

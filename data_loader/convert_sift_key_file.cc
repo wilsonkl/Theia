@@ -1,4 +1,4 @@
-// Copyright (C) 2013 The Regents of the University of California (Regents).
+// Copyright (C) 2014 The Regents of the University of California (Regents).
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,16 +32,45 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_SFM_H_
-#define THEIA_SFM_H_
+#include <Eigen/Core>
+#include <glog/logging.h>
+#include <gflags/gflags.h>
+#include <theia/theia.h>
 
-#include "theia/data_loader/bundler_text_file.h"
-#include "theia/data_loader/bundler_binary_file.h"
-#include "theia/pose.h"
-#include "theia/vision/sfm/camera/camera.h"
-#include "theia/vision/sfm/camera/camera_pose.h"
-#include "theia/vision/sfm/projection_matrix.h"
-#include "theia/vision/sfm/triangulation/triangulation.h"
-#include "theia/vision/transformation/align_point_clouds.h"
+#include <string>
+#include <vector>
 
-#endif  // THEIA_SFM_H_
+DEFINE_string(input_sift_key_file, "",
+              "Input sift key text file to convert. Should end in .key");
+
+DEFINE_string(output_sift_key_file, "",
+              "Output sift key file in binary format. Should end in .bin");
+
+// This function will load the sift descriptors from the key text files and
+// convert them to binary files.
+bool ConvertSiftKeyFile(const std::string& input_sift_key_file,
+                        const std::string& output_sift_key_file) {
+  // Read text file.
+  std::vector<Eigen::Vector2d> feature_position;
+  std::vector<Eigen::VectorXf> descriptor;
+  std::vector<theia::Keypoint> keypoint;
+  CHECK(theia::ReadSiftKeyTextFile(
+      input_sift_key_file, &feature_position, &descriptor, &keypoint));
+
+  // Write binary file.
+  CHECK(theia::WriteSiftKeyBinaryFile(
+      output_sift_key_file, feature_position, descriptor, keypoint));
+
+  return true;
+}
+
+int main(int argc, char* argv[]) {
+  google::InitGoogleLogging(argv[0]);
+  google::ParseCommandLineFlags(&argc, &argv, true);
+
+  // Load the SIFT descriptors into the cameras.
+  CHECK(ConvertSiftKeyFile(FLAGS_input_sift_key_file,
+                           FLAGS_output_sift_key_file));
+
+  return 0;
+}

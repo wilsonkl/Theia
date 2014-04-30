@@ -32,26 +32,45 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_DATA_LOADER_READ_BIGSFM_BINARY_FILE_H_
-#define THEIA_DATA_LOADER_READ_BIGSFM_BINARY_FILE_H_
-
 #include <Eigen/Core>
+#include <glog/logging.h>
+#include <gflags/gflags.h>
+#include <theia/theia.h>
+
 #include <string>
 #include <vector>
 
-#include "theia/vision/sfm/camera/camera.h"
+DEFINE_string(input_bundle_file, "",
+              "Input bundle text file to convert. Should end in .out");
 
-namespace theia {
+DEFINE_string(output_bundle_file, "",
+              "Output bundle file in binary format. Should end in .bin");
 
-// Loads a bigsfm dataset from a binary file. This file should contain 3D
-// points, camera poses, camera internal params, feature locations and
-// descriptors, and 2D-3D correspondences. The binary file should be generated
-// with the convert_bigsfm_to_binary.cc file distributed with Theia.
-bool ReadBigSfMBinary(const std::string& binary_file,
-                      std::vector<theia::Camera>* cameras,
-                      std::vector<Eigen::Vector3d>* world_points,
-                      std::vector<Eigen::Vector3f>* world_points_color);
+// This function will load the sift descriptors from the key text files and
+// convert them to binary files.
+bool ConvertBundleFile(const std::string& input_bundle_file,
+                       const std::string& output_bundle_file) {
+  // Read text file.
+  std::vector<theia::Camera> camera;
+  std::vector<Eigen::Vector3d> world_points;
+  std::vector<Eigen::Vector3f> world_points_color;
+  std::vector<theia::BundleViewList> view_list;
+  CHECK(theia::ReadBundleTextFile(input_bundle_file, &camera, &world_points,
+                                   &world_points_color, &view_list));
 
-}  // namespace theia
+  // Write binary file.
+  CHECK(
+      theia::WriteBundleBinaryFile(output_bundle_file, camera, world_points,
+                                   world_points_color, view_list));
+  return true;
+}
 
-#endif  // THEIA_DATA_LOADER_READ_BIGSFM_BINARY_FILE_H_
+int main(int argc, char* argv[]) {
+  google::InitGoogleLogging(argv[0]);
+  google::ParseCommandLineFlags(&argc, &argv, true);
+
+  // Load the SIFT descriptors into the cameras.
+  CHECK(ConvertBundleFile(FLAGS_input_bundle_file, FLAGS_output_bundle_file));
+
+  return 0;
+}
