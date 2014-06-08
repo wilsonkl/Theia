@@ -102,7 +102,7 @@ and <a class="reference internal" href="#GrayImage" title="GrayImage"><tt class=
 of the <a class="reference internal" href="#Image:T:" title="Image&lt;T&gt;"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Image&lt;T&gt;</span></tt></a> class, so their interfaces will be nearly
 identical. Images can be easily read in from a file upon contruction or with
 the <tt class="xref cpp cpp-func docutils literal"><span class="pre">Read()</span></tt> command.</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="n">RGBImage</span> <span class="n">my_rgb_image</span><span class="p">(</span><span class="n">img_filename</span><span class="p">);</span>
+<div class="highlight-c++"><div class="highlight"><pre><span class="n">RGBImage</span> <span class="nf">my_rgb_image</span><span class="p">(</span><span class="n">img_filename</span><span class="p">);</span>
 
 <span class="c1">// Or alternatively:</span>
 <span class="n">RGBImage</span> <span class="n">my_rgb_image</span><span class="p">;</span>
@@ -121,8 +121,8 @@ will be returned (for <tt class="xref cpp cpp-class docutils literal"><span clas
 respectively). The <tt class="xref cpp cpp-class docutils literal"><span class="pre">RGBPixel</span></tt> contains members <tt class="xref cpp cpp-member docutils literal"><span class="pre">red</span></tt>,
 <tt class="xref cpp cpp-member docutils literal"><span class="pre">green</span></tt>, and <tt class="xref cpp cpp-member docutils literal"><span class="pre">blue</span></tt> (all of type <tt class="xref cpp cpp-class docutils literal"><span class="pre">float</span></tt>).</p>
 <div class="highlight-c++"><div class="highlight"><pre><span class="c1">// Load RGB and scale images.</span>
-<span class="n">RGBImage</span> <span class="n">my_rgb_img</span><span class="p">(</span><span class="s">&quot;test_img.jpg&quot;</span><span class="p">);</span>
-<span class="n">GrayImage</span> <span class="n">my_gray_img</span><span class="p">(</span><span class="s">&quot;test_img.jpg&quot;</span><span class="p">);</span>
+<span class="n">RGBImage</span> <span class="nf">my_rgb_img</span><span class="p">(</span><span class="s">&quot;test_img.jpg&quot;</span><span class="p">);</span>
+<span class="n">GrayImage</span> <span class="nf">my_gray_img</span><span class="p">(</span><span class="s">&quot;test_img.jpg&quot;</span><span class="p">);</span>
 
 <span class="c1">// Get the middle pixel location.</span>
 <span class="kt">int</span> <span class="n">middle_row</span> <span class="o">=</span> <span class="n">my_image</span><span class="p">.</span><span class="n">Rows</span><span class="p">()</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>
@@ -154,7 +154,7 @@ must be taken when deleting images. <a class="reference internal" href="#Image:T
 <a class="reference internal" href="#SubImage:T:" title="SubImage&lt;T&gt;"><tt class="xref cpp cpp-class docutils literal"><span class="pre">SubImage&lt;T&gt;</span></tt></a> object of the same type that it is extracting from.</p>
 </dd></dl>
 
-<div class="highlight-c++"><div class="highlight"><pre><span class="n">RGBImage</span> <span class="n">my_img</span><span class="p">(</span><span class="s">&quot;...&quot;</span><span class="p">);</span>
+<div class="highlight-c++"><div class="highlight"><pre><span class="n">RGBImage</span> <span class="nf">my_img</span><span class="p">(</span><span class="s">&quot;...&quot;</span><span class="p">);</span>
 
 <span class="c1">// Get the middle pixel location.</span>
 <span class="kt">int</span> <span class="n">middle_row</span> <span class="o">=</span> <span class="n">my_image</span><span class="p">.</span><span class="n">Rows</span><span class="p">()</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>

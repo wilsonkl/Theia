@@ -90,6 +90,242 @@ compatibility with other libraries.</p>
 <h2>Projection Matrix<a class="headerlink" href="#projection-matrix" title="Permalink to this headline">¶</a></h2>
 <p>We provide two convenience matrices that are commonly used in multiview geometry. The first is a <tt class="xref cpp cpp-class docutils literal"><span class="pre">TransformationMatrix</span></tt> which is an affine transformation matrix composed of rotation and translation of the form: <span class="math">\(\left[R | t\right]\)</span>, i.e., the extrinsic parameters of a camera. The <tt class="xref cpp cpp-class docutils literal"><span class="pre">TransformationMatrix</span></tt> is merely a typedef of the Eigen affine transformation matrix. Similarly, a <tt class="xref cpp cpp-class docutils literal"><span class="pre">ProjectionMatrix</span></tt> class is defined that representsthe intrinsic and extrinsic parameters, nameley matrices of the form: <span class="math">\(K\left[R | t \right]\)</span> where <span class="math">\(K\)</span> is a 3x3 matrix of the camera intrinsics (e.g., focal length, principle point, and radial distortion). The <tt class="xref cpp cpp-class docutils literal"><span class="pre">ProjectionMatrix</span></tt> is merely a typedef of an Eigen 3x4 matrix.</p>
 </div>
+<div class="section" id="camera-and-camerapose">
+<h2>Camera and CameraPose<a class="headerlink" href="#camera-and-camerapose" title="Permalink to this headline">¶</a></h2>
+<p>At the core of SfM are cameras which provide us with observations of 3D points. Theia uses a <tt class="xref cpp cpp-class docutils literal"><span class="pre">Camera</span></tt> struct to maintain all imaging and view information. This includes information about the image captured, the feature positions (both in the image planes and in 3D space), and feature descriptors.</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="k">struct</span> <span class="n">Camera</span> <span class="p">{</span>
+  <span class="n">EIGEN_MAKE_ALIGNED_OPERATOR_NEW</span>
+  <span class="n">Camera</span><span class="p">()</span> <span class="p">{}</span>
+  <span class="k">explicit</span> <span class="n">Camera</span><span class="p">(</span><span class="k">const</span> <span class="n">CameraPose</span><span class="o">&amp;</span> <span class="n">pose</span><span class="p">)</span> <span class="o">:</span> <span class="n">pose_</span><span class="p">(</span><span class="n">pose</span><span class="p">)</span> <span class="p">{}</span>
+
+  <span class="c1">// The camera pose describing the position, orientation, and intrinsics of the</span>
+  <span class="c1">// camera.</span>
+  <span class="n">CameraPose</span> <span class="n">pose_</span><span class="p">;</span>
+
+  <span class="c1">// Width of the camera in pixels.</span>
+  <span class="kt">int</span> <span class="n">width_</span><span class="p">;</span>
+  <span class="c1">// Height of the camera in pixels.</span>
+  <span class="kt">int</span> <span class="n">height_</span><span class="p">;</span>
+
+  <span class="c1">// Original measured feature positions.</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Eigen</span><span class="o">::</span><span class="n">Vector2d</span><span class="o">&gt;</span> <span class="n">feature_position_2D_distorted_</span><span class="p">;</span>
+  <span class="c1">// Feature positions after correcting for radial distortion.</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Eigen</span><span class="o">::</span><span class="n">Vector2d</span><span class="o">&gt;</span> <span class="n">feature_position_2D_</span><span class="p">;</span>
+
+  <span class="c1">// Descriptors.</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Eigen</span><span class="o">::</span><span class="n">VectorXf</span><span class="o">&gt;</span> <span class="n">descriptors_</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Eigen</span><span class="o">::</span><span class="n">BinaryVectorX</span><span class="o">&gt;</span> <span class="n">binary_descriptors_</span><span class="p">;</span>
+
+  <span class="c1">// 3D feature IDs. This assumes that a container of 3D feature positions is</span>
+  <span class="c1">// owned elsewhere. This is essentially the track ID, and the main usage is</span>
+  <span class="c1">// for reconstructions where many 2D points correspond to a single 3D point.</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">size_t</span><span class="o">&gt;</span> <span class="n">feature_3D_ids_</span><span class="p">;</span>
+
+  <span class="c1">// If the 3D positions are stored locally, then we can keep them in a</span>
+  <span class="c1">// container here.</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Eigen</span><span class="o">::</span><span class="n">Vector3d</span><span class="o">&gt;</span> <span class="n">feature_positions_3D_</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>The pose of the camera is contained in the <a class="reference internal" href="#CameraPose" title="CameraPose"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CameraPose</span></tt></a> object. This
+class contains extrinsic (rotation and translation) and intrinsic calibration
+(focal length, principle point, radial distortion) information for the camera,
+and provides many convenience functions for various image and point
+transformations.</p>
+<blockquote>
+<div><dl class="class">
+<dt id="CameraPose">
+<em class="property">class </em><tt class="descname">CameraPose</tt><a class="headerlink" href="#CameraPose" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="function">
+<dt id="CameraPose::CameraPose">
+ <tt class="descname">CameraPose</tt><big>(</big><big>)</big><a class="headerlink" href="#CameraPose::CameraPose" title="Permalink to this definition">¶</a></dt>
+<dd><p>The default constructor. Sets all values to identity values.</p>
+</dd></dl>
+
+<p>The <a class="reference internal" href="#CameraPose" title="CameraPose"><tt class="xref cpp cpp-class docutils literal"><span class="pre">CameraPose</span></tt></a> class must be initialized with the
+<a class="reference internal" href="#CameraPose::InitializePose__Eigen::Matrix3dCR.Eigen::Vector3dCR.Eigen::Matrix3dCR.doubleC.doubleC.doubleC.doubleC" title="CameraPose::InitializePose"><tt class="xref cpp cpp-func docutils literal"><span class="pre">InitializePose()</span></tt></a> method rather than with the constructor. There are
+several variations of this method so as to be flexible to the information
+that the user has available:</p>
+<dl class="function">
+<dt id="CameraPose::InitializePose__Eigen::Matrix3dCR.Eigen::Vector3dCR.Eigen::Matrix3dCR.doubleC.doubleC.doubleC.doubleC">
+void <tt class="descname">InitializePose</tt><big>(</big>const Eigen::Matrix3d&amp; <em>rotation</em>, const Eigen::Vector3d&amp; <em>translation</em>, const Eigen::Matrix3d&amp; <em>calibration</em>, const double <em>k1</em>, const double <em>k2</em>, const double <em>k3</em>, const double <em>k4</em><big>)</big><a class="headerlink" href="#CameraPose::InitializePose__Eigen::Matrix3dCR.Eigen::Vector3dCR.Eigen::Matrix3dCR.doubleC.doubleC.doubleC.doubleC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the camera pose with the full extrinsic (rotation and
+translation) and intrinsic (calibration matrix and radial distortion)
+parameters. The extrinsic parameters should provide world-to-camera
+transformations.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::InitializePose__Eigen::Matrix:double.3.4:CR.doubleC.doubleC.doubleC.doubleC">
+void <tt class="descname">InitializePose</tt><big>(</big>const Eigen::Matrix&lt;double, 3, 4&gt;&amp; <em>projection_matrix</em>, const double <em>k1</em>, const double <em>k2</em>, const double <em>k3</em>, const double <em>k4</em><big>)</big><a class="headerlink" href="#CameraPose::InitializePose__Eigen::Matrix:double.3.4:CR.doubleC.doubleC.doubleC.doubleC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the pose with a projection matrix given by P = K * [R | t],
+where K is the calibration matrix, R is the rotation matrix, and t is the
+translation. The projection matrix provided should be a world-to-image
+transformation (as opposed to world-to-camera).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::InitializePose__Eigen::Matrix:double.3.4:CR.Eigen::Matrix3dCR.doubleC.doubleC.doubleC.doubleC">
+void <tt class="descname">InitializePose</tt><big>(</big>const Eigen::Matrix&lt;double, 3, 4&gt;&amp; <em>transformation_matrix</em>, const Eigen::Matrix3d&amp; <em>calibration</em>, const double <em>k1</em>, const double <em>k2</em>, const double <em>k3</em>, const double <em>k4</em><big>)</big><a class="headerlink" href="#CameraPose::InitializePose__Eigen::Matrix:double.3.4:CR.Eigen::Matrix3dCR.doubleC.doubleC.doubleC.doubleC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the pose with a given transformation matrix that defines the
+world-to-camera transformation.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::InitializePose__CameraPoseCR">
+void <tt class="descname">InitializePose</tt><big>(</big>const CameraPose&amp; <em>pose</em><big>)</big><a class="headerlink" href="#CameraPose::InitializePose__CameraPoseCR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy constructor.</p>
+</dd></dl>
+
+<p>It is important to be able to access components of the camera pose, so we
+provide getter functions for all relative information:</p>
+<dl class="function">
+<dt id="CameraPose::rotation_matrixC">
+Eigen::Matrix3d <tt class="descname">rotation_matrix</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::rotation_matrixC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the rotation componenet of the transformation matrix.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::translationC">
+Eigen::Vector3d <tt class="descname">translation</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::translationC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the translation componenet of the transformation matrix.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::positionC">
+Eigen::Vector3d <tt class="descname">position</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::positionC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the camera position in the world coordinate system defined as
+position = -R&#8217; * t.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::calibration_matrixC">
+Eigen::Matrix3d <tt class="descname">calibration_matrix</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::calibration_matrixC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the 3x3 camera calibration matrix defined by K = diag(f, f, 1).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::focal_lengthC">
+double <tt class="descname">focal_length</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::focal_lengthC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the focal length of the camera.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::radial_distortion__doubleP.doubleP.doubleP.doublePC">
+void <tt class="descname">radial_distortion</tt><big>(</big>double* <em>k1</em>, double* <em>k2</em>, double* <em>k3</em>, double* <em>k4</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::radial_distortion__doubleP.doubleP.doubleP.doublePC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the radial distortion parameters.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::projection_matrixC">
+Eigen::Matrix&lt;double, 3, 4&gt; <tt class="descname">projection_matrix</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::projection_matrixC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the full projection matrix that describes the camera pose.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::transformation_matrixC">
+Eigen::Matrix&lt;double, 3, 4&gt; <tt class="descname">transformation_matrix</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::transformation_matrixC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the transformation matrix <span class="math">\(T = [R | t]\)</span> i.e., the extrinsic parameters.</p>
+</dd></dl>
+
+<p>Finally, the most important functionality of a camera is that it projects
+points in the world into the image. Modeling this projection is a crucial
+part of structure from motion (and all projective geometry!), so we provide
+transformation functions to perform these tasks for you. We define three
+coordinate systems: the world coordinate system, camera coordinate system,
+and image coordinate system. The world coordinate system is defined as the
+3D coordinate system relative to some world origin. 3D points in SfM models
+are typically defined with respect to the world coordinate system. The
+camera coordinate system is the coordinate system centered around the
+camera. That is, with the camera at the origin looking down the
+z-axis. Finally, the image coordinate system is the camera coordinate system
+projected onto the image plane. The image coordinate system is defined in
+pixels, and may only be reconciled with respect to the other coordinate
+systems when the intrinsic paramters are known.</p>
+<p>So, given a point in the world coordinate system, <span class="math">\(X_w\)</span>, we can
+transform that point with a translation and rotation <span class="math">\(T=[R | t]\)</span> such
+that <span class="math">\(X_c = T * X_w\)</span> is a point in the camera coordinate system. To
+transform <span class="math">\(X_c\)</span> into image coordinates, we must apply the camera
+calibration matrix, <span class="math">\(K\)</span> such that <span class="math">\(X_i = K * T * X_w\)</span> is a point
+in the image plane (in pixels).</p>
+<p>The functions below provide these transformations for a single point, as
+well as optimized transformations for transforming multiple points at the
+same time.</p>
+<dl class="function">
+<dt id="CameraPose::WorldToCamera__Eigen::Vector3dCR.Eigen::Vector3dPC">
+void <tt class="descname">WorldToCamera</tt><big>(</big>const Eigen::Vector3d&amp; <em>world_point</em>, Eigen::Vector3d* <em>camera_point</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::WorldToCamera__Eigen::Vector3dCR.Eigen::Vector3dPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms a point from the world coordinate system to the camera
+coordinate system.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::WorldToCamera__std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:PC">
+void <tt class="descname">WorldToCamera</tt><big>(</big>const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>world_point</em>, std::vector&lt;Eigen::Vector3d&gt;* <em>camera_point</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::WorldToCamera__std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:PC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transformation method for multiple points.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::CameraToWorld__Eigen::Vector3dCR.Eigen::Vector3dPC">
+void <tt class="descname">CameraToWorld</tt><big>(</big>const Eigen::Vector3d&amp; <em>camera_point</em>, Eigen::Vector3d* <em>world_point</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::CameraToWorld__Eigen::Vector3dCR.Eigen::Vector3dPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms a point from the camera coordinate system to the world
+coordinate system.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::CameraToWorld__std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:PC">
+void <tt class="descname">CameraToWorld</tt><big>(</big>const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>camera_point</em>, std::vector&lt;Eigen::Vector3d&gt;* <em>world_point</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::CameraToWorld__std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:PC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transformation method for multiple points.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::CameraToImage__Eigen::Vector3dCR.Eigen::Vector2dPC">
+void <tt class="descname">CameraToImage</tt><big>(</big>const Eigen::Vector3d&amp; <em>camera_point</em>, Eigen::Vector2d* <em>image_point</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::CameraToImage__Eigen::Vector3dCR.Eigen::Vector2dPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Projects the 3D points in camera coordinates into the image plane using the
+calibration matrix of the camera.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::CameraToImage__std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector2d:PC">
+void <tt class="descname">CameraToImage</tt><big>(</big>const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>camera_point</em>, std::vector&lt;Eigen::Vector2d&gt;* <em>image_point</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::CameraToImage__std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector2d:PC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Projection method for multiple points. NOTE: this method is void, and does
+not indicate whether points are in front of behind the camera.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::WorldToImage__Eigen::Vector3dCR.Eigen::Vector2dPC">
+bool <tt class="descname">WorldToImage</tt><big>(</big>const Eigen::Vector3d&amp; <em>world_point</em>, Eigen::Vector2d* <em>image_point</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::WorldToImage__Eigen::Vector3dCR.Eigen::Vector2dPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Projects the 3D points in world coordinates into the image plane using the
+projection matrix of the camera. Returns true if the point is in front of
+the camera and false otherwise.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::WorldToImage__std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector2d:PC">
+void <tt class="descname">WorldToImage</tt><big>(</big>const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>world_point</em>, std::vector&lt;Eigen::Vector2d&gt;* <em>image_point</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::WorldToImage__std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector2d:PC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Projection method for multiple points. NOTE: this method is void, and does
+not indicate whether points are in front of behind the camera.</p>
+</dd></dl>
+
+<p>Correcting radial distortion can be a common operation for SfM so that the
+images may be as geomtetrically correct as possible. The following two
+functions will undistort image points based on the intrinsic paramters of
+the camera.</p>
+<dl class="function">
+<dt id="CameraPose::UndistortImagePoint__Eigen::Vector2dCR.Eigen::Vector2dPC">
+void <tt class="descname">UndistortImagePoint</tt><big>(</big>const Eigen::Vector2d&amp; <em>distorted_point</em>, Eigen::Vector2d* <em>undistorted_point</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::UndistortImagePoint__Eigen::Vector2dCR.Eigen::Vector2dPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Undistorts the image point using the radial distortion parameters.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CameraPose::UndistortImagePoint__std::vector:Eigen::Vector2d:CR.std::vector:Eigen::Vector2d:PC">
+void <tt class="descname">UndistortImagePoint</tt><big>(</big>const std::vector&lt;Eigen::Vector2d&gt;&amp; <em>distorted_point</em>, std::vector&lt;Eigen::Vector2d&gt;* <em>undistorted_point</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CameraPose::UndistortImagePoint__std::vector:Eigen::Vector2d:CR.std::vector:Eigen::Vector2d:PC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Undistort multiple points at the same time.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
 <div class="section" id="view-triangulation">
 <h2>2-View Triangulation<a class="headerlink" href="#view-triangulation" title="Permalink to this headline">¶</a></h2>
 <blockquote>

@@ -91,7 +91,7 @@
 <dt id="Keypoint">
 <em class="property">class </em><tt class="descname">Keypoint</tt><a class="headerlink" href="#Keypoint" title="Permalink to this definition">¶</a></dt>
 <dd><div class="highlight-c++"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Keypoint</span> <span class="p">{</span>
- <span class="k">public</span><span class="o">:</span>
+ <span class="nl">public:</span>
    <span class="k">enum</span> <span class="n">KeypointType</span> <span class="p">{</span>
        <span class="n">INVALID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
        <span class="n">OTHER</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
@@ -107,30 +107,30 @@
 
    <span class="c1">// Required Keypoint type.</span>
    <span class="kr">inline</span> <span class="n">KeypointType</span> <span class="n">keypoint_type</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
-   <span class="kr">inline</span> <span class="kt">void</span> <span class="n">set_keypoint_type</span><span class="p">(</span><span class="n">KeypointType</span> <span class="n">type</span><span class="p">);</span>
+   <span class="kr">inline</span> <span class="kt">void</span> <span class="nf">set_keypoint_type</span><span class="p">(</span><span class="n">KeypointType</span> <span class="n">type</span><span class="p">);</span>
 
    <span class="c1">// Required Variable x.</span>
    <span class="kr">inline</span> <span class="kt">double</span> <span class="n">x</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
-   <span class="kr">inline</span> <span class="kt">void</span> <span class="n">set_x</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+   <span class="kr">inline</span> <span class="kt">void</span> <span class="nf">set_x</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
 
    <span class="c1">// Required Variable y.</span>
    <span class="kr">inline</span> <span class="kt">double</span> <span class="n">y</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
-   <span class="kr">inline</span> <span class="kt">void</span> <span class="n">set_y</span><span class="p">(</span><span class="kt">double</span> <span class="n">y</span><span class="p">);</span>
+   <span class="kr">inline</span> <span class="kt">void</span> <span class="nf">set_y</span><span class="p">(</span><span class="kt">double</span> <span class="n">y</span><span class="p">);</span>
 
    <span class="c1">// Optional variable strength.</span>
    <span class="kr">inline</span> <span class="kt">bool</span> <span class="n">has_strength</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
    <span class="kr">inline</span> <span class="kt">double</span> <span class="n">strength</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
-   <span class="kr">inline</span> <span class="kt">void</span> <span class="n">set_strength</span><span class="p">(</span><span class="kt">double</span> <span class="n">strength</span><span class="p">);</span>
+   <span class="kr">inline</span> <span class="kt">void</span> <span class="nf">set_strength</span><span class="p">(</span><span class="kt">double</span> <span class="n">strength</span><span class="p">);</span>
 
    <span class="c1">// Optional variable scale.</span>
    <span class="kr">inline</span> <span class="kt">bool</span> <span class="n">has_scale</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
    <span class="kr">inline</span> <span class="kt">double</span> <span class="n">scale</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
-   <span class="kr">inline</span> <span class="kt">void</span> <span class="n">set_scale</span><span class="p">(</span><span class="kt">double</span> <span class="n">scale</span><span class="p">);</span>
+   <span class="kr">inline</span> <span class="kt">void</span> <span class="nf">set_scale</span><span class="p">(</span><span class="kt">double</span> <span class="n">scale</span><span class="p">);</span>
 
    <span class="c1">// Optional variable orientation.</span>
    <span class="kr">inline</span> <span class="kt">bool</span> <span class="n">has_orientation</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
    <span class="kr">inline</span> <span class="kt">double</span> <span class="n">orientation</span><span class="p">()</span> <span class="k">const</span><span class="p">;</span>
-   <span class="kr">inline</span> <span class="kt">void</span> <span class="n">set_orientation</span><span class="p">(</span><span class="kt">double</span> <span class="n">orientation</span><span class="p">);</span>
+   <span class="kr">inline</span> <span class="kt">void</span> <span class="nf">set_orientation</span><span class="p">(</span><span class="kt">double</span> <span class="n">orientation</span><span class="p">);</span>
 <span class="p">};</span>
 </pre></div>
 </div>
@@ -163,7 +163,7 @@ function. The caller is responsible for deleting the keypoints.</p>
 
 <div class="highlight-c++"><div class="highlight"><pre><span class="c1">// Assume var keypoint_detector was created with one of the constructors below.</span>
 
-<span class="n">GrayImage</span> <span class="n">input_image</span><span class="p">(</span><span class="n">input_image_filename</span><span class="p">);</span>
+<span class="n">GrayImage</span> <span class="nf">input_image</span><span class="p">(</span><span class="n">input_image_filename</span><span class="p">);</span>
 <span class="k">const</span> <span class="kt">bool</span> <span class="n">initialization_success</span> <span class="o">=</span> <span class="n">keypoint_detector</span><span class="p">.</span><span class="n">Initialize</span><span class="p">();</span>
 
 <span class="c1">// Container for the detected keypoints.</span>
@@ -292,7 +292,7 @@ SIFT) while Eigen::BinaryVectorX is used for float descriptors.</p>
 </dd></dl>
 
 <div class="highlight-c++"><div class="highlight"><pre><span class="c1">// Open image we want to extract features from.</span>
-<span class="n">GrayImage</span> <span class="n">input_image</span><span class="p">(</span><span class="n">input_image_filename</span><span class="p">);</span>
+<span class="n">GrayImage</span> <span class="nf">input_image</span><span class="p">(</span><span class="n">input_image_filename</span><span class="p">);</span>
 
 <span class="c1">// Detect keypoints.</span>
 <span class="n">SiftDetector</span> <span class="n">sift_keypoint_detector</span><span class="p">;</span>
