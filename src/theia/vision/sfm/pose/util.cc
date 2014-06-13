@@ -161,4 +161,21 @@ bool NormalizeImagePoints(
   return true;
 }
 
+// Projects a 3x3 matrix to the rotation matrix in SO3 space with the closest
+// Frobenius norm. For a matrix with an SVD decomposition M = USV, the nearest
+// rotation matrix is R = UV'.
+Matrix3d ProjectToRotationMatrix(const Matrix3d& matrix) {
+  Eigen::JacobiSVD<Matrix3d> svd(matrix,
+                                 Eigen::ComputeFullU | Eigen::ComputeFullV);
+  Matrix3d rotation_mat = svd.matrixU() * (svd.matrixV().transpose());
+
+  // The above projection will give a matrix with a determinant +1 or -1. Valid
+  // rotation matrices have a determinant of +1.
+  if (rotation_mat.determinant() < 0) {
+    rotation_mat *= -1.0;
+  }
+
+  return rotation_mat;
+}
+
 }  // namespace theia

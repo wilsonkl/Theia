@@ -85,6 +85,12 @@ bool NormalizeImagePoints(
     std::vector<Eigen::Vector2d>* normalized_image_points,
     Eigen::Matrix3d* normalization_matrix);
 
+
+// Projects a 3x3 matrix to the rotation matrix in SO3 space with the closest
+// Frobenius norm. For a matrix with an SVD decomposition M = USV, the nearest
+// rotation matrix is R = UV'.
+Eigen::Matrix3d ProjectToRotationMatrix(const Eigen::Matrix3d& matrix);
+
 }  // namespace theia
 
 #endif  // THEIA_VISION_SFM_POSE_UTIL_H_
