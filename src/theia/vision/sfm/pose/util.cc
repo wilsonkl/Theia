@@ -135,7 +135,6 @@ bool NormalizeImagePoints(
 
   // Allocate the output vector and map an Eigen object to the underlying data
   // for efficient calculations.
-  normalized_image_points->clear();
   normalized_image_points->resize(image_points.size());
   Eigen::Map<Matrix<double, 2, Eigen::Dynamic> >
       normalized_image_points_mat((*normalized_image_points)[0].data(), 2,
@@ -144,11 +143,13 @@ bool NormalizeImagePoints(
   // Compute centroid.
   const Vector2d centroid(image_points_mat.rowwise().mean());
 
-  // Calculate average distance to centroid.
-  const double mean_dist = (image_points_mat.colwise() - centroid).norm();
+  // Calculate average RMS distance to centroid.
+  const double rms_mean_dist =
+      sqrt((image_points_mat.colwise() - centroid).squaredNorm() /
+           image_points.size());
 
   // Create normalization matrix.
-  const double norm_factor = sqrt(2.0) / mean_dist;
+  const double norm_factor = sqrt(2.0) / rms_mean_dist;
   *normalization_matrix << norm_factor, 0, -1.0 * norm_factor* centroid.x(),
       0, norm_factor, -1.0 * norm_factor * centroid.y(),
       0, 0, 1;
