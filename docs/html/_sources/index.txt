@@ -19,6 +19,19 @@ Mapping (SLAM) systems. The goal of this library is to provide researchers with 
 * If you have questions, please email the `Theia mailing list <http://groups.google.com/group/theia-vision-library>`_.
 
 
+Citation
+========
+
+If you use Theia for an academic publication, please cite this
+manual. e.g., ::
+
+  @manual{theia-manual,
+          Author = {Chris Sweeney},
+          Title = {Theia Multiview Geometry Library: Tutorial \& Reference},
+          Organization = {University of California Santa Barbara.}
+  }
+
+
 .. toctree::
    :maxdepth: 2
    :hidden:
