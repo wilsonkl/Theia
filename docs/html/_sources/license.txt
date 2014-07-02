@@ -4,7 +4,7 @@ License
 
 Theia is licensed under the New BSD license, whose terms are as follows.
 
-Copyright © 2013. The Regents of the University of California (Regents). All
+Copyright © 2013, 2014. The Regents of the University of California (Regents). All
 rights reserved.
 
 1. Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -36,6 +36,6 @@ manual. e.g., ::
 
   @manual{theia-manual,
           Author = {Chris Sweeney},
-          Title = {Theia Computer Vision Library: Tutorial \& Reference},
+          Title = {Theia Multiview Geometry Library: Tutorial \& Reference},
           Organization = {University of California Santa Barbara.}
   }
