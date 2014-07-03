@@ -267,8 +267,8 @@ N-View Triangulation
     can be extracted efficiently by noting that it is equivalent to the nullspace
     of :math:`A^\top A`, which is a 4x4 matrix.
 
-ICP
-===
+Similarity Transformation
+=========================
 
   .. cpp:function:: void AlignPointCloudsICP(const int num_points, const double left[], const double right[], double rotation[3 * 3], double translation[3])
 
@@ -286,3 +286,37 @@ ICP
     squares method of [Umeyama]_. The returned rotation, translation, and scale
     align the left points to the right such that :math:`Right = s * R * Left +
     t`.
+
+  .. cpp:function:: void DlsSimilarityTransform(const std::vector<Eigen::Vector3d>& ray_origin, const std::vector<Eigen::Vector3d>& ray_direction, const std::vector<Eigen::Vector3d>& world_point, std::vector<Eigen::Quaterniond>* solution_rotation, std::vector<Eigen::Vector3d>* solution_translation, std::vector<double>* solution_scale)
+
+    Computes the solution to the generalized pose and scale problem based on the
+    paper "gDLS: A Scalable Solution to the Generalized Pose and Scale Problem"
+    by Sweeney et. al. [SweeneyGDLS]_. Given image rays from one coordinate
+    system that correspond to 3D points in another coordinate system, this
+    function computes the rotation, translation, and scale that will align the
+    rays with the 3D points. This is used for applications such as loop closure
+    in SLAM and SfM. This method is extremely scalable and highly accurate
+    because the cost function that is minimized is independent of the number of
+    points. Theoretically, up to 27 solutions may be returned, but in practice
+    only 4 real solutions arise and in almost all cases where n >= 6 there is
+    only one solution which places the observed points in front of the
+    camera. The rotation, translation, and scale are defined such that:
+    :math:`sp_i + \alpha_i d_i = RX_i + t` where the observed image ray has an
+    origin at :math:`p_i` in the unit direction :math:`d_i` corresponding to 3D
+    point :math:`X_i`.
+
+    ``ray_origin``: the origin (i.e., camera center) of the image ray used in
+    the 2D-3D correspondence.
+
+    ``ray_direction``: Normalized image rays corresponding to model points. Must
+    contain at least 4 points.
+
+    ``world_point``: 3D location of features. Must correspond to the image_ray
+    of the same index. Must contain the same number of points as image_ray, and
+    at least 4.
+
+    ``solution_rotation``: the rotation quaternion of the candidate solutions
+
+    ``solution_translation``: the translation of the candidate solutions
+
+    ``solution_scale``: the scale of the candidate solutions

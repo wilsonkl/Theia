@@ -69,8 +69,9 @@ SET(THEIA_SRC
   vision/sfm/pose/perspective_three_point.cc
   vision/sfm/pose/util.cc
   vision/sfm/projection_matrix.cc
+  vision/sfm/transformation/align_point_clouds.cc
+  vision/sfm/transformation/dls_similarity_transform.cc
   vision/sfm/triangulation/triangulation.cc
-  vision/transformation/align_point_clouds.cc
   )
 
 SET(THEIA_LIBRARY_DEPENDENCIES
@@ -147,7 +148,8 @@ IF (BUILD_TESTING)
   GTEST(vision/sfm/pose/four_point_homography)
   GTEST(vision/sfm/pose/global_orientation)
   GTEST(vision/sfm/pose/perspective_three_point)
+  GTEST(vision/sfm/transformation/align_point_clouds)
+  GTEST(vision/sfm/transformation/dls_similarity_transform)
   GTEST(vision/sfm/triangulation/triangulation)
-  GTEST(vision/transformation/align_point_clouds)
 
 ENDIF (BUILD_TESTING)

@@ -54,6 +54,9 @@ void AddNoiseToPoint(const double noise_factor, Eigen::Vector3d* point);
 // Adds noise to the ray i.e. the projection of the point.
 void AddNoiseToProjection(const double noise_factor, Eigen::Vector2d* point);
 
+// Adds noise to the image ray.
+void AddNoiseToRay(const double std_dev, Eigen::Vector3d* proj);
+
 void AddGaussianNoise(const double noise_factor, Eigen::Vector3d* ray);
 
 // Creates points that are randomly distributed within a viewing frustum.

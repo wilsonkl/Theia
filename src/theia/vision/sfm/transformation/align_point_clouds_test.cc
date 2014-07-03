@@ -36,7 +36,7 @@
 #include <cmath>
 #include "gtest/gtest.h"
 
-#include "theia/vision/transformation/align_point_clouds.h"
+#include "theia/vision/sfm/transformation/align_point_clouds.h"
 #include "theia/test/benchmark.h"
 
 namespace theia {

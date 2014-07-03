@@ -32,7 +32,7 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#include "theia/vision/transformation/align_point_clouds.h"
+#include "theia/vision/sfm/transformation/align_point_clouds.h"
 
 #include <glog/logging.h>
 #include <Eigen/Dense>

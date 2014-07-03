@@ -77,6 +77,21 @@ void AddNoiseToProjection(const double noise_factor, Vector2d* ray) {
   *ray = Vector2d(ray->x() + noise_x, ray->y() + noise_y);
 }
 
+// Basically, transform the point to be at (0, 0, -1), add noise, then reverse
+// the transformation.
+void AddNoiseToRay(const double std_dev, Vector3d* proj) {
+  const double scale = proj->norm();
+  const double noise_x = (-0.5 + theia::RandDouble(0.0, 1.0)) * 2.0 * std_dev;
+  const double noise_y = (-0.5 + theia::RandDouble(0.0, 1.0)) * 2.0 * std_dev;
+
+  Eigen::Quaterniond rot =
+      Eigen::Quaterniond::FromTwoVectors(Eigen::Vector3d(0, 0, 1.0), *proj);
+  Eigen::Vector3d noisy_point(noise_x, noise_y, 1);
+  noisy_point *= scale;
+
+  *proj = (rot * noisy_point).normalized();
+}
+
 void AddGaussianNoise(const double noise_factor, Vector2d* ray) {
   const double noise_x = RandGaussian(0.0, noise_factor);
   const double noise_y = RandGaussian(0.0, noise_factor);
