@@ -384,8 +384,8 @@ of <span class="math">\(A^\top A\)</span>, which is a 4x4 matrix.</p>
 
 </div></blockquote>
 </div>
-<div class="section" id="icp">
-<h2>ICP<a class="headerlink" href="#icp" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="similarity-transformation">
+<h2>Similarity Transformation<a class="headerlink" href="#similarity-transformation" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><dl class="function">
 <dt id="AlignPointCloudsICP__iC.doubleCA.doubleCA.doubleA.doubleA">
@@ -406,6 +406,32 @@ void <tt class="descname">AlignPointCloudsUmeyama</tt><big>(</big>const int <em>
 squares method of <a class="reference internal" href="bibliography.html#umeyama">[Umeyama]</a>. The returned rotation, translation, and scale
 align the left points to the right such that <span class="math">\(Right = s * R * Left +
 t\)</span>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DlsSimilarityTransform__std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Quaterniond:P.std::vector:Eigen::Vector3d:P.std::vector:double:P">
+void <tt class="descname">DlsSimilarityTransform</tt><big>(</big>const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>ray_origin</em>, const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>ray_direction</em>, const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>world_point</em>, std::vector&lt;Eigen::Quaterniond&gt;* <em>solution_rotation</em>, std::vector&lt;Eigen::Vector3d&gt;* <em>solution_translation</em>, std::vector&lt;double&gt;* <em>solution_scale</em><big>)</big><a class="headerlink" href="#DlsSimilarityTransform__std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Quaterniond:P.std::vector:Eigen::Vector3d:P.std::vector:double:P" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the solution to the generalized pose and scale problem based on the
+paper &#8220;gDLS: A Scalable Solution to the Generalized Pose and Scale Problem&#8221;
+by Sweeney et. al. <a class="reference internal" href="bibliography.html#sweeneygdls">[SweeneyGDLS]</a>. Given image rays from one coordinate
+system that correspond to 3D points in another coordinate system, this
+function computes the rotation, translation, and scale that will align the
+rays with the 3D points. This is used for applications such as loop closure
+in SLAM and SfM. This method is extremely scalable and highly accurate
+because the cost function that is minimized is independent of the number of
+points. Theoretically, up to 27 solutions may be returned, but in practice
+only 4 real solutions arise and in almost all cases where n &gt;= 6 there is
+only one solution which places the observed points in front of the
+camera. The rotation, translation, and scale are defined such that:
+<span class="math">\(sp_i + \alpha_i d_i = RX_i + t\)</span> where the observed image ray has an
+origin at <span class="math">\(p_i\)</span> in the unit direction <span class="math">\(d_i\)</span> corresponding to 3D
+point <span class="math">\(X_i\)</span>.</p>
+<p><tt class="docutils literal"><span class="pre">ray_origin</span></tt>: the origin (i.e., camera center) of the image ray used in the 2D-3D correspondence.</p>
+<p><tt class="docutils literal"><span class="pre">ray_direction</span></tt>: Normalized image rays corresponding to model points. Must contain at least 4 points.</p>
+<p><tt class="docutils literal"><span class="pre">world_point</span></tt>: 3D location of features. Must correspond to the image_ray of the same index. Must contain the same number of points as image_ray, and at least 4.</p>
+<p><tt class="docutils literal"><span class="pre">solution_rotation</span></tt>: the rotation quaternion of the candidate solutions</p>
+<p><tt class="docutils literal"><span class="pre">solution_translation</span></tt>: the translation of the candidate solutions</p>
+<p><tt class="docutils literal"><span class="pre">solution_scale</span></tt>: the scale of the candidate solutions</p>
 </dd></dl>
 
 </div></blockquote>

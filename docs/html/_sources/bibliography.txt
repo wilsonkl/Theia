@@ -72,6 +72,10 @@ Bibliography
    Estimation via Residual Consensus**. *International Conference on Computer
    Vision (ICCV)*, 2011.
 
+.. [SweeneyGDLS] C. Sweeney, V. Fragoso, T. Hollerer, M. Turk. **gDLS: A
+   Scalable Solution to the Generalized Pose and Scale Problem**. *European
+   Conference on Computer Vision (ECCV)*, 2014
+
 .. [Torr] P. H. S. Torr and A. Zisserman. 2000. **MLESAC: a new robust estimator
    with application to estimating image geometry**. *Comput. Vis. Image
    Underst*. 78, 1 (April 2000), 138-156.
