@@ -38,7 +38,6 @@
 #include <Eigen/LU>
 #include <Eigen/SparseCore>
 #include <Eigen/SparseQR>
-#include <Eigen/SVD>
 #include <glog/logging.h>
 
 #include <algorithm>
@@ -47,6 +46,7 @@
 
 #include "theia/util/map_util.h"
 #include "theia/vision/sfm/pose/util.h"
+#include "theia/vision/sfm/types.h"
 
 namespace theia {
 
@@ -62,8 +62,8 @@ namespace {
 // system where m is the number of relative rotations and n is the number of
 // views. Sets up the linear system lhs * x = rhs.
 void SetupSparseLinearSystem(
-    const std::vector<PairwiseRelativeRotation>& relative_rotations,
-    const std::unordered_map<int, int>& view_id_map,
+    const std::unordered_map<ViewIdPair, RelativeRotation>& relative_rotations,
+    const std::unordered_map<ViewId, int>& view_id_map,
     SparseMatrix* lhs,
     MatrixXd* rhs) {
   typedef Eigen::Triplet<double> TripletEntry;
@@ -82,32 +82,34 @@ void SetupSparseLinearSystem(
   // sparse matrix.
   std::vector<TripletEntry> triplet_list;
   triplet_list.reserve(12 * relative_rotations.size());
-  for (int i = 0; i < relative_rotations.size(); i++) {
+  int current_relative_rotation_index = 0;
+  for (const auto& relative_rotation : relative_rotations) {
     const int view1_index =
-        FindOrDie(view_id_map, relative_rotations[i].view_id_one);
+        FindOrDie(view_id_map, relative_rotation.first.first);
     const int view2_index =
-        FindOrDie(view_id_map, relative_rotations[i].view_id_two);
+        FindOrDie(view_id_map, relative_rotation.first.second);
 
     // Set R_j term to identity.
     for (int j = 0; j < 3; j++) {
-      triplet_list.push_back(
-          TripletEntry(kRotationMatrixDimSize * i + j,
-                       kRotationMatrixDimSize * view2_index + j,
-                       relative_rotations[i].weight));
+      triplet_list.push_back(TripletEntry(
+          kRotationMatrixDimSize * current_relative_rotation_index + j,
+          kRotationMatrixDimSize * view2_index + j,
+          relative_rotation.second.weight));
     }
 
     // Set R_i term. This is equal to the weight times the relative rotation
     // (note the negative sign).
-    const Matrix3d relative_rotation =
-        -relative_rotations[i].weight * relative_rotations[i].rotation;
+    const Matrix3d weighted_relative_rotation =
+        -relative_rotation.second.weight * relative_rotation.second.rotation;
     for (int r = 0; r < 3; r++) {
       for (int c = 0; c < 3; c++) {
         triplet_list.push_back(TripletEntry(
-            kRotationMatrixDimSize * i + r,
+            kRotationMatrixDimSize * current_relative_rotation_index + r,
             kRotationMatrixDimSize * view1_index + c,
-            relative_rotation(r, c)));
+            weighted_relative_rotation(r, c)));
       }
     }
+    ++current_relative_rotation_index;
   }
 
   lhs->setFromTriplets(triplet_list.begin(), triplet_list.end());
@@ -126,16 +128,16 @@ void SetupSparseLinearSystem(
 }  // namespace
 
 bool GlobalOrientationLinear(
-    const std::vector<PairwiseRelativeRotation>& relative_rotations,
-    std::vector<GlobalOrientation>* global_orientations) {
+    const std::unordered_map<ViewIdPair, RelativeRotation>& relative_rotations,
+    std::unordered_map<ViewId, Matrix3d>* global_orientations) {
   CHECK_GT(relative_rotations.size(), 0);
   CHECK_NOTNULL(global_orientations);
 
   // Determine all unique view ids.
   std::vector<int> view_ids;
   for (const auto& view_pair : relative_rotations) {
-    view_ids.push_back(view_pair.view_id_one);
-    view_ids.push_back(view_pair.view_id_two);
+    view_ids.push_back(view_pair.first.first);
+    view_ids.push_back(view_pair.first.second);
   }
 
   // Sort and unique the vector.
@@ -143,12 +145,11 @@ bool GlobalOrientationLinear(
   view_ids.erase(std::unique(view_ids.begin(), view_ids.end()), view_ids.end());
 
   // Lookup map to keep track of the global orientation estimates by view id.
-  std::unordered_map<int, int> view_id_map;
+  std::unordered_map<ViewId, int> view_id_map;
 
   // Initialize all global orientation ids and populate view id map.
-  global_orientations->resize(view_ids.size());
-  for (int i = 0; i < global_orientations->size(); i++) {
-    global_orientations->at(i).view_id = view_ids[i];
+  global_orientations->reserve(view_ids.size());
+  for (int i = 0; i < view_ids.size(); i++) {
     view_id_map[view_ids[i]] = i;
   }
 
@@ -158,7 +159,6 @@ bool GlobalOrientationLinear(
   SetupSparseLinearSystem(relative_rotations, view_id_map, &lhs, &rhs);
 
   // Setup sparse QR solver.
-  // TODO(cmsweeney): Use SuiteSparse instead.
   Eigen::SparseQR<SparseMatrix, Eigen::COLAMDOrdering<int> >
       sparse_qr_solver(lhs);
 
@@ -183,10 +183,10 @@ bool GlobalOrientationLinear(
   // above makes no constraint on the space of the solutions, so the final
   // solutions are not guaranteed to be valid rotations (e.g., det(R) may not be
   // +1).
-  global_orientations->at(0).rotation = Matrix3d::Identity();
+  (*global_orientations)[view_ids[0]] = Matrix3d::Identity();
   for (int i = 0; i < global_orientations->size() - 1; i++) {
     const Matrix3d& solution_i = solution.block<3, 3>(3 * i, 0);
-    global_orientations->at(i + 1).rotation =
+    (*global_orientations)[view_ids[i + 1]] =
         ProjectToRotationMatrix(solution_i);
   }
 

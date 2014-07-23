@@ -32,38 +32,18 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_VISION_SFM_POSE_GLOBAL_ORIENTATION_H_
-#define THEIA_VISION_SFM_POSE_GLOBAL_ORIENTATION_H_
+#ifndef THEIA_VISION_SFM_TYPES_H_
+#define THEIA_VISION_SFM_TYPES_H_
 
-#include <Eigen/Core>
-#include <unordered_map>
-
-#include "theia/util/hash.h"
-#include "theia/vision/sfm/types.h"
+#include <cstdint>
+#include <utility>
 
 namespace theia {
 
-// Struct for holding pairwise relative rotations. The rotation specifies the
-// transformation from first to second camera. The weight given will determine
-// how the pairwise relationship affects the overall system.
-//
-// TODO(csweeney): Analyze the memory overhead of using rotation matrices
-// instead of angle-axis or quaternions.
-struct RelativeRotation {
-  Eigen::Matrix3d rotation = Eigen::Matrix3d::Identity();
-  double weight = 1.0;
-};
+typedef uint32_t ViewId;
+typedef uint32_t TrackId;
+typedef std::pair<ViewId, ViewId> ViewIdPair;
 
-// Computes the orientation of views in a global frame given pairwise relative
-// rotations between the views. This is done with a linear approximation to
-// rotation averaging.
-//
-// This linear solution follows the method in "Robust Rotation and Translation
-// Estimation in Multiview Geometry" by Martinec and Pajdla (CVPR 2007).
-bool GlobalOrientationLinear(
-    const std::unordered_map<ViewIdPair, RelativeRotation>& relative_rotations,
-    std::unordered_map<ViewId, Eigen::Matrix3d>* global_orientations);
+}  // namespace
 
-}  // namespace theia
-
-#endif  // THEIA_VISION_SFM_POSE_GLOBAL_ORIENTATION_H_
+#endif  // THEIA_VISION_SFM_TYPES_H_

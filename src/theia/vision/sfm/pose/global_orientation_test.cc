@@ -43,8 +43,11 @@
 #include "gtest/gtest.h"
 
 #include "theia/math/util.h"
+#include "theia/util/hash.h"
+#include "theia/util/map_util.h"
 #include "theia/util/random.h"
 #include "theia/vision/sfm/pose/util.h"
+#include "theia/vision/sfm/types.h"
 
 namespace theia {
 
@@ -60,13 +63,13 @@ static const double kRelativeRotationNoiseDegrees = 1.0;
 // Computes the relative rotation between two views given the global
 // orientations.
 void GetRelativeRotationFromGlobalOrientation(
-    const GlobalOrientation& global_orientation1,
-    const GlobalOrientation& global_orientation2,
+    const Matrix3d& global_orientation1,
+    const Matrix3d& global_orientation2,
     const double weight,
     const double pairwise_rotation_noise_degrees,
-    PairwiseRelativeRotation* relative_rotation) {
+    RelativeRotation* relative_rotation) {
   relative_rotation->rotation =
-      global_orientation2.rotation * global_orientation1.rotation.transpose();
+      global_orientation2 * global_orientation1.transpose();
 
   // Add noise if applicable.
   if (pairwise_rotation_noise_degrees) {
@@ -82,8 +85,6 @@ void GetRelativeRotationFromGlobalOrientation(
     relative_rotation->rotation = rotation_noise * relative_rotation->rotation;
   }
 
-  relative_rotation->view_id_one = global_orientation1.view_id;
-  relative_rotation->view_id_two = global_orientation2.view_id;
   relative_rotation->weight = weight;
 }
 
@@ -91,70 +92,67 @@ void GetRelativeRotationFromGlobalOrientation(
 // rotations. CHECKs that the estimated orientations are close to the ground
 // truth orientations with an angular tolerance.
 void TestGlobalOrientationLinear(
-    const std::vector<GlobalOrientation>& gt_global_orientation,
-    const std::vector<std::pair<int, int> >& pairwise_indices,
+    const std::unordered_map<ViewId, Matrix3d>& gt_global_orientation,
+    const std::vector<ViewIdPair>& pairwise_indices,
     const std::vector<double>& weights,
     const double relative_rotation_noise,
     const double tolerance_in_degrees) {
   // Compute the relative rotation.
-  std::vector<PairwiseRelativeRotation> pairwise_relative_rotation(
-      pairwise_indices.size());
+  std::unordered_map<ViewIdPair, RelativeRotation> relative_rotations;
   for (int i = 0; i < pairwise_indices.size(); i++) {
+    RelativeRotation relative_rotation;
     GetRelativeRotationFromGlobalOrientation(
-        gt_global_orientation[pairwise_indices[i].first],
-        gt_global_orientation[pairwise_indices[i].second],
+        FindOrDie(gt_global_orientation, pairwise_indices[i].first),
+        FindOrDie(gt_global_orientation, pairwise_indices[i].second),
         weights[i],
         relative_rotation_noise,
-        &(pairwise_relative_rotation[i]));
+        &relative_rotation);
+    const ViewIdPair view_id_pair =
+        ViewIdPair(pairwise_indices[i].first, pairwise_indices[i].second);
+    relative_rotations[view_id_pair] = relative_rotation;
   }
 
   // Run global orientation estimation.
-  std::vector<GlobalOrientation> estimated_global_orientation;
-  CHECK(GlobalOrientationLinear(pairwise_relative_rotation,
+  std::unordered_map<ViewId, Matrix3d> estimated_global_orientation;
+  CHECK(GlobalOrientationLinear(relative_rotations,
                                 &estimated_global_orientation));
 
   // Check that the estimated and ground truth orientations are the same size.
   for (int i = 0; i < estimated_global_orientation.size(); i++) {
-    const Matrix3d loop_matrix = gt_global_orientation[i].rotation.transpose() *
-                                 estimated_global_orientation[i].rotation;
+    const Matrix3d loop_matrix =
+        FindOrDie(gt_global_orientation, i).transpose() *
+        estimated_global_orientation[i];
     const double angular_difference = Degrees(AngleAxisd(loop_matrix).angle());
     CHECK_LE(angular_difference, tolerance_in_degrees);
   }
 }
 
 TEST(GlobalOrientationLinear, IdentityRotation) {
-  std::vector<GlobalOrientation> gt_global_orientation;
+  std::unordered_map<ViewId, Matrix3d> gt_global_orientation;
 
-  const Matrix3d identity_mat = Matrix3d::Identity();
   for (int i = 0; i < 3; i++) {
-    GlobalOrientation gt_global_view_orientation;
-    gt_global_view_orientation.view_id = i;
-    gt_global_view_orientation.rotation = identity_mat;
-    gt_global_orientation.push_back(gt_global_view_orientation);
+    gt_global_orientation[i] = Matrix3d::Identity();
   }
 
-  const std::vector<std::pair<int, int> > pairwise_indices = { { 0, 1 },
-                                                               { 0, 2 },
-                                                               { 1, 2 } };
+  const std::vector<ViewIdPair> pairwise_indices = { { 0, 1 },
+                                                     { 0, 2 },
+                                                     { 1, 2 } };
   const std::vector<double> weights(pairwise_indices.size(), 1.0);
   TestGlobalOrientationLinear(gt_global_orientation, pairwise_indices, weights,
                               0.0, 0.0);
 }
 
 TEST(GlobalOrientationLinear, SimpleRotationNoNoise) {
-  std::vector<GlobalOrientation> gt_global_orientation;
+  std::unordered_map<ViewId, Matrix3d> gt_global_orientation;
 
   for (int i = 0; i < 3; i++) {
-    GlobalOrientation gt_global_view_orientation;
-    gt_global_view_orientation.view_id = i;
-    gt_global_view_orientation.rotation =
+    gt_global_orientation[i] =
         AngleAxisd(Radians(i * 10.0), Vector3d::UnitY()).toRotationMatrix();
-    gt_global_orientation.push_back(gt_global_view_orientation);
   }
 
-  const std::vector<std::pair<int, int> > pairwise_indices = { { 0, 1 },
-                                                               { 0, 2 },
-                                                               { 1, 2 } };
+  const std::vector<ViewIdPair> pairwise_indices = { { 0, 1 },
+                                                     { 0, 2 },
+                                                     { 1, 2 } };
   const std::vector<double> weights(pairwise_indices.size(), 1.0);
   TestGlobalOrientationLinear(gt_global_orientation, pairwise_indices, weights,
                               0.0, 0.0);
@@ -162,118 +160,97 @@ TEST(GlobalOrientationLinear, SimpleRotationNoNoise) {
 
 
 TEST(GlobalOrientationLinear, SimpleRotationWithNoise) {
-  std::vector<GlobalOrientation> gt_global_orientation;
+  std::unordered_map<ViewId, Matrix3d> gt_global_orientation;
 
   for (int i = 0; i < 3; i++) {
-    GlobalOrientation gt_global_view_orientation;
-    gt_global_view_orientation.view_id = i;
-    gt_global_view_orientation.rotation =
+    gt_global_orientation[i] =
         AngleAxisd(Radians(i * 10.0), Vector3d::UnitY()).toRotationMatrix();
-    gt_global_orientation.push_back(gt_global_view_orientation);
   }
 
-  const std::vector<std::pair<int, int> > pairwise_indices = { { 0, 1 },
-                                                               { 0, 2 },
-                                                               { 1, 2 } };
+  const std::vector<ViewIdPair> pairwise_indices = { { 0, 1 },
+                                                     { 0, 2 },
+                                                     { 1, 2 } };
   const std::vector<double> weights(pairwise_indices.size(), 1.0);
   TestGlobalOrientationLinear(gt_global_orientation, pairwise_indices, weights,
                               kRelativeRotationNoiseDegrees, 1.0);
 }
 
 TEST(GlobalOrientationLinear, NinetyDegreeRotation) {
-  std::vector<GlobalOrientation> gt_global_orientation;
+  std::unordered_map<ViewId, Matrix3d> gt_global_orientation;
 
   for (int i = 0; i < 3; i++) {
-    GlobalOrientation gt_global_view_orientation;
-    gt_global_view_orientation.view_id = i;
-    gt_global_view_orientation.rotation =
+    gt_global_orientation[i] =
         AngleAxisd(Radians(i * 90.0), Vector3d::UnitY()).toRotationMatrix();
-    gt_global_orientation.push_back(gt_global_view_orientation);
   }
 
-  const std::vector<std::pair<int, int> > pairwise_indices = { { 0, 1 },
-                                                               { 0, 2 },
-                                                               { 1, 2 } };
+  const std::vector<ViewIdPair> pairwise_indices = { { 0, 1 },
+                                                     { 0, 2 },
+                                                     { 1, 2 } };
   const std::vector<double> weights(pairwise_indices.size(), 1.0);
   TestGlobalOrientationLinear(gt_global_orientation, pairwise_indices, weights,
                               kRelativeRotationNoiseDegrees, 1.0);
 }
 
 TEST(GlobalOrientationLinear, NonConsecutiveIds) {
-  std::vector<GlobalOrientation> gt_global_orientation;
+  std::unordered_map<ViewId, Matrix3d> gt_global_orientation;
 
   for (int i = 0; i < 3; i++) {
-    GlobalOrientation gt_global_view_orientation;
-    gt_global_view_orientation.view_id = 3 * i;
-    gt_global_view_orientation.rotation =
+    gt_global_orientation[3 * i] =
         AngleAxisd(Radians(i * 10.0), Vector3d::UnitY()).toRotationMatrix();
-    gt_global_orientation.push_back(gt_global_view_orientation);
   }
 
-  const std::vector<std::pair<int, int> > pairwise_indices = { { 0, 1 },
-                                                               { 0, 2 },
-                                                               { 1, 2 } };
+  const std::vector<ViewIdPair> pairwise_indices = { { 0, 3 },
+                                                     { 0, 6 },
+                                                     { 3, 6 } };
   const std::vector<double> weights(pairwise_indices.size(), 1.0);
   TestGlobalOrientationLinear(gt_global_orientation, pairwise_indices, weights,
                               kRelativeRotationNoiseDegrees, 1.0);
 }
 
 TEST(GlobalOrientationLinear, NonuniformWeighting) {
-  std::vector<GlobalOrientation> gt_global_orientation;
+  std::unordered_map<ViewId, Matrix3d> gt_global_orientation;
 
   for (int i = 0; i < 3; i++) {
-    GlobalOrientation gt_global_view_orientation;
-    gt_global_view_orientation.view_id = i;
-    gt_global_view_orientation.rotation =
+    gt_global_orientation[i] =
         AngleAxisd(Radians(i * 10.0), Vector3d::UnitY()).toRotationMatrix();
-    gt_global_orientation.push_back(gt_global_view_orientation);
   }
 
-  const std::vector<std::pair<int, int> > pairwise_indices = { { 0, 1 },
-                                                               { 0, 2 },
-                                                               { 1, 2 } };
+  const std::vector<ViewIdPair> pairwise_indices = { { 0, 1 },
+                                                     { 0, 2 },
+                                                     { 1, 2 } };
   const std::vector<double> weights = { 0.2, 1.5, 1.3 };
   TestGlobalOrientationLinear(gt_global_orientation, pairwise_indices, weights,
                               kRelativeRotationNoiseDegrees, 1.0);
 }
 
 TEST(GlobalOrientationLinear, ManyViews) {
-  std::vector<GlobalOrientation> gt_global_orientation;
+  std::unordered_map<ViewId, Matrix3d> gt_global_orientation;
   static const int kNumViews = 100;
 
   InitRandomGenerator();
 
-  GlobalOrientation gt_global_view_orientation;
-  gt_global_view_orientation.view_id = 0;
-  gt_global_view_orientation.rotation = Matrix3d::Identity();
-  gt_global_orientation.push_back(gt_global_view_orientation);
+  gt_global_orientation[0] = Matrix3d::Identity();
 
   for (int i = 1; i < kNumViews; i++) {
     // Generate a random rotation within 60 deg around a random axis
-    GlobalOrientation gt_global_view_orientation;
-    gt_global_view_orientation.view_id = i;
-    gt_global_view_orientation.rotation =
+    gt_global_orientation[i] =
         AngleAxisd(Radians(RandDouble(0, 60.0)),
                    Vector3d::Random().normalized()).toRotationMatrix();
-    gt_global_orientation.push_back(gt_global_view_orientation);
   }
 
   static const int kNumRelativeRotations = 150;
-  std::vector<std::pair<int, int> > pairwise_indices;
+  std::vector<ViewIdPair> pairwise_indices;
 
   // Add a relative rotation containing each view so that there is guaranteed to
   // be a valid solution.
-  for (int i = 0; i < kNumViews; i++) {
-    int j;
-    while ((j = RandInt(0, kNumViews)) == i) {}
-    pairwise_indices.push_back(std::make_pair(i, j));
+  for (int i = 0; i < kNumViews - 1; i++) {
+    pairwise_indices.push_back(std::make_pair(i, i + 1));
   }
 
   // Now add extra constraints with random view pairs.
   for (int i = kNumViews; i < kNumRelativeRotations; i++) {
-    int j = RandInt(0, kNumViews);
-    int k;
-    while ((k = RandInt(0, kNumViews)) == j) {}
+    const int j = RandInt(0, kNumViews - 2);
+    const int k = RandInt(j + 1, kNumViews - 1);
     pairwise_indices.push_back(std::make_pair(j, k));
   }
 
