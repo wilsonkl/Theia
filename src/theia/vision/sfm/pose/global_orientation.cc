@@ -110,22 +110,17 @@ void SetupSparseLinearSystem(
     }
   }
 
-  // Set up the rhs matrix (i.e. b in Ax = b). All entries will be zero except
-  // for one constraint that keeps the first rotation equal to the identity so
-  // that the solution to the system is not trivial. Without this constraint, we
-  // will have to solve for the null space which makes solving the system much
-  // more complicated (and, indeed, solving the linear system would not be the
-  // correct method).
-  for (int i = 0; i < 3; i++) {
-    triplet_list.push_back(TripletEntry(
-        kRotationMatrixDimSize * relative_rotations.size() + i, i, 1.0));
-  }
-
-  rhs->block<kRotationMatrixDimSize, kRotationMatrixDimSize>(
-      kRotationMatrixDimSize * relative_rotations.size(), 0) =
-      Matrix3d::Identity();
-
   lhs->setFromTriplets(triplet_list.begin(), triplet_list.end());
+
+  // We want the first camera to have the identity rotation, so we eliminate it
+  // from the linear system. It is easy to see that our system is an
+  // Ax = 0 system, which is equivalent to Ax = [p | Q][y | b]^t = 0, where y is
+  // the first rotation (i.e. the one we want to set to identity) and p is
+  // the columns of A corresponding to y. Thus, b is the unknown rotation.
+  // We can solve the linear system Qb = -py to obtain our solution.
+  *rhs = -lhs->leftCols<3>();
+  const int num_cols = lhs->cols() - 3;
+  *lhs = lhs->rightCols(num_cols);
 }
 
 }  // namespace
@@ -188,9 +183,11 @@ bool GlobalOrientationLinear(
   // above makes no constraint on the space of the solutions, so the final
   // solutions are not guaranteed to be valid rotations (e.g., det(R) may not be
   // +1).
-  for (int i = 0; i < global_orientations->size(); i++) {
+  global_orientations->at(0).rotation = Matrix3d::Identity();
+  for (int i = 0; i < global_orientations->size() - 1; i++) {
     const Matrix3d& solution_i = solution.block<3, 3>(3 * i, 0);
-    global_orientations->at(i).rotation = ProjectToRotationMatrix(solution_i);
+    global_orientations->at(i + 1).rotation =
+        ProjectToRotationMatrix(solution_i);
   }
 
   return true;
