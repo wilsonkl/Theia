@@ -32,8 +32,8 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_VISION_SFM_POSE_GLOBAL_ORIENTATION_H_
-#define THEIA_VISION_SFM_POSE_GLOBAL_ORIENTATION_H_
+#ifndef THEIA_VISION_SFM_POSE_ESTIMATE_GLOBAL_ROTATIONS_H_
+#define THEIA_VISION_SFM_POSE_ESTIMATE_GLOBAL_ROTATIONS_H_
 
 #include <Eigen/Core>
 #include <unordered_map>
@@ -60,10 +60,10 @@ struct RelativeRotation {
 //
 // This linear solution follows the method in "Robust Rotation and Translation
 // Estimation in Multiview Geometry" by Martinec and Pajdla (CVPR 2007).
-bool GlobalOrientationLinear(
+bool EstimateGlobalRotationsLinear(
     const std::unordered_map<ViewIdPair, RelativeRotation>& relative_rotations,
     std::unordered_map<ViewId, Eigen::Matrix3d>* global_orientations);
 
 }  // namespace theia
 
-#endif  // THEIA_VISION_SFM_POSE_GLOBAL_ORIENTATION_H_
+#endif  // THEIA_VISION_SFM_POSE_ESTIMATE_GLOBAL_ROTATIONS_H_

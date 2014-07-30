@@ -32,7 +32,7 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#include "theia/vision/sfm/pose/global_orientation.h"
+#include "theia/vision/sfm/pose/estimate_global_rotations.h"
 
 #include <Eigen/Core>
 #include <Eigen/LU>
@@ -127,7 +127,7 @@ void SetupSparseLinearSystem(
 
 }  // namespace
 
-bool GlobalOrientationLinear(
+bool EstimateGlobalRotationsLinear(
     const std::unordered_map<ViewIdPair, RelativeRotation>& relative_rotations,
     std::unordered_map<ViewId, Matrix3d>* global_orientations) {
   CHECK_GT(relative_rotations.size(), 0);
