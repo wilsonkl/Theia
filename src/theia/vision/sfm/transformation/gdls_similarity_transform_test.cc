@@ -45,7 +45,7 @@
 #include "theia/util/random.h"
 #include "theia/util/util.h"
 #include "theia/vision/sfm/pose/util.h"
-#include "theia/vision/sfm/transformation/dls_similarity_transform.h"
+#include "theia/vision/sfm/transformation/gdls_similarity_transform.h"
 
 namespace theia {
 namespace {
@@ -55,7 +55,7 @@ using Eigen::Matrix3d;
 using Eigen::Quaterniond;
 using Eigen::Vector3d;
 
-void TestDlsSimilarityTransformWithNoise(
+void TestGdlsSimilarityTransformWithNoise(
     const std::vector<Vector3d>& camera_centers,
     const std::vector<Vector3d>& world_points,
     const double projection_noise_std_dev,
@@ -96,8 +96,8 @@ void TestDlsSimilarityTransformWithNoise(
   std::vector<Quaterniond> soln_rotation;
   std::vector<Vector3d> soln_translation;
   std::vector<double> soln_scale;
-  DlsSimilarityTransform(ray_origins, camera_rays, world_points, &soln_rotation,
-                         &soln_translation, &soln_scale);
+  GdlsSimilarityTransform(ray_origins, camera_rays, world_points,
+                          &soln_rotation, &soln_translation, &soln_scale);
 
   // Check solutions and verify at least one is close to the actual solution.
 
@@ -165,7 +165,7 @@ void BasicTest() {
                                                 Vector3d(2.0, 0.0, 0.0),
                                                 Vector3d(3.0, 0.0, 0.0) };
 
-  TestDlsSimilarityTransformWithNoise(
+  TestGdlsSimilarityTransformWithNoise(
       kImageOrigins,
       points_3d,
       kNoise,
@@ -178,15 +178,15 @@ void BasicTest() {
       kMaxAllowedScaleDifference);
 }
 
-TEST(DlsSimilarityTransform, Basic) {
+TEST(GdlsSimilarityTransform, Basic) {
   BasicTest();
 }
 
-BENCHMARK(DlsSimilarityTransform, BasicBenchmark, 100, 100) {
+BENCHMARK(GdlsSimilarityTransform, BasicBenchmark, 100, 100) {
   BasicTest();
 }
 
-TEST(DlsSimilarityTransform, NoiseTest) {
+TEST(GdlsSimilarityTransform, NoiseTest) {
   const std::vector<Vector3d> points_3d = { Vector3d(-1.0, 3.0, 3.0),
                                             Vector3d(1.0, -1.0, 2.0),
                                             Vector3d(-1.0, 1.0, 2.0),
@@ -211,7 +211,7 @@ TEST(DlsSimilarityTransform, NoiseTest) {
   const double kMaxAllowedTranslationDifference = 1e-3;
   const double kMaxAllowedScaleDifference = 1e-2;
 
-  TestDlsSimilarityTransformWithNoise(
+  TestGdlsSimilarityTransformWithNoise(
       kImageOrigins,
       points_3d,
       kNoise,
@@ -224,7 +224,7 @@ TEST(DlsSimilarityTransform, NoiseTest) {
       kMaxAllowedScaleDifference);
 }
 
-TEST(DlsSimilarityTransform, ManyPoints) {
+TEST(GdlsSimilarityTransform, ManyPoints) {
   // Sets some test rotations and translations.
   static const Vector3d kAxes[] = {
     Vector3d(0.0, 0.0, 1.0).normalized(),
@@ -294,7 +294,7 @@ TEST(DlsSimilarityTransform, ManyPoints) {
                                      RandDouble(2.0, 10.0)));
       }
 
-      TestDlsSimilarityTransformWithNoise(
+      TestGdlsSimilarityTransformWithNoise(
           kImageOrigins,
           points_3d,
           kNoise,
@@ -309,7 +309,7 @@ TEST(DlsSimilarityTransform, ManyPoints) {
   }
 }
 
-TEST(DlsSimilarityTransform, NoRotation) {
+TEST(GdlsSimilarityTransform, NoRotation) {
   const std::vector<Vector3d> points_3d = { Vector3d(-1.0, 3.0, 3.0),
                                             Vector3d(1.0, -1.0, 2.0),
                                             Vector3d(-1.0, 1.0, 2.0),
@@ -334,7 +334,7 @@ TEST(DlsSimilarityTransform, NoRotation) {
   const double kMaxAllowedTranslationDifference = 5e-4;
   const double kMaxAllowedScaleDifference = 1e-2;
 
-  TestDlsSimilarityTransformWithNoise(
+  TestGdlsSimilarityTransformWithNoise(
       kImageOrigins,
       points_3d,
       kNoise,
@@ -347,7 +347,7 @@ TEST(DlsSimilarityTransform, NoRotation) {
       kMaxAllowedScaleDifference);
 }
 
-TEST(DlsSimilarityTransform, NoTranslation) {
+TEST(GdlsSimilarityTransform, NoTranslation) {
   const std::vector<Vector3d> points_3d = { Vector3d(-1.0, 3.0, 3.0),
                                             Vector3d(1.0, -1.0, 2.0),
                                             Vector3d(-1.0, 1.0, 2.0),
@@ -372,7 +372,7 @@ TEST(DlsSimilarityTransform, NoTranslation) {
   const double kMaxAllowedTranslationDifference = 1e-3;
   const double kMaxAllowedScaleDifference = 1e-2;
 
-  TestDlsSimilarityTransformWithNoise(
+  TestGdlsSimilarityTransformWithNoise(
       kImageOrigins,
       points_3d,
       kNoise,

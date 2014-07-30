@@ -32,8 +32,8 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_VISION_SFM_TRANSFORM_DLS_SIMILARITY_TRANSFORM_H_
-#define THEIA_VISION_SFM_TRANSFORM_DLS_SIMILARITY_TRANSFORM_H_
+#ifndef THEIA_VISION_SFM_TRANSFORM_GDLS_SIMILARITY_TRANSFORM_H_
+#define THEIA_VISION_SFM_TRANSFORM_GDLS_SIMILARITY_TRANSFORM_H_
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -47,13 +47,13 @@ namespace theia {
 // another coordinate system, this function computes the rotation, translation,
 // and scale that will align the rays with the 3D points. This is used for
 // applications such as loop closure in SLAM and SfM as well as ICP. This method
-// is a generalization of the method proposed in "A Direct Least-Squares (DLS)
-// Method for PnP" by Joel Hesch and Stergios Roumeliotis. This method is
-// extremely scalable and highly accurate because the cost function that is
-// minimized is independent of the number of points. Theoretically, up to 27
-// solutions may be returned, but in practice only 4 real solutions arise and in
-// almost all cases where n >= 6 there is only one solution which places the
-// observed points in front of the camera.
+// is an implementation of the method presented in "gDLS: A Scalable Solution to
+// the Generalized Pose and Scale Problem" by Sweeney et al (ECCV 2014). This
+// method is extremely scalable and highly accurate because the cost function
+// that is minimized is independent of the number of points. Theoretically, up
+// to 27 solutions may be returned, but in practice only 4 real solutions arise
+// and in almost all cases where n >= 6 there is only one solution which places
+// the observed points in front of the camera.
 //
 // Params:
 //   ray_origin: the origin (i.e., camera center) of the image ray used in the
@@ -66,12 +66,12 @@ namespace theia {
 //   solution_rotation: the rotation quaternion of the candidate solutions
 //   solution_translation: the translation of the candidate solutions
 //   solution_scale: the scale of the candidate solutions
-void DlsSimilarityTransform(const std::vector<Eigen::Vector3d>& ray_origin,
-                            const std::vector<Eigen::Vector3d>& ray_direction,
-                            const std::vector<Eigen::Vector3d>& world_point,
-                            std::vector<Eigen::Quaterniond>* solution_rotation,
-                            std::vector<Eigen::Vector3d>* solution_translation,
-                            std::vector<double>* solution_scale);
+void GdlsSimilarityTransform(const std::vector<Eigen::Vector3d>& ray_origin,
+                             const std::vector<Eigen::Vector3d>& ray_direction,
+                             const std::vector<Eigen::Vector3d>& world_point,
+                             std::vector<Eigen::Quaterniond>* solution_rotation,
+                             std::vector<Eigen::Vector3d>* solution_translation,
+                             std::vector<double>* solution_scale);
 }  // namespace theia
 
-#endif  // THEIA_VISION_SFM_TRANSFORMATION_DLS_SIMILARITY_TRANSFORM_H_
+#endif  // THEIA_VISION_SFM_TRANSFORMATION_GDLS_SIMILARITY_TRANSFORM_H_

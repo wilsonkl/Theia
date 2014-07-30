@@ -70,7 +70,7 @@ SET(THEIA_SRC
   vision/sfm/pose/util.cc
   vision/sfm/projection_matrix.cc
   vision/sfm/transformation/align_point_clouds.cc
-  vision/sfm/transformation/dls_similarity_transform.cc
+  vision/sfm/transformation/gdls_similarity_transform.cc
   vision/sfm/triangulation/triangulation.cc
   )
 
@@ -149,7 +149,7 @@ IF (BUILD_TESTING)
   GTEST(vision/sfm/pose/global_orientation)
   GTEST(vision/sfm/pose/perspective_three_point)
   GTEST(vision/sfm/transformation/align_point_clouds)
-  GTEST(vision/sfm/transformation/dls_similarity_transform)
+  GTEST(vision/sfm/transformation/gdls_similarity_transform)
   GTEST(vision/sfm/triangulation/triangulation)
 
 ENDIF (BUILD_TESTING)

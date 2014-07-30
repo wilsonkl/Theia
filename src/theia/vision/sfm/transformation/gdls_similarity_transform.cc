@@ -32,7 +32,7 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#include "theia/vision/sfm/transformation/dls_similarity_transform.h"
+#include "theia/vision/sfm/transformation/gdls_similarity_transform.h"
 
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
@@ -64,20 +64,19 @@ using dls_impl::LeftMultiplyMatrix;
 // cost function, and solve these equations via a Macaulay matrix to obtain the
 // roots (i.e., the 3 parameters of rotation). The translation and scale can
 // then be obtained through back-substitution.
-void DlsSimilarityTransform(const std::vector<Vector3d>& ray_origin,
-                            const std::vector<Vector3d>& ray_direction,
-                            const std::vector<Vector3d>& world_point,
-                            std::vector<Quaterniond>* solution_rotation,
-                            std::vector<Vector3d>* solution_translation,
-                            std::vector<double>* solution_scale) {
+void GdlsSimilarityTransform(const std::vector<Vector3d>& ray_origin,
+                             const std::vector<Vector3d>& ray_direction,
+                             const std::vector<Vector3d>& world_point,
+                             std::vector<Quaterniond>* solution_rotation,
+                             std::vector<Vector3d>* solution_translation,
+                             std::vector<double>* solution_scale) {
   CHECK_GE(ray_direction.size(), 4);
 
   const int num_correspondences = ray_direction.size();
   // The bottom-right symmetric block matrix of inverse(A^T * A). This is the
-  // generalized version of Matrix H from Eq. 25 in the Appendix of the DLS
+  // generalized version of Matrix H from Eq. 17 in the Appendix of the gDLS
   // paper (note that term appears exactly in the bottom right 3x3 of this
   // matrix).
-  // TODO(cmsweeney): Update this comment based on my paper.
   Matrix4d h_inverse = Matrix4d::Zero();
   for (int i = 0; i < num_correspondences; i++) {
     h_inverse(0, 0) = h_inverse(0, 0) + ray_origin[i].squaredNorm() -
@@ -116,12 +115,10 @@ void DlsSimilarityTransform(const std::vector<Vector3d>& ray_origin,
   const Matrix<double, 1, 9>& scale_factor = sv_helper.row(0);
   const Matrix<double, 3, 9>& translation_factor = sv_helper.block<3, 9>(1, 0);
 
-  // Compute the cost function J' of Eq. 17 in DLS paper. This is a factorized
+  // Compute the cost function C' of Eq. 15 in gDLS paper. This is a factorized
   // version where the rotation matrix parameters have been pulled out. The
   // entries to this equation are the coefficients to the cost function which is
   // a quartic in the rotation parameters.
-  //
-  // TODO(cmsweeney): Update these comments based on my paper.
   Matrix<double, 9, 9> ls_cost_coefficients = Matrix<double, 9, 9>::Zero();
   for (int i = 0; i < num_correspondences; i++) {
     const Matrix<double, 3, 9> cost_coeff_term =
@@ -133,13 +130,11 @@ void DlsSimilarityTransform(const std::vector<Vector3d>& ray_origin,
         ls_cost_coefficients + cost_coeff_term.transpose() * cost_coeff_term;
   }
 
-  // Extract the coefficients of the jacobian (Eq. 18) from the
+  // Extract the coefficients of the jacobian (Eq. 16) from the
   // ls_cost_coefficients matrix. The jacobian represent 3 monomials in the
   // rotation parameters. Each entry of the jacobian will be 0 at the roots of
   // the polynomial, so we can arrange a system of polynomials from these
   // equations.
-  //
-  // TODO(cmsweeney): Update these comments based on my paper.
   double f1_coeff[20];
   double f2_coeff[20];
   double f3_coeff[20];
