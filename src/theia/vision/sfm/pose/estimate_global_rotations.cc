@@ -159,6 +159,7 @@ bool EstimateGlobalRotationsLinear(
   SetupSparseLinearSystem(relative_rotations, view_id_map, &lhs, &rhs);
 
   // Setup sparse QR solver.
+  // TODO(cmsweeney): Use Eigen's SPQR wrapper.
   Eigen::SparseQR<SparseMatrix, Eigen::COLAMDOrdering<int> >
       sparse_qr_solver(lhs);
 
