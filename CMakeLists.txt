@@ -231,11 +231,12 @@ ENDIF (OPENMP)
 ADD_SUBDIRECTORY(libraries)
 INCLUDE_DIRECTORIES(
   libraries
+  ${agast_SOURCE_DIR}
   ${gtest_SOURCE_DIR}/include
   ${gtest_SOURCE_DIR}
   ${hayai_SOURCE_DIR}
-  ${vlfeat_SOURCE_DIR}
-  ${agast_SOURCE_DIR})
+  ${lemon_SOURCE_DIR}
+  ${vlfeat_SOURCE_DIR})
 
 INCLUDE("${CMAKE_MODULE_PATH}/OptimizeTheiaCompilerFlags.cmake")
 OptimizeTheiaCompilerFlags()

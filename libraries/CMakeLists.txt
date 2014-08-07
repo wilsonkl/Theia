@@ -5,5 +5,8 @@ ENDIF (${BUILD_TESTING})
 # Add Agast keypoint detector
 ADD_SUBDIRECTORY(agast)
 
+# Add Lemon graph library
+ADD_SUBDIRECTORY(lemon)
+
 # Add VLFeat
 ADD_SUBDIRECTORY(vlfeat)
