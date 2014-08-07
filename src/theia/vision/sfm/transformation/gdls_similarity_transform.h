@@ -32,8 +32,8 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_VISION_SFM_TRANSFORM_GDLS_SIMILARITY_TRANSFORM_H_
-#define THEIA_VISION_SFM_TRANSFORM_GDLS_SIMILARITY_TRANSFORM_H_
+#ifndef THEIA_VISION_SFM_TRANSFORMATION_GDLS_SIMILARITY_TRANSFORM_H_
+#define THEIA_VISION_SFM_TRANSFORMATION_GDLS_SIMILARITY_TRANSFORM_H_
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>

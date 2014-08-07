@@ -75,9 +75,9 @@ void GetRelativeRotationFromGlobalRotation(
 
     // Apply the rotation noise about each axis.
     Matrix3d rotation_noise =
-        (AngleAxisd(Radians(noise_std_dev(0)), Vector3d::UnitX()),
-         AngleAxisd(Radians(noise_std_dev(1)), Vector3d::UnitY()),
-         AngleAxisd(Radians(noise_std_dev(2)), Vector3d::UnitZ()))
+        (AngleAxisd(DegToRad(noise_std_dev(0)), Vector3d::UnitX()),
+         AngleAxisd(DegToRad(noise_std_dev(1)), Vector3d::UnitY()),
+         AngleAxisd(DegToRad(noise_std_dev(2)), Vector3d::UnitZ()))
             .toRotationMatrix();
     relative_rotation->rotation = rotation_noise * relative_rotation->rotation;
   }
@@ -115,7 +115,7 @@ void TestEstimateGlobalRotationsLinear(
   for (int i = 0; i < estimated_global_rotation.size(); i++) {
     const Matrix3d loop_matrix = FindOrDie(gt_global_rotation, i).transpose() *
                                  estimated_global_rotation[i];
-    const double angular_difference = Degrees(AngleAxisd(loop_matrix).angle());
+    const double angular_difference = RadToDeg(AngleAxisd(loop_matrix).angle());
     CHECK_LE(angular_difference, tolerance_in_degrees);
   }
 }
@@ -139,7 +139,7 @@ TEST(GlobalRotationLinear, SimpleRotationNoNoise) {
 
   for (int i = 0; i < 3; i++) {
     gt_global_rotation[i] =
-        AngleAxisd(Radians(i * 10.0), Vector3d::UnitY()).toRotationMatrix();
+        AngleAxisd(DegToRad(i * 10.0), Vector3d::UnitY()).toRotationMatrix();
   }
 
   const std::vector<ViewIdPair> pairwise_indices = { { 0, 1 }, { 0, 2 },
@@ -154,7 +154,7 @@ TEST(GlobalRotationLinear, SimpleRotationWithNoise) {
 
   for (int i = 0; i < 3; i++) {
     gt_global_rotation[i] =
-        AngleAxisd(Radians(i * 10.0), Vector3d::UnitY()).toRotationMatrix();
+        AngleAxisd(DegToRad(i * 10.0), Vector3d::UnitY()).toRotationMatrix();
   }
 
   const std::vector<ViewIdPair> pairwise_indices = { { 0, 1 }, { 0, 2 },
@@ -170,7 +170,7 @@ TEST(GlobalRotationLinear, NinetyDegreeRotation) {
 
   for (int i = 0; i < 3; i++) {
     gt_global_rotation[i] =
-        AngleAxisd(Radians(i * 90.0), Vector3d::UnitY()).toRotationMatrix();
+        AngleAxisd(DegToRad(i * 90.0), Vector3d::UnitY()).toRotationMatrix();
   }
 
   const std::vector<ViewIdPair> pairwise_indices = { { 0, 1 }, { 0, 2 },
@@ -186,7 +186,7 @@ TEST(GlobalRotationLinear, NonConsecutiveIds) {
 
   for (int i = 0; i < 3; i++) {
     gt_global_rotation[3 * i] =
-        AngleAxisd(Radians(i * 10.0), Vector3d::UnitY()).toRotationMatrix();
+        AngleAxisd(DegToRad(i * 10.0), Vector3d::UnitY()).toRotationMatrix();
   }
 
   const std::vector<ViewIdPair> pairwise_indices = { { 0, 3 }, { 0, 6 },
@@ -202,7 +202,7 @@ TEST(GlobalRotationLinear, NonuniformWeighting) {
 
   for (int i = 0; i < 3; i++) {
     gt_global_rotation[i] =
-        AngleAxisd(Radians(i * 10.0), Vector3d::UnitY()).toRotationMatrix();
+        AngleAxisd(DegToRad(i * 10.0), Vector3d::UnitY()).toRotationMatrix();
   }
 
   const std::vector<ViewIdPair> pairwise_indices = { { 0, 1 }, { 0, 2 },
@@ -224,7 +224,7 @@ TEST(GlobalRotationLinear, ManyViews) {
   for (int i = 1; i < kNumViews; i++) {
     // Generate a random rotation within 60 deg around a random axis
     gt_global_rotation[i] =
-        AngleAxisd(Radians(RandDouble(0, 60.0)),
+        AngleAxisd(DegToRad(RandDouble(0, 60.0)),
                    Vector3d::Random().normalized()).toRotationMatrix();
   }
 

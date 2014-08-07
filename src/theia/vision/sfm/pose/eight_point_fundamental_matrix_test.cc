@@ -149,7 +149,7 @@ void BasicNormalizedTest() {
   };
 
   const Quaterniond soln_rotation(
-      AngleAxisd(Radians(13.0), Vector3d(0.0, 0.0, 1.0)));
+      AngleAxisd(DegToRad(13.0), Vector3d(0.0, 0.0, 1.0)));
   const Vector3d soln_translation(1.0, 0.5, 1.5);
   const double kNoise = 0.0 / 512.0;
   const double kMaxReprojectionError = 1e-12;
@@ -179,7 +179,7 @@ TEST(NormalizedEightPoint, NoiseTest) {
   };
 
   const Quaterniond soln_rotation(
-      AngleAxisd(Radians(13.0), Vector3d(0.0, 0.0, 1.0)));
+      AngleAxisd(DegToRad(13.0), Vector3d(0.0, 0.0, 1.0)));
   const Vector3d soln_translation(1.0, 0.5, 0.0);
   const double kNoise = 1.0 / 512.0;
   const double kMaxReprojectionError = 1e-4;
@@ -219,7 +219,7 @@ void BasicGoldStandardTest() {
   };
 
   const Quaterniond soln_rotation(
-      AngleAxisd(Radians(13.0), Vector3d(0.0, 0.0, 1.0)));
+      AngleAxisd(DegToRad(13.0), Vector3d(0.0, 0.0, 1.0)));
   const Vector3d soln_translation(1.0, 0.5, 1.5);
   const double kNoise = 0.0 / 512.0;
   const double kMaxReprojectionError = 1e-12;
@@ -249,7 +249,7 @@ TEST(GoldStandardEightPoint, NoiseTest) {
   };
 
   const Quaterniond soln_rotation(
-      AngleAxisd(Radians(13.0), Vector3d(0.0, 0.0, 1.0)));
+      AngleAxisd(DegToRad(13.0), Vector3d(0.0, 0.0, 1.0)));
   const Vector3d soln_translation(1.0, 0.5, 0.0);
   const double kNoise = 1.0 / 512.0;
   const double kMaxReprojectionError = 1e-5;

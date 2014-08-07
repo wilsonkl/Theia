@@ -108,18 +108,21 @@ void TestTriangulationManyPoints(const double projection_noise,
 
   // Sets some test rotations and translations.
   static const Quaterniond kRotations[num_views] = {
-    Quaterniond(AngleAxisd(Radians(7.0), Vector3d(0.0, 0.0, 1.0).normalized())),
     Quaterniond(
-        AngleAxisd(Radians(12.0), Vector3d(0.0, 1.0, 0.0).normalized())),
+        AngleAxisd(DegToRad(7.0), Vector3d(0.0, 0.0, 1.0).normalized())),
     Quaterniond(
-        AngleAxisd(Radians(15.0), Vector3d(1.0, 0.0, 0.0).normalized())),
+        AngleAxisd(DegToRad(12.0), Vector3d(0.0, 1.0, 0.0).normalized())),
     Quaterniond(
-        AngleAxisd(Radians(20.0), Vector3d(1.0, 0.0, 1.0).normalized())),
+        AngleAxisd(DegToRad(15.0), Vector3d(1.0, 0.0, 0.0).normalized())),
     Quaterniond(
-        AngleAxisd(Radians(11.0), Vector3d(0.0, 1.0, 1.0).normalized())),
-    Quaterniond(AngleAxisd(Radians(0.0), Vector3d(1.0, 1.0, 1.0).normalized())),
-    Quaterniond(AngleAxisd(Radians(5.0), Vector3d(0.0, 1.0, 1.0).normalized())),
-    Quaterniond(AngleAxisd(Radians(0.0), Vector3d(1.0, 1.0, 1.0).normalized()))
+        AngleAxisd(DegToRad(20.0), Vector3d(1.0, 0.0, 1.0).normalized())),
+    Quaterniond(
+        AngleAxisd(DegToRad(11.0), Vector3d(0.0, 1.0, 1.0).normalized())),
+    Quaterniond(
+        AngleAxisd(DegToRad(0.0), Vector3d(1.0, 1.0, 1.0).normalized())),
+    Quaterniond(
+        AngleAxisd(DegToRad(5.0), Vector3d(0.0, 1.0, 1.0).normalized())),
+    Quaterniond(AngleAxisd(DegToRad(0.0), Vector3d(1.0, 1.0, 1.0).normalized()))
   };
 
   static const Vector3d kTranslations[num_views] = {

@@ -32,8 +32,8 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_VISION_TRANSFORMATION_ALIGN_POINT_CLOUDS_H_
-#define THEIA_VISION_TRANSFORMATION_ALIGN_POINT_CLOUDS_H_
+#ifndef THEIA_VISION_SFM_TRANSFORMATION_ALIGN_POINT_CLOUDS_H_
+#define THEIA_VISION_SFM_TRANSFORMATION_ALIGN_POINT_CLOUDS_H_
 
 namespace theia {
 // Use Besl-McKay registration to align point clouds. We use SVD decomposition
@@ -75,4 +75,4 @@ void AlignPointCloudsUmeyama(const int num_points,
 
 }  // namespace theia
 
-#endif  // THEIA_VISION_TRANSFORMATION_ALIGN_POINT_CLOUDS_H_
+#endif  // THEIA_VISION_SFM_TRANSFORMATION_ALIGN_POINT_CLOUDS_H_

@@ -151,12 +151,12 @@ void BasicTest() {
                                             Vector3d(-1.0, 1.0, 2.0),
                                             Vector3d(2.0, 1.0, 3.0) };
   const Quaterniond soln_rotation = Quaterniond(
-      AngleAxisd(Radians(13.0), Vector3d(0.0, 0.0, 1.0)));
+      AngleAxisd(DegToRad(13.0), Vector3d(0.0, 0.0, 1.0)));
   const Vector3d soln_translation(1.0, 1.0, 1.0);
   const double soln_scale = 2.5;
   const double kNoise = 0.0;
   const double kMaxReprojectionError = 1.0 / 512.0;
-  const double kMaxAllowedRotationDifference = Radians(1e-4);
+  const double kMaxAllowedRotationDifference = DegToRad(1e-4);
   const double kMaxAllowedTranslationDifference = 1e-6;
   const double kMaxAllowedScaleDifference = 1e-6;
 
@@ -202,12 +202,12 @@ TEST(GdlsSimilarityTransform, NoiseTest) {
                                                 Vector3d(0.0, 3.0, 0.0) };
 
   const Quaterniond soln_rotation = Quaterniond(
-      AngleAxisd(Radians(13.0), Vector3d(0.0, 0.0, 1.0)));
+      AngleAxisd(DegToRad(13.0), Vector3d(0.0, 0.0, 1.0)));
   const Vector3d soln_translation(1.0, 1.0, 1.0);
   const double soln_scale = 2.5;
   const double kNoise = 1.0 / 512.0;
   const double kMaxReprojectionError = 5.0 / 512.0;
-  const double kMaxAllowedRotationDifference = Radians(1.0);
+  const double kMaxAllowedRotationDifference = DegToRad(1.0);
   const double kMaxAllowedTranslationDifference = 1e-3;
   const double kMaxAllowedScaleDifference = 1e-2;
 
@@ -238,14 +238,14 @@ TEST(GdlsSimilarityTransform, ManyPoints) {
   };
 
   static const double kRotationAngles[ARRAYSIZE(kAxes)] = {
-    Radians(7.0),
-    Radians(12.0),
-    Radians(15.0),
-    Radians(20.0),
-    Radians(11.0),
-    Radians(0.0),  // Tests no rotation.
-    Radians(5.0),
-    Radians(0.0)  // Tests no rotation and no translation.
+    DegToRad(7.0),
+    DegToRad(12.0),
+    DegToRad(15.0),
+    DegToRad(20.0),
+    DegToRad(11.0),
+    DegToRad(0.0),  // Tests no rotation.
+    DegToRad(5.0),
+    DegToRad(0.0)  // Tests no rotation and no translation.
   };
 
   static const Vector3d kTranslations[ARRAYSIZE(kAxes)] = {
@@ -278,7 +278,7 @@ TEST(GdlsSimilarityTransform, ManyPoints) {
   static const int num_points[3] = { 100, 500, 1000 };
   const double kNoise = 0.5 / 512.0;
   const double kMaxReprojectionError = 10.0 / 512.0;
-  const double kMaxAllowedRotationDifference = Radians(0.3);
+  const double kMaxAllowedRotationDifference = DegToRad(0.3);
   const double kMaxAllowedTranslationDifference = 1e-3;
   const double kMaxAllowedScaleDifference = 1e-2;
 
@@ -325,12 +325,12 @@ TEST(GdlsSimilarityTransform, NoRotation) {
                                                 Vector3d(3.0, 0.0, 0.0) };
 
   const Quaterniond soln_rotation = Quaterniond(
-      AngleAxisd(Radians(0.0), Vector3d(0.0, 0.0, 1.0)));
+      AngleAxisd(DegToRad(0.0), Vector3d(0.0, 0.0, 1.0)));
   const Vector3d soln_translation(1.0, 1.0, 1.0);
   const double soln_scale = 0.77;
   const double kNoise = 0.5 / 512.0;
   const double kMaxReprojectionError = 2.0 / 5.0;
-  const double kMaxAllowedRotationDifference = Radians(0.2);
+  const double kMaxAllowedRotationDifference = DegToRad(0.2);
   const double kMaxAllowedTranslationDifference = 5e-4;
   const double kMaxAllowedScaleDifference = 1e-2;
 
@@ -363,12 +363,12 @@ TEST(GdlsSimilarityTransform, NoTranslation) {
                                                 Vector3d(3.0, 0.0, 0.0) };
 
   const Quaterniond soln_rotation = Quaterniond(
-      AngleAxisd(Radians(13.0), Vector3d(0.0, 0.0, 1.0)));
+      AngleAxisd(DegToRad(13.0), Vector3d(0.0, 0.0, 1.0)));
   const Vector3d soln_translation(0.0, 0.0, 0.0);
   const double soln_scale = 2.5;
   const double kNoise = 1.0 / 512.0;
   const double kMaxReprojectionError = 4.0 / 512.0;
-  const double kMaxAllowedRotationDifference = Radians(0.5);
+  const double kMaxAllowedRotationDifference = DegToRad(0.5);
   const double kMaxAllowedTranslationDifference = 1e-3;
   const double kMaxAllowedScaleDifference = 1e-2;
 

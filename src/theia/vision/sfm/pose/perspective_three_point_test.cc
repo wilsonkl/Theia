@@ -84,7 +84,7 @@ void PoseFromThreeCalibratedTest(const double noise) {
   bool matched_transform = false;
   for (int i = 0; i < rotations.size(); ++i) {
     // Check that the rotation and translation are close.
-    double angular_diff = Degrees(Eigen::Quaterniond(
+    double angular_diff = RadToDeg(Eigen::Quaterniond(
         rotations[i]).angularDistance(Eigen::Quaterniond(gt_rotation)));
     double trans_diff = ((-gt_rotation * gt_translation) -
                          (-rotations[i] * translations[i])).norm();

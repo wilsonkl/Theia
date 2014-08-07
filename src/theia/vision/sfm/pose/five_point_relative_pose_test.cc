@@ -140,11 +140,11 @@ void BasicTest() {
                                   Vector3d(-1.0, 1.0, 2.0),
                                   Vector3d(2.0, 1.0, 3.0) };
   const Matrix3d soln_rotation = Quaterniond(
-      AngleAxisd(Radians(13.0), Vector3d(0.0, 0.0, 1.0))).toRotationMatrix();
+      AngleAxisd(DegToRad(13.0), Vector3d(0.0, 0.0, 1.0))).toRotationMatrix();
   const Vector3d soln_translation(1.0, 1.0, 1.0);
   const double kNoise = 0.0 / 512.0;
-  const double kMaxAllowedRotationDifference = Radians(1e-2);
-  const double kMaxAllowedAngleBetweenTranslations = Radians(1e-2);
+  const double kMaxAllowedRotationDifference = DegToRad(1e-2);
+  const double kMaxAllowedAngleBetweenTranslations = DegToRad(1e-2);
 
   TestFivePointResultWithNoise(points_3d,
                                kNoise,
@@ -170,12 +170,12 @@ TEST(FivePointRelativePose, NoiseTest) {
                                  Vector3d(-1.0, 1.0, 2.0),
                                  Vector3d(2.0, 1.0, 3.0)};
   const Matrix3d soln_rotation = Quaterniond(
-      AngleAxisd(Radians(13.0), Vector3d(0.0, 0.0, 1.0))).toRotationMatrix();
+      AngleAxisd(DegToRad(13.0), Vector3d(0.0, 0.0, 1.0))).toRotationMatrix();
 
   const Vector3d soln_translation(1.0, 1.0, 1.0);
   const double kNoise = 1.0 / 512.0;
-  const double kMaxAllowedRotationDifference = Radians(1.0);
-  const double kMaxAllowedAngleBetweenTranslations = Radians(1.0);
+  const double kMaxAllowedRotationDifference = DegToRad(1.0);
+  const double kMaxAllowedAngleBetweenTranslations = DegToRad(1.0);
 
   TestFivePointResultWithNoise(points_3d,
                                kNoise,
@@ -193,12 +193,12 @@ TEST(FivePointRelativePose, ForwardMotion) {
                                  Vector3d(-1.0, 1.0, 2.0),
                                  Vector3d(2.0, 1.0, 3.0)};
   const Matrix3d soln_rotation = Quaterniond(
-      AngleAxisd(Radians(13.0), Vector3d(0.0, 0.0, 1.0))).toRotationMatrix();
+      AngleAxisd(DegToRad(13.0), Vector3d(0.0, 0.0, 1.0))).toRotationMatrix();
 
   const Vector3d soln_translation(0.0, 0.0, 1.0);
   const double kNoise = 1.0 / 512.0;
-  const double kMaxAllowedRotationDifference = Radians(2.0);
-  const double kMaxAllowedAngleBetweenTranslations = Radians(5.0);
+  const double kMaxAllowedRotationDifference = DegToRad(2.0);
+  const double kMaxAllowedAngleBetweenTranslations = DegToRad(5.0);
 
   TestFivePointResultWithNoise(points_3d,
                                kNoise,
@@ -216,12 +216,12 @@ TEST(FivePointRelativePose, NoRotation) {
                                  Vector3d(-1.0, 1.0, 2.0),
                                  Vector3d(2.0, 1.0, 3.0)};
   const Matrix3d soln_rotation = Quaterniond(
-      AngleAxisd(Radians(0.0), Vector3d(0.0, 0.0, 1.0))).toRotationMatrix();
+      AngleAxisd(DegToRad(0.0), Vector3d(0.0, 0.0, 1.0))).toRotationMatrix();
 
   const Vector3d soln_translation(1.0, 1.0, 1.0);
   const double kNoise = 1.0 / 512.0;
-  const double kMaxAllowedRotationDifference = Radians(1.0);
-  const double kMaxAllowedAngleBetweenTranslations = Radians(1.0);
+  const double kMaxAllowedRotationDifference = DegToRad(1.0);
+  const double kMaxAllowedAngleBetweenTranslations = DegToRad(1.0);
 
   TestFivePointResultWithNoise(points_3d,
                                kNoise,

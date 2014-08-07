@@ -43,12 +43,15 @@
 
 namespace theia {
 
-inline double Degrees(double angle_radians) {
-  return 180.0 * angle_radians / M_PI;
+static constexpr double kRadToDeg = 180.0 / M_PI;
+static constexpr double kDegToRad = M_PI / 180.0;
+
+inline double RadToDeg(double angle_radians) {
+  return angle_radians * kRadToDeg;
 }
 
-inline double Radians(double angle_degrees) {
-  return angle_degrees * M_PI / 180.0;
+inline double DegToRad(double angle_degrees) {
+  return angle_degrees * kDegToRad;
 }
 
 }  // namespace theia
