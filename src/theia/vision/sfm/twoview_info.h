@@ -32,18 +32,31 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_VISION_SFM_TYPES_H_
-#define THEIA_VISION_SFM_TYPES_H_
+#ifndef THEIA_VISION_SFM_TWOVIEW_INFO_H_
+#define THEIA_VISION_SFM_TWOVIEW_INFO_H_
 
-#include <cstdint>
-#include <utility>
+#include <Eigen/Core>
+
+#include "theia/vision/sfm/types.h"
 
 namespace theia {
 
-typedef uint32_t ViewId;
-typedef uint32_t TrackId;
-typedef std::pair<ViewId, ViewId> ViewIdPair;
+// A struct to hold match and projection data between two views. It is assumed
+// that the first view is at the origin with an identity rotation.
+struct TwoViewInfo {
+  TwoViewInfo() {}
+
+  Eigen::Vector3d position_2;
+  Eigen::Vector3d rotation_2;
+
+  // Number of 3d points that could be triangulated between the images.
+  int num_3d_points;
+
+  // Number of features that were matched and geometrically verified betwen the
+  // images.
+  int num_matched_features;
+};
 
 }  // namespace theia
 
-#endif  // THEIA_VISION_SFM_TYPES_H_
+#endif  // THEIA_VISION_SFM_TWOVIEW_INFO_H_

@@ -73,6 +73,7 @@ SET(THEIA_SRC
   vision/sfm/transformation/align_point_clouds.cc
   vision/sfm/transformation/gdls_similarity_transform.cc
   vision/sfm/triangulation/triangulation.cc
+  vision/sfm/view_graph.cc
   )
 
 SET(THEIA_LIBRARY_DEPENDENCIES
@@ -153,5 +154,5 @@ IF (BUILD_TESTING)
   GTEST(vision/sfm/transformation/align_point_clouds)
   GTEST(vision/sfm/transformation/gdls_similarity_transform)
   GTEST(vision/sfm/triangulation/triangulation)
-
+  GTEST(vision/sfm/view_graph)
 ENDIF (BUILD_TESTING)

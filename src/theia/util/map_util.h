@@ -87,15 +87,42 @@ namespace theia {
 //      choose to resize the underlying storage)
 //  * It invalidates iterators (when it chooses to resize)
 //  * It default constructs a value object even if it doesn't need to
-//
-// This version assumes the key is printable, and includes it in the fatal log
-// message.
+template <class Collection>
+typename Collection::value_type::second_type& FindOrDie(
+    Collection& collection,  // NO_LINT
+    const typename Collection::value_type::first_type& key) {
+  typename Collection::iterator it = collection.find(key);
+  CHECK(it != collection.end()) << "Map key not found: " << key;
+  return it->second;
+}
+
+// Same as above but returns a const reference.
 template <class Collection>
 const typename Collection::value_type::second_type& FindOrDie(
     const Collection& collection,
     const typename Collection::value_type::first_type& key) {
   typename Collection::const_iterator it = collection.find(key);
   CHECK(it != collection.end()) << "Map key not found: " << key;
+  return it->second;
+}
+
+// Same as above but does not print the key.
+template <class Collection>
+typename Collection::value_type::second_type& FindOrDieNoPrint(
+    Collection& collection,  // NO_LINT
+    const typename Collection::value_type::first_type& key) {
+  typename Collection::iterator it = collection.find(key);
+  CHECK(it != collection.end());
+  return it->second;
+}
+
+// Same as above but returns a const reference.
+template <class Collection>
+const typename Collection::value_type::second_type& FindOrDieNoPrint(
+    const Collection& collection,
+    const typename Collection::value_type::first_type& key) {
+  typename Collection::const_iterator it = collection.find(key);
+  CHECK(it != collection.end());
   return it->second;
 }
 
@@ -128,6 +155,18 @@ bool InsertIfNotPresent(
   return ret.second;
 }
 
+// Insert a new value into a set or hash_set. If the value is not present in
+// the set then it is inserted, otherwise nothing happens. True indicates that
+// an insert took place, false indicates the value was already present.
+template <class Collection>
+bool InsertIfNotPresent(
+    Collection* const collection,
+    const typename Collection::value_type& value) {
+  std::pair<typename Collection::iterator, bool> ret =
+      collection->insert(typename Collection::value_type(value));
+  return ret.second;
+}
+
 // Perform a lookup in a map or hash_map.
 // Same as above but the returned pointer is not const and can be used to change
 // the stored value.
@@ -136,6 +175,20 @@ typename Collection::value_type::second_type* FindOrNull(
     Collection& collection,  // NOLINT
     const typename Collection::value_type::first_type& key) {
   typename Collection::iterator it = collection.find(key);
+  if (it == collection.end()) {
+    return 0;
+  }
+  return &it->second;
+}
+
+// Perform a lookup in a map or hash_map.
+// Same as above but the returned pointer is not const and can be used to change
+// the stored value.
+template <class Collection>
+const typename Collection::value_type::second_type* FindOrNull(
+    const Collection& collection,
+    const typename Collection::value_type::first_type& key) {
+  typename Collection::const_iterator it = collection.find(key);
   if (it == collection.end()) {
     return 0;
   }
