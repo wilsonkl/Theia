@@ -37,68 +37,137 @@
 #include <Eigen/Core>
 #include <Eigen/LU>
 #include <Eigen/SVD>
+#include <glog/logging.h>
+
+#include "theia/vision/sfm/pose/util.h"
 
 namespace theia {
 
+using Eigen::DiagonalMatrix;
+using Eigen::Map;
+using Eigen::Matrix;
 using Eigen::Matrix3d;
 using Eigen::Vector3d;
-
-namespace {
-
-inline Matrix3d CreateCMatrix(const Matrix3d& a, const Matrix3d& b) {
-  const double a1_b3 = a.col(0).dot(b.col(2));
-  const double a2_b3 = a.col(1).dot(b.col(2));
-  Matrix3d cmatrix;
-  cmatrix <<
-      a1_b3 * a1_b3, a(2, 0) * a(2, 0) + a(2, 2) * a(2, 2), 1,
-      a2_b3 * a1_b3, a(2, 0) * a(2, 1), 0,
-      a2_b3 * a2_b3, a(2, 1) * a(2, 1) + a(2, 2) * a(2, 2), 1;
-  return cmatrix;
-}
-
-}  // namespace
 
 // Given a fundmental matrix, decompose the fundmental matrix and recover focal
 // lengths f1, f2 >0 such that diag([f2 f2 1]) F diag[f1 f1 1]) is a valid
 // essential matrix. This assumes a principal point of (0, 0) for both cameras.
-//
-// This code is based off of the paper "Recovering Unknown Focal Lengths in
-// Self-Calibration: An Essentially Linear Algorithm and Degenerate
-// Configurations" by Newsam et al, International Archives of Photogrammetry and
-// Remote Sensing (1996).
-//
 // Returns true on success, false otherwise.
 bool FocalLengthsFromFundamentalMatrix(const double fmatrix[3 * 3],
                                        double* focal_length1,
                                        double* focal_length2) {
-  Eigen::Map<const Eigen::Matrix3d> fmatrix_map(fmatrix);
-  Eigen::JacobiSVD<Matrix3d> svd(fmatrix_map,
-                                 Eigen::ComputeFullU | Eigen::ComputeFullV);
-  const Matrix3d& matrix_u = svd.matrixU();
-  const Vector3d& singular_values = svd.singularValues();
+  Map<const Matrix3d> fundamental_matrix(fmatrix);
 
-  if (sqrt(fabs(singular_values(0))) == 0.0 ||
-      sqrt(fabs(singular_values(1))) == 0.0) {
+  // Compute the epipoles for each image.
+  const Vector3d epipole1 = fundamental_matrix.jacobiSvd(Eigen::ComputeFullV)
+                                .matrixV()
+                                .rightCols<1>();
+  const Vector3d epipole2 = fundamental_matrix.transpose()
+                                .jacobiSvd(Eigen::ComputeFullV)
+                                .matrixV()
+                                .rightCols<1>();
+  if (epipole1.x() == 0 || epipole2.x() == 0) {
+    VLOG(2) << "Optical axes are collinear. Cannot recover the focal length.";
     return false;
   }
 
-  const Matrix3d lhs = CreateCMatrix(matrix_u, fmatrix_map);
-  const Vector3d rhs(singular_values(0) * singular_values(0),
-                     0,
-                     singular_values(1) * singular_values(1));
+  // Find the rotation that takes epipole1 to (e_0, 0, e_2) and the
+  // epipole2 to (e'_0, 0, e'_2). If we form a rotation matrix:
+  // R = [ cos x  -sin x  0 ]
+  //     [ sin x   cos x  0 ]
+  //     [ 0       0      1 ]
+  // then we can solve for the angle x such that R * e1 = (e_1, 0, e_3).
+  // We can solve this simply be investigating the second row and noting that
+  // e1(0) * sin x + e2 * cos x = 0.
+  const double theta1 = atan2(-epipole1(1), epipole1(0));
+  const double theta2 = atan2(-epipole2(1), epipole2(0));
 
-  const Vector3d omegas = lhs.fullPivLu().solve(rhs);
+  Matrix3d rotation1, rotation2;
+  rotation1 <<
+      cos(theta1), -sin(theta1), 0,
+      sin(theta1), cos(theta1), 0,
+      0, 0, 1;
+  rotation2 <<
+      cos(theta2), -sin(theta2), 0,
+      sin(theta2), cos(theta2), 0,
+      0, 0, 1;
 
-  const double focal_length1_sq = 1.0 / (1.0 - omegas(0));
-  const double focal_length2_sq = 1.0 + omegas(1) / omegas(2);
+  const Matrix3d rotated_fmatrix =
+      rotation2 * fundamental_matrix * rotation1.transpose();
+  // With the normalized epipoles, the fundamental matrix is now of the form:
+  // F = [ e'_2   0    0   ] [ a b a ] [ e_2   0     0  ]
+  //     [ 0      1    0   ] [ c d c ] [ 0     1     0  ]
+  //     [ 0      0  -e'_1 ] [ a b a ] [ 0     0   -e_1 ]
+  const Vector3d rotated_epipole1 = rotation1 * epipole1;
+  const Vector3d rotated_epipole2 = rotation2 * epipole2;
+
+  Matrix3d factorized_matrix =
+      DiagonalMatrix<double, 3>(rotated_epipole2(2), 1, -rotated_epipole2(0))
+          .inverse() *
+      rotated_fmatrix *
+      DiagonalMatrix<double, 3>(rotated_epipole1(2), 1, -rotated_epipole1(0))
+          .inverse();
+
+  // For convenience, as defined above.
+  const double a = factorized_matrix(0, 0);
+  const double b = factorized_matrix(0, 1);
+  const double c = factorized_matrix(1, 0);
+  const double d = factorized_matrix(1, 1);
+
+  const double focal_length1_sq =
+      (-a * c * rotated_epipole1(0) * rotated_epipole1(0)) /
+      (a * c * rotated_epipole1(2) * rotated_epipole1(2) + b * d);
+  const double focal_length2_sq =
+      (-a * b * rotated_epipole2(0) * rotated_epipole2(0)) /
+      (a * b * rotated_epipole2(2) * rotated_epipole2(2) + c * d);
 
   if (focal_length1_sq < 0 || focal_length2_sq < 0) {
+    VLOG(2) << "Real focal length values could not be extracted.";
     return false;
   }
 
   *focal_length1 = sqrt(focal_length1_sq);
   *focal_length2 = sqrt(focal_length2_sq);
   return true;
+}
+
+
+void ProjectionMatricesFromFundamentalMatrix(const double fmatrix[3 * 3],
+                                             double pmatrix1[3 * 4],
+                                             double pmatrix2[3 * 4]) {
+  Map<const Matrix3d> fmatrix_map(fmatrix);
+  const Vector3d right_epipole = fmatrix_map.jacobiSvd(Eigen::ComputeFullV)
+      .matrixV().rightCols<1>();
+
+  Map<Matrix3d>(pmatrix1, 3, 3) = Matrix3d::Identity();
+  Map<Vector3d>(pmatrix1 + 9, 3) = Vector3d::Zero();
+
+  Map<Matrix3d>(pmatrix2, 3, 3) =
+      CrossProductMatrix(right_epipole) * fmatrix_map.transpose();
+  Map<Vector3d>(pmatrix2 + 9, 3) = right_epipole;
+}
+
+// Ported from Hartley and Zisserman:
+// http://www.robots.ox.ac.uk/~vgg/hzbook/code/vgg_multiview/vgg_F_from_P.m
+void FundamentalMatrixFromProjectionMatrices(const double pmatrix1[3 * 4],
+                                             const double pmatrix2[3 * 4],
+                                             double fmatrix[3 * 3]) {
+  Map<const Matrix<double, 3, 4> > projection1(pmatrix1);
+  Map<const Matrix<double, 3, 4> > projection2(pmatrix2);
+  Map<Matrix3d> fundamental_matrix(fmatrix);
+
+  const int index1[3] = {1, 2, 0};
+  const int index2[3] = {2, 0, 1};
+  Eigen::Matrix4d temp_mat;
+  for (int r = 0; r < 3; r++) {
+    temp_mat.row(2) = projection1.row(index1[r]);
+    temp_mat.row(3) = projection1.row(index2[r]);
+    for (int c = 0; c < 3; c++) {
+      temp_mat.row(0) = projection2.row(index1[c]);
+      temp_mat.row(1) = projection2.row(index2[c]);
+      fundamental_matrix(r, c) = temp_mat.determinant();
+    }
+  }
 }
 
 }  // namespace theia

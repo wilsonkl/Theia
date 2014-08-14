@@ -32,6 +32,7 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
+#include <cmath>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <Eigen/SVD>
@@ -42,6 +43,7 @@
 #include "theia/test/benchmark.h"
 #include "theia/util/random.h"
 #include "theia/vision/sfm/pose/eight_point_fundamental_matrix.h"
+#include "theia/vision/sfm/pose/fundamental_matrix_util.h"
 #include "theia/vision/sfm/pose/util.h"
 #include "theia/vision/sfm/projection_matrix.h"
 #include "theia/vision/sfm/triangulation/triangulation.h"
@@ -85,25 +87,20 @@ void CheckReprojectionError(const std::vector<Vector2d>& image_1_points,
                             const std::vector<Vector2d>& image_2_points,
                             const Matrix3d& fundamental_matrix,
                             const double max_reprojection_error) {
-  // Compute the right projection matrix.
-  Eigen::JacobiSVD<Matrix3d> f_svd(fundamental_matrix, Eigen::ComputeFullU);
-  const Vector3d epipole_right = f_svd.matrixU().rightCols<1>();
-  ProjectionMatrix right_projection;
-  right_projection.col(3) = epipole_right;
-  right_projection.block<3, 3>(0, 0) =
-      CrossProductMatrix(epipole_right) * fundamental_matrix;
-
-  // The left projection matrix is the identity.
-  const ProjectionMatrix identity_transformation =
-      TransformationMatrix::Identity().matrix();
+  // Compute the projection matrices.
+  ProjectionMatrix left_projection, right_projection;
+  ProjectionMatricesFromFundamentalMatrix(fundamental_matrix.data(),
+                                          right_projection.data(),
+                                          left_projection.data());
 
   for (int i = 0; i < image_1_points.size(); i++) {
     // Triangulate the world point.
     Vector3d triangulated_point;
-    CHECK(
-        Triangulate(identity_transformation, right_projection,
-                    image_1_points[i], image_2_points[i], &triangulated_point));
-    const Vector3d left_point = triangulated_point;
+    CHECK(TriangulateDLT(left_projection, right_projection,
+                         image_1_points[i], image_2_points[i],
+                         &triangulated_point));
+    const Vector3d left_point =
+        left_projection * triangulated_point.homogeneous();
     const Vector3d right_point =
         right_projection * triangulated_point.homogeneous();
 
@@ -185,76 +182,6 @@ TEST(NormalizedEightPoint, NoiseTest) {
   const double kMaxReprojectionError = 1e-4;
 
   EightPointNormalizedWithNoiseTest(points_3d, kNoise, soln_rotation,
-                                    soln_translation, kMaxReprojectionError);
-}
-
-void EightPointGoldStandardWithNoiseTest(const std::vector<Vector3d>& points_3d,
-                                       const double projection_noise_std_dev,
-                                       const Quaterniond& expected_rotation,
-                                       const Vector3d& expected_translation,
-                                       const double kMaxReprojectionError) {
-  InitRandomGenerator();
-  std::vector<Vector2d> image_1_points;
-  std::vector<Vector2d> image_2_points;
-  GenerateImagePoints(points_3d, projection_noise_std_dev, expected_rotation,
-                      expected_translation, &image_1_points, &image_2_points);
-  // Compute fundamental matrix.
-  Matrix3d fundamental_matrix;
-  EXPECT_TRUE(GoldStandardEightPoint(image_1_points, image_2_points,
-                                   &fundamental_matrix));
-
-  CheckReprojectionError(image_1_points, image_2_points, fundamental_matrix,
-                         kMaxReprojectionError);
-}
-
-void BasicGoldStandardTest() {
-  const std::vector<Vector3d> points_3d = { Vector3d(-1.0, 3.0, 3.0),
-                                            Vector3d(1.0, -1.0, 2.0),
-                                            Vector3d(-1.0, 1.0, 2.0),
-                                            Vector3d(2.0, 1.0, 3.0),
-                                            Vector3d(-1.0, -3.0, 2.0),
-                                            Vector3d(1.0, -2.0, 1.0),
-                                            Vector3d(-1.0, 4.0, 2.0),
-                                            Vector3d(-2.0, 2.0, 3.0)
-  };
-
-  const Quaterniond soln_rotation(
-      AngleAxisd(DegToRad(13.0), Vector3d(0.0, 0.0, 1.0)));
-  const Vector3d soln_translation(1.0, 0.5, 1.5);
-  const double kNoise = 0.0 / 512.0;
-  const double kMaxReprojectionError = 1e-12;
-
-  EightPointGoldStandardWithNoiseTest(
-      points_3d, kNoise, soln_rotation, soln_translation,
-      kMaxReprojectionError);
-}
-
-TEST(GoldStandardEightPoint, BasicTest) {
-  BasicGoldStandardTest();
-}
-
-BENCHMARK(GoldStandardEightPoint, Benchmark, 100, 1000) {
-  BasicGoldStandardTest();
-}
-
-TEST(GoldStandardEightPoint, NoiseTest) {
-  const std::vector<Vector3d> points_3d = { Vector3d(-1.0, 3.0, 3.0),
-                                            Vector3d(1.0, -1.0, 2.0),
-                                            Vector3d(-1.0, 1.0, 2.0),
-                                            Vector3d(2.0, 1.0, 3.0),
-                                            Vector3d(-1.0, -3.0, 2.0),
-                                            Vector3d(1.0, -2.0, 1.0),
-                                            Vector3d(-1.0, 4.0, 2.0),
-                                            Vector3d(-2.0, 2.0, 3.0)
-  };
-
-  const Quaterniond soln_rotation(
-      AngleAxisd(DegToRad(13.0), Vector3d(0.0, 0.0, 1.0)));
-  const Vector3d soln_translation(1.0, 0.5, 0.0);
-  const double kNoise = 1.0 / 512.0;
-  const double kMaxReprojectionError = 1e-5;
-
-  EightPointGoldStandardWithNoiseTest(points_3d, kNoise, soln_rotation,
                                     soln_translation, kMaxReprojectionError);
 }
 

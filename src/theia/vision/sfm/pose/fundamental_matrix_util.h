@@ -46,6 +46,21 @@ bool FocalLengthsFromFundamentalMatrix(const double fmatrix[3 * 3],
                                        double* focal_length1,
                                        double* focal_length2);
 
+// Computes the projection matrices corresponding to the fundamental matrix such
+// that if y^t * F * x = 0, pmatrix1 corresponds to the camera observing y and
+// pmatrix2 corresponds to the camera observing x.
+void ProjectionMatricesFromFundamentalMatrix(const double fmatrix[3 * 3],
+                                             double pmatrix1[3 * 4],
+                                             double pmatrix2[3 * 4]);
+
+// Constructs projection matrices from the input fundamental matrix. The
+// fundamental matrix is such that point1^t * fmatrix * point2 = 0 for point1 in
+// the image corresponding to pmatrix1 and point2 in the image corresponding to
+// pmatrix2.
+void FundamentalMatrixFromProjectionMatrices(const double pmatrix1[3 * 4],
+                                             const double pmatrix2[3 * 4],
+                                             double fmatrix[3 * 3]);
+
 }  // namespace theia
 
 #endif  // THEIA_VISION_SFM_POSE_FUNDAMENTAL_MATRIX_UTIL_H_

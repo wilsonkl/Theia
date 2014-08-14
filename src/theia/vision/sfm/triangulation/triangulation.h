@@ -41,14 +41,26 @@
 #include "theia/vision/sfm/projection_matrix.h"
 
 namespace theia {
-// Triangulates 2 posed views using the DLT method from HZZ 12.2 p 312. The
-// inputs are the projection matrices and the unit image observations. Returns
-// true on success and false on failure (e.g., if the point is at infinity).
+
+// Triangulates 2 posed views using the "Triangulation Made Easy" by Lindstrom
+// (CVPR 2010)". The inputs are the projection matrices and image points. For
+// two view reconstructions where only an essential matrix or fundamental matrix
+// is available you can use ProjectionMatricesFromFundamentalMatrix in
+// theia/vision/sfm/pose/fundamental_matrix_utils.h
 bool Triangulate(const ProjectionMatrix& pose_left,
                  const ProjectionMatrix& pose_right,
                  const Eigen::Vector2d& point_left,
                  const Eigen::Vector2d& point_right,
                  Eigen::Vector3d* triangulated_point);
+
+// Triangulates 2 posed views using the DLT method from HZZ 12.2 p 312. The
+// inputs are the projection matrices and the unit image observations. Returns
+// true on success and false on failure (e.g., if the point is at infinity).
+bool TriangulateDLT(const ProjectionMatrix& pose_left,
+                    const ProjectionMatrix& pose_right,
+                    const Eigen::Vector2d& point_left,
+                    const Eigen::Vector2d& point_right,
+                    Eigen::Vector3d* triangulated_point);
 
 // Computes n-view triangulation by computing the SVD that wil approximately
 // minimize reprojection error. The inputs are the projection matrices and the

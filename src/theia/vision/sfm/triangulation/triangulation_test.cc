@@ -64,15 +64,15 @@ double ReprojectionError(const TransformationMatrix& pose,
   return sq_reproj_error;
 }
 
-void TestTriangulationBasic(const Vector3d& point_3d,
-                            const Quaterniond& rel_rotation,
-                            const Vector3d& rel_translation,
-                            const double projection_noise,
-                            const double max_reprojection_error) {
+void TestTriangulationDLTBasic(const Vector3d& point_3d,
+                               const Quaterniond& rel_rotation,
+                               const Vector3d& rel_translation,
+                               const double projection_noise,
+                               const double max_reprojection_error) {
   InitRandomGenerator();
 
-  TransformationMatrix pose_left = TransformationMatrix::Identity();
-  TransformationMatrix pose_right = TransformationMatrixFromRt(
+  const TransformationMatrix pose_left = TransformationMatrix::Identity();
+  const TransformationMatrix pose_right = TransformationMatrixFromRt(
       rel_rotation.toRotationMatrix(), rel_translation);
 
   // Reproject point into both image 2, assume image 1 is identity rotation at
@@ -86,18 +86,56 @@ void TestTriangulationBasic(const Vector3d& point_3d,
     AddNoiseToProjection(projection_noise, &image_point_2);
   }
 
-  // Triangulate.
-  Vector3d triangulated_point;
-  EXPECT_TRUE(Triangulate(pose_left.matrix(), pose_right.matrix(),
-                          image_point_1, image_point_2, &triangulated_point));
+  // Triangulate with DLT.
+  Vector3d dlt_triangulated_point;
+  EXPECT_TRUE(
+      TriangulateDLT(pose_left.matrix(), pose_right.matrix(), image_point_1,
+                     image_point_2, &dlt_triangulated_point));
 
   // Check the reprojection error.
   EXPECT_LE(
-      ReprojectionError(pose_left, triangulated_point, image_point_1),
+      ReprojectionError(pose_left, dlt_triangulated_point, image_point_1),
       max_reprojection_error);
   EXPECT_LE(
-      ReprojectionError(pose_right, triangulated_point, image_point_2),
+      ReprojectionError(pose_right, dlt_triangulated_point, image_point_2),
       max_reprojection_error);
+}
+
+void TestTriangulationBasic(const Vector3d& point_3d,
+                            const Quaterniond& rel_rotation,
+                            const Vector3d& rel_translation,
+                            const double projection_noise,
+                            const double max_reprojection_error) {
+  InitRandomGenerator();
+
+  const TransformationMatrix pose1 = TransformationMatrixFromRt(
+      rel_rotation.toRotationMatrix(), rel_translation.normalized());
+  const TransformationMatrix pose2 = TransformationMatrix::Identity();
+
+  // Reproject point into both image 2, assume image 1 is identity rotation at
+  // the origin.
+  Vector2d image_point1 = (pose1 * point_3d).hnormalized();
+  Vector2d image_point2 = (pose2 * point_3d).hnormalized();
+
+  // Add projection noise if required.
+  if (projection_noise) {
+    AddNoiseToProjection(projection_noise, &image_point1);
+    AddNoiseToProjection(projection_noise, &image_point2);
+  }
+
+  // Triangulate with Optimal.
+  Vector3d triangulated_point;
+  EXPECT_TRUE(Triangulate(pose1.matrix(), pose2.matrix(), image_point1,
+                          image_point2, &triangulated_point));
+
+  // Check the reprojection error.
+  EXPECT_LE(
+      ReprojectionError(pose1, triangulated_point, image_point1),
+      max_reprojection_error);
+  EXPECT_LE(
+      ReprojectionError(pose2, triangulated_point, image_point2),
+      max_reprojection_error);
+
 }
 
 void TestTriangulationManyPoints(const double projection_noise,
@@ -201,6 +239,12 @@ TEST(Triangluation, BasicTest) {
 
   // Run the test.
   for (int i = 0; i < 2; i++) {
+    TestTriangulationDLTBasic(points_3d[i],
+                              kRotation,
+                              kTranslation,
+                              kProjectionNoise,
+                              kReprojectionTolerance);
+
     TestTriangulationBasic(points_3d[i],
                            kRotation,
                            kTranslation,
@@ -225,6 +269,12 @@ TEST(Triangluation, NoiseTest) {
 
   // Run the test.
   for (int i = 0; i < 2; i++) {
+    TestTriangulationDLTBasic(points_3d[i],
+                              kRotation,
+                              kTranslation,
+                              kProjectionNoise,
+                              kReprojectionTolerance);
+
     TestTriangulationBasic(points_3d[i],
                            kRotation,
                            kTranslation,
