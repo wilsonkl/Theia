@@ -81,6 +81,7 @@ SET(THEIA_LIBRARY_DEPENDENCIES
   ${CVD_LIBRARIES}
   ${GFLAGS_LIBRARIES}
   ${GLOG_LIBRARIES}
+  STATX
   vlfeat
   agast)
 
@@ -139,6 +140,7 @@ IF (BUILD_TESTING)
   GTEST(solvers/arrsac)
   GTEST(solvers/mlesac)
   GTEST(solvers/prosac)
+  GTEST(solvers/evsac)
   GTEST(solvers/ransac)
   GTEST(vision/matching/distance)
   GTEST(vision/sfm/camera/camera_pose)
