@@ -236,6 +236,8 @@ INCLUDE_DIRECTORIES(
   ${gtest_SOURCE_DIR}
   ${hayai_SOURCE_DIR}
   ${lemon_SOURCE_DIR}
+  ${optimo_SOURCE_DIR}
+  ${statx_SOURCE_DIR}
   ${vlfeat_SOURCE_DIR})
 
 INCLUDE("${CMAKE_MODULE_PATH}/OptimizeTheiaCompilerFlags.cmake")
