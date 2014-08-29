@@ -39,7 +39,7 @@ SET(OPTIMO_FOUND FALSE)
 
 FIND_PATH(OPTIMO_INCLUDE_DIR 
   NAMES optimo/solvers/bfgs.h
-  PATHS /usr/include /usr/local/include)
+  PATHS ${CMAKE_SOURCE_DIR}/libraries/optimo /usr/include /usr/local/include)
 
 IF(OPTIMO_INCLUDE_DIR)
   SET(OPTIMO_FOUND TRUE)
