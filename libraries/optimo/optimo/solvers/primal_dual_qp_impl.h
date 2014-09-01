@@ -72,16 +72,16 @@ PrimalDualQP<Scalar, n, m, p>::operator()(
   y.setConstant(1.0);
   y.block(0, 0, n, 1) = *x;
   const auto& lambdas = y.block(n, 0, m, 1);
-  const auto& nus = y.block(n + m, 0, p, 1);
+  //  const auto& nus = y.block(n + m, 0, p, 1);
 
   // Useful blocks
   Matrix<Scalar, Dynamic, 1> d(n);
   d.setConstant(0.0);
   d.block(0, 0, n, 1) = params.d;
   const auto& x_vec = y.block(0, 0, n, 1);
-  const auto& Q = F_.block(0, 0, n, n);
+  // const auto& Q = F_.block(0, 0, n, n);
   const auto& Ain = F_.block(0, n, n, m).transpose();
-  const auto& Aeq = F_.block(0, n + m, n, p).transpose();
+  // const auto& Aeq = F_.block(0, n + m, n, p).transpose();
 
   // Check if initial point is feasible!
   Matrix<Scalar, Dynamic, 1> ineq_x = params.Ain*(*x) - params.bin;

@@ -36,7 +36,7 @@ IF (COMMAND cmake_policy)
   CMAKE_POLICY(SET CMP0003 NEW)
 ENDIF (COMMAND cmake_policy)
 
-PROJECT (STATX C CXX)
+PROJECT (statx C CXX)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/libraries/statx/cmake/Modules/")
@@ -115,7 +115,7 @@ IF(WITH_CERES)
 ENDIF(WITH_CERES)
 
 # Include optimo headers
-FIND_PACKAGE(OPTIMO)
+FIND_PACKAGE(optimo)
 MESSAGE("-- Check for Optimo")
 IF(OPTIMO_FOUND)
   MESSAGE("-- Found optimo headers: ${OPTIMO_INCLUDE_DIR}")
