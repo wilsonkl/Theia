@@ -36,7 +36,7 @@ IF (COMMAND cmake_policy)
   CMAKE_POLICY(SET CMP0003 NEW)
 ENDIF (COMMAND cmake_policy)
 
-PROJECT (STATX C CXX) 
+PROJECT (STATX C CXX)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/libraries/statx/cmake/Modules/")
@@ -115,8 +115,8 @@ IF(WITH_CERES)
 ENDIF(WITH_CERES)
 
 # Include optimo headers
+FIND_PACKAGE(OPTIMO)
 MESSAGE("-- Check for Optimo")
-FIND_PACKAGE(OPTIMO REQUIRED)
 IF(OPTIMO_FOUND)
   MESSAGE("-- Found optimo headers: ${OPTIMO_INCLUDE_DIR}")
 ELSE(OPTIMO_FOUND)
@@ -139,7 +139,7 @@ IF (CMAKE_BUILD_TYPE STREQUAL "Release")
     # Linux
     IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
       IF (NOT GCC_VERSION VERSION_LESS 4.2)
-        SET (STATX_CXX_FLAGS 
+        SET (STATX_CXX_FLAGS
           "${STATX_CXX_FLAGS} -march=native -mtune=native -msse2 -msse3 -msse4")
       ENDIF (NOT GCC_VERSION VERSION_LESS 4.2)
     ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")
@@ -194,7 +194,7 @@ SET(default_link_libraries ${GLOG_LIBRARIES})
 IF(WITH_CERES)
 SET(statx_src ${statx_src} ${EVD_PREFIX_DIR}/gev_ceres.cc ${EVD_PREFIX_DIR}/gpd_ceres.cc)
 ADD_DEFINITIONS(-DWITH_CERES)
-SET(default_link_libraries ${default_link_libraries} ${CERES_LIBRARIES} 
+SET(default_link_libraries ${default_link_libraries} ${CERES_LIBRARIES}
   ${SUITESPARSE_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
 ENDIF(WITH_CERES)
 ADD_LIBRARY(statx STATIC ${statx_src})
@@ -209,11 +209,11 @@ IF (${STATX_BUILD_TESTING})
   #       GTEST(myclass_test myclass) will create a test executable myclass_test
   #       by automatically compiling myclass_test.cc and linking the mytest target
   ADD_LIBRARY(test_main test/test_main.cc)
-  TARGET_LINK_LIBRARIES(test_main gtest ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES} 
+  TARGET_LINK_LIBRARIES(test_main gtest ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES}
     ${CERES_LIBRARIES} ${SUITESPARSE_LIBRARIES})
   MACRO (GTEST NAME)
     ADD_EXECUTABLE(${NAME} ${NAME}.cc)
-    TARGET_LINK_LIBRARIES(${NAME} test_main gtest ${ARGN} ${GFLAGS_LIBRARIES} 
+    TARGET_LINK_LIBRARIES(${NAME} test_main gtest ${ARGN} ${GFLAGS_LIBRARIES}
       ${GLOG_LIBRARIES} ${CERES_LIBRARIES} ${SUITESPARSE_LIBRARIES})
     ADD_TEST(NAME ${NAME} COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${NAME})
   ENDMACRO (GTEST)
