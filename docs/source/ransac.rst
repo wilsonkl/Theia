@@ -48,6 +48,7 @@ requires you implement derived class of the :class:`Estimator` class.
 	  public:
 	   Estimator() {}
 	   virtual ~Estimator() {}
+	   virtual double SampleSize() const = 0;
 	   virtual bool EstimateModel(const std::vector<Datum>& data,
 				      std::vector<Model>* model) const = 0;
 	   virtual double Error(const Datum& data, const Model& model) const = 0;
@@ -72,11 +73,11 @@ requires you implement derived class of the :class:`Estimator` class.
 	 };
 
 	The only methods that are required to be implemented are the
-	:func:`Estimator::EstimateModel` and :func:`Estimator::Error`
-	methods. These methods specify how the model is estimated from the data
-	provided, and how the error residuals are calculated from a given
-	model. All other methods are optional to implement, but will only
-	enhance the output of RANSAC.
+	:func:`Estimator::EstimateModel`, :func:`Estimator::SampleSize`, and
+	:func:`Estimator::Error` methods. These methods specify how the model is
+	estimated from the data provided, and how the error residuals are
+	calculated from a given model. All other methods are optional to
+	implement, but will only enhance the output of RANSAC.
 
 Using the RANSAC classes
 ========================
@@ -88,7 +89,7 @@ have the same interface. When using a RANSAC (or RANSAC-variant) class, you
 simply need to create a ransac object, set up the parameters you want to use,
 and then call the :func:`Estimate <SampleConsensusEstimator::Estimate>` method.
 
-.. function:: bool SampleConsensusEstimator::Estimate(const std::vector<Datum>& data, const Estimator<Datum, Model>& estimator, Model* best_model)
+.. function:: bool SampleConsensusEstimator::Estimate(const std::vector<Datum>& data, Model* best_model, RansacSummary* summary)
 
   This is the main (and often the only) method you use when performing RANSAC
   (or a variant). It computes a model given the data and the :class:`Estimator`
@@ -152,6 +153,9 @@ We will illustrate the use of the RANSAC class with a simple line estimation exa
 
    // Estimator class.
    class LineEstimator: public Estimator<Point, Line> {
+     // Number of points needed to estimate a line.
+     double SampleSize() { return 2; }
+
      // Estimate a line from two points.
      bool EstimateModel(const std::vector<Point>& data,
                         std::vector<Line>* models) const {
@@ -195,15 +199,18 @@ use a RANSAC method to use the :class:`LineEstimator`.
       // Estimate the line with RANSAC.
       LineEstimator line_estimator;
       Line best_line;
-      // Create Ransac object, specifying the number of points to sample to
-      // generate a model estimation.
-      Ransac<Point, Line> ransac_estimator(2);
       // Set the ransac parameters.
       RansacParameters params;
       params.error_thresh = 0.1;
+
+      // Create Ransac object, specifying the number of points to sample to
+      // generate a model estimation.
+      Ransac<LineEstimator> ransac_estimator(params, line_estimator);
       // Initialize must always be called!
-      ransac_estimator.Initialize(params);
-      ransac_estimator.Estimate(input_data, line_estimator, &best_line);
+      ransac_estimator.Initialize();
+
+      RansacSummary summary;
+      ransac_estimator.Estimate(input_data, &best_line, &summary);
       LOG(INFO) << "Line m = " << best_line.m << "*x + " << best_line.b;
 
       return 0;
@@ -228,7 +235,7 @@ constructor. The constructors for each method are specified as follows
 
   The standard `RANSAC <http://en.wikipedia.org/wiki/RANSAC>`_ implementation as originally proposed by Fischler et. al. [Fischler]_
 
-  .. function:: Ransac(int min_sample_size)
+  .. function:: Ransac(const RansacParams& params, const Estimator& estimator)
 
 .. class:: Prosac
 
@@ -238,7 +245,7 @@ constructor. The constructors for each method are specified as follows
    then progressively sampling the rest of the data set. In the worst case, this
    algorithm degenerates to RANSAC, but typically is significantly faster.
 
-  .. function:: Prosac(int min_sample_size)
+  .. function:: Prosac(const RansacParams& params, const Estimator& estimator)
 
   **NOTE:** the :func:`Estimate` method for prosace assumes the data is sorted
     by quality! That is, that the highest quality data point is first, and the
@@ -249,9 +256,7 @@ constructor. The constructors for each method are specified as follows
 
   A generalization of RANSAC that chooses to maximize the likelihood of an estimation rather than the inlier count. Proposed by [Torr]_ et. al.
 
-  .. function:: Mlesac(int min_sample_size)
-
-    ``min_sample_size``: The minimum number of samples needed to estimate a model
+  .. function:: Mlesac(const RansacParams& params, const Estimator& estimator)
 
 .. class:: Arrsac
 
@@ -261,9 +266,7 @@ constructor. The constructors for each method are specified as follows
   pursuing only the models which are most likely to lead to high quality
   results. This results in a very fast method which can be used for real-time applications.
 
-  .. function:: Arrsac(int min_sample_size, int max_candidate_hyps = 500, int block_size = 100)
-
-     ``min_sample_size``: The minimum number of samples needed to estimate a model.
+  .. function:: Arrsac(const RansacParams& params, const Estimator& estimator, int max_candidate_hyps = 500, int block_size = 100)
 
      ``max_candidate_hyps``: Maximum number of hypotheses in the initial hypothesis set
 
@@ -298,21 +301,25 @@ function will not change and can simply be inherited from the
 
   .. code-block:: c++
 
-    template <class Datum, class Model>
-    class Ransac : public SampleConsensusEstimator<Datum, Model> {
+    // NOTE: ModelEstimator must be a subclass of the Estimator class.
+    template <class ModelEstimator>
+    class Ransac : public SampleConsensusEstimator<ModelEstimator> {
      public:
-      explicit Ransac(const int min_sample_size)
-	  : SampleConsensusEstimator<Datum, Model>(min_sample_size) {}
+      typedef typename ModelEstimator::Datum Datum;
+      typedef typename ModelEstimator::Model Model;
+
+      explicit Ransac(const RansacParams& params, const ModelEstimator& estimator)
+	  : SampleConsensusEstimator<ModelEstimator>(params, estimator) {}
       virtual ~Ransac() {}
 
       // Initializes the random sampler and inlier support measurement.
-      bool Initialize(const RansacParameters& ransac_params) {
+      bool Initialize() {
 	Sampler<Datum>* random_sampler =
-	    new RandomSampler<Datum>(this->min_sample_size_);
+	    new RandomSampler<Datum>(this->estimator_.SampleSize());
 	QualityMeasurement* inlier_support =
-	    new InlierSupport(ransac_params.error_thresh);
-	return SampleConsensusEstimator<Datum, Model>::Initialize(
-	    ransac_params, random_sampler, inlier_support);
+	    new InlierSupport(this->ransac_params_.error_thresh);
+	return SampleConsensusEstimator<ModelEstimator>::Initialize(
+	    random_sampler, inlier_support);
       }
     };
 

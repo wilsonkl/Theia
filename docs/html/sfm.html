@@ -426,9 +426,13 @@ camera. The rotation, translation, and scale are defined such that:
 <span class="math">\(sp_i + \alpha_i d_i = RX_i + t\)</span> where the observed image ray has an
 origin at <span class="math">\(p_i\)</span> in the unit direction <span class="math">\(d_i\)</span> corresponding to 3D
 point <span class="math">\(X_i\)</span>.</p>
-<p><tt class="docutils literal"><span class="pre">ray_origin</span></tt>: the origin (i.e., camera center) of the image ray used in the 2D-3D correspondence.</p>
-<p><tt class="docutils literal"><span class="pre">ray_direction</span></tt>: Normalized image rays corresponding to model points. Must contain at least 4 points.</p>
-<p><tt class="docutils literal"><span class="pre">world_point</span></tt>: 3D location of features. Must correspond to the image_ray of the same index. Must contain the same number of points as image_ray, and at least 4.</p>
+<p><tt class="docutils literal"><span class="pre">ray_origin</span></tt>: the origin (i.e., camera center) of the image ray used in
+the 2D-3D correspondence.</p>
+<p><tt class="docutils literal"><span class="pre">ray_direction</span></tt>: Normalized image rays corresponding to model points. Must
+contain at least 4 points.</p>
+<p><tt class="docutils literal"><span class="pre">world_point</span></tt>: 3D location of features. Must correspond to the image_ray
+of the same index. Must contain the same number of points as image_ray, and
+at least 4.</p>
 <p><tt class="docutils literal"><span class="pre">solution_rotation</span></tt>: the rotation quaternion of the candidate solutions</p>
 <p><tt class="docutils literal"><span class="pre">solution_translation</span></tt>: the translation of the candidate solutions</p>
 <p><tt class="docutils literal"><span class="pre">solution_scale</span></tt>: the scale of the candidate solutions</p>

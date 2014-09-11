@@ -305,11 +305,15 @@ Similarity Transformation
     origin at :math:`p_i` in the unit direction :math:`d_i` corresponding to 3D
     point :math:`X_i`.
 
-    ``ray_origin``: the origin (i.e., camera center) of the image ray used in the 2D-3D correspondence.
+    ``ray_origin``: the origin (i.e., camera center) of the image ray used in
+    the 2D-3D correspondence.
 
-    ``ray_direction``: Normalized image rays corresponding to model points. Must contain at least 4 points.
+    ``ray_direction``: Normalized image rays corresponding to model points. Must
+    contain at least 4 points.
 
-    ``world_point``: 3D location of features. Must correspond to the image_ray of the same index. Must contain the same number of points as image_ray, and at least 4.
+    ``world_point``: 3D location of features. Must correspond to the image_ray
+    of the same index. Must contain the same number of points as image_ray, and
+    at least 4.
 
     ``solution_rotation``: the rotation quaternion of the candidate solutions
 
