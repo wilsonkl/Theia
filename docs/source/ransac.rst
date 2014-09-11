@@ -100,7 +100,8 @@ and then call the :func:`Estimate <SampleConsensusEstimator::Estimate>` method.
 The other main component of using one of the RANSAC methods is to set up the
 :class:`RansacParameters` used for the RANSAC scheme. :class:`RansacParameters`
 is a struct that holds several crucial elements to deciding how the RANSAC
-scheme performs.
+scheme performs. The :class:`RansacSummary` struct returns several useful
+pieces of information describing the ransac run.
 
 .. class:: RansacParameters
 
@@ -135,6 +136,15 @@ scheme performs.
       most one pose is correct. If the selected match is correct, then only the
       correct pose will pass the test. Per default, the test is disabled.
       NOTE: Not currently implemented!
+
+.. class:: RansacSummary
+
+  ``inliers``: A std::vector<int> container with inlier indices.
+
+  ``num_iterations``: Number of iterations required.
+
+  ``confidence``: The observed confidence of the model based on the inlier ratio
+       and the number of iterations performed.
 
 
 We will illustrate the use of the RANSAC class with a simple line estimation example.

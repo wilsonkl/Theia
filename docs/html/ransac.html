@@ -167,7 +167,8 @@ undefined behavior) upon failure.</p>
 <p>The other main component of using one of the RANSAC methods is to set up the
 <a class="reference internal" href="#RansacParameters" title="RansacParameters"><tt class="xref cpp cpp-class docutils literal"><span class="pre">RansacParameters</span></tt></a> used for the RANSAC scheme. <a class="reference internal" href="#RansacParameters" title="RansacParameters"><tt class="xref cpp cpp-class docutils literal"><span class="pre">RansacParameters</span></tt></a>
 is a struct that holds several crucial elements to deciding how the RANSAC
-scheme performs.</p>
+scheme performs. The <a class="reference internal" href="#RansacSummary" title="RansacSummary"><tt class="xref cpp cpp-class docutils literal"><span class="pre">RansacSummary</span></tt></a> struct returns several useful
+pieces of information describing the ransac run.</p>
 <dl class="class">
 <dt id="RansacParameters">
 <em class="property">class </em><tt class="descname">RansacParameters</tt><a class="headerlink" href="#RansacParameters" title="Permalink to this definition">¶</a></dt>
@@ -199,6 +200,17 @@ rejected. Notice that if the pose solver returns multiple poses, then at
 most one pose is correct. If the selected match is correct, then only the
 correct pose will pass the test. Per default, the test is disabled.
 NOTE: Not currently implemented!</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="RansacSummary">
+<em class="property">class </em><tt class="descname">RansacSummary</tt><a class="headerlink" href="#RansacSummary" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">inliers</span></tt>: A std::vector&lt;int&gt; container with inlier indices.</p>
+<p><tt class="docutils literal"><span class="pre">num_iterations</span></tt>: Number of iterations required.</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">confidence</span></tt>: The observed confidence of the model based on the inlier ratio</dt>
+<dd>and the number of iterations performed.</dd>
 </dl>
 </dd></dl>
 
