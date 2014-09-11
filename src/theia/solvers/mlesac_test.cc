@@ -65,12 +65,15 @@ class LineEstimator : public Estimator<Point, Line> {
   LineEstimator() {}
   ~LineEstimator() {}
 
+  double SampleSize() const { return 2; }
+
   bool EstimateModel(const std::vector<Point>& data,
                      std::vector<Line>* models) const {
     Line model;
     model.m = (data[1].y - data[0].y) / (data[1].x - data[0].x);
     model.b = data[1].y - model.m * data[1].x;
     models->push_back(model);
+    LOG(INFO) << "Line = " << model.m << "x + " << model.b;
     return true;
   }
 
@@ -104,11 +107,13 @@ TEST(MlesacTest, LineFitting) {
   }
   LineEstimator line_estimator;
   Line line;
-  Mlesac<Point, Line> mlesac_line(2);
   RansacParameters params;
   params.error_thresh = 0.1;
-  mlesac_line.Initialize(params);
-  mlesac_line.Estimate(input_points, line_estimator, &line);
+
+  Mlesac<LineEstimator> mlesac_line(params, line_estimator);
+  mlesac_line.Initialize();
+  RansacSummary summary;
+  mlesac_line.Estimate(input_points, &line, &summary);
   ASSERT_LT(fabs(line.m - 1.0), 0.1);
 }
 

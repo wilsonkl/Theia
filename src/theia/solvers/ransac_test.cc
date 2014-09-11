@@ -63,6 +63,7 @@ class LineEstimator : public Estimator<Point, Line> {
   LineEstimator() {}
   ~LineEstimator() {}
 
+  double SampleSize() const { return 2; }
   bool EstimateModel(const std::vector<Point>& data,
                      std::vector<Line>* models) const {
     Line model;
@@ -98,11 +99,12 @@ TEST(RansacTest, LineFitting) {
 
   LineEstimator line_estimator;
   Line line;
-  Ransac<Point, Line> ransac_line(2);
   RansacParameters params;
   params.error_thresh = 0.5;
-  ransac_line.Initialize(params);
-  CHECK(ransac_line.Estimate(input_points, line_estimator, &line));
+  Ransac<LineEstimator> ransac_line(params, line_estimator);
+  ransac_line.Initialize();
+  RansacSummary summary;
+  CHECK(ransac_line.Estimate(input_points, &line, &summary));
   ASSERT_LT(fabs(line.m - 1.0), 0.1);
 }
 
@@ -124,12 +126,12 @@ TEST(RansacTest, TerminationNumInliers) {
 
   LineEstimator line_estimator;
   Line line;
-  Ransac<Point, Line> ransac_line(2);
   RansacParameters params;
   params.error_thresh = 0.5;
-  ransac_line.Initialize(params);
-  ransac_line.Estimate(input_points, line_estimator, &line);
-  int num_inliers = ransac_line.GetNumInliers();
-  ASSERT_GE(num_inliers, 2500);
+  Ransac<LineEstimator> ransac_line(params, line_estimator);
+  ransac_line.Initialize();
+  RansacSummary summary;
+  ransac_line.Estimate(input_points, &line, &summary);
+  ASSERT_GE(summary.inliers.size(), 2500);
 }
 }  // namespace theia

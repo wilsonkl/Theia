@@ -64,6 +64,8 @@ class LineEstimator : public Estimator<Point, Line> {
   LineEstimator() {}
   ~LineEstimator() {}
 
+  double SampleSize() const { return 2; }
+
   bool EstimateModel(const std::vector<Point>& data,
                      std::vector<Line>* models) const {
     Line model;
@@ -110,11 +112,12 @@ TEST(ProsacTest, LineFitting) {
 
   LineEstimator line_estimator;
   Line line;
-  Prosac<Point, Line> prosac_line(2);
   RansacParameters params;
   params.error_thresh = 0.5;
-  prosac_line.Initialize(params);
-  prosac_line.Estimate(input_points, line_estimator, &line);
+  Prosac<LineEstimator> prosac_line(params, line_estimator);
+  prosac_line.Initialize();
+  RansacSummary summary;
+  prosac_line.Estimate(input_points, &line, &summary);
   ASSERT_LT(fabs(line.m - 1.0), 0.1);
 }
 

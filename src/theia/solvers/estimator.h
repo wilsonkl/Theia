@@ -51,10 +51,16 @@ namespace theia {
 // NOTE: RANSAC, ARRSAC, and other solvers work best if Datum and Model are
 // lightweight classes or structs.
 
-template <class Datum, class Model> class Estimator {
+template <typename DatumType, typename ModelType> class Estimator {
  public:
+  typedef DatumType Datum;
+  typedef ModelType Model;
+
   Estimator() {}
   virtual ~Estimator() {}
+
+  // Get the minimum number of samples needed to generate a model.
+  virtual double SampleSize() const = 0;
 
   // Given a set of data points, estimate the model. Users should implement this
   // function appropriately for the task being solved. Returns true for
@@ -98,23 +104,17 @@ template <class Datum, class Model> class Estimator {
 
   // Returns the set inliers of the data set based on the error threshold
   // provided.
-  std::vector<bool> GetInliers(const std::vector<Datum>& data,
-                               const Model& model,
-                               double error_threshold) const {
-    std::vector<bool> inliers;
-    for (const Datum& data_point : data)
-      inliers.push_back(Error(data_point, model) < error_threshold);
+  std::vector<int> GetInliers(const std::vector<Datum>& data,
+                              const Model& model,
+                              double error_threshold) const {
+    std::vector<int> inliers;
+    inliers.reserve(data.size());
+    for (int i = 0; i < data.size(); i++) {
+      if (Error(data[i], model) < error_threshold) {
+        inliers.push_back(i);
+      }
+    }
     return inliers;
-  }
-
-  // Returns the number inliers of the data set based on the error threshold
-  // provided.
-  int GetNumInliers(const std::vector<Datum>& data, const Model& model,
-                    double error_threshold) const {
-    int num_inliers = 0;
-    for (const Datum& data_point : data)
-      if (Error(data_point, model) < error_threshold) num_inliers++;
-    return num_inliers;
   }
 
   // Enable a quick check to see if the model is valid. This can be a geometric

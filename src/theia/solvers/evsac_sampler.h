@@ -35,12 +35,6 @@
 #ifndef THEIA_SOLVERS_EVSAC_SAMPLER_H_
 #define THEIA_SOLVERS_EVSAC_SAMPLER_H_
 
-#include <algorithm>
-#include <cstdlib>
-#include <memory>
-#include <random>
-#include <vector>
-
 #include <Eigen/Core>
 #include <glog/logging.h>
 #include <optimo/solvers/primal_dual_qp.h>
@@ -48,6 +42,12 @@
 #include <statx/distributions/gamma.h>
 #include <statx/distributions/rayleigh.h>
 #include <statx/utils/ecdf.h>
+
+#include <algorithm>
+#include <cstdlib>
+#include <memory>
+#include <random>
+#include <vector>
 
 #include "theia/solvers/sampler.h"
 #include "theia/util/util.h"

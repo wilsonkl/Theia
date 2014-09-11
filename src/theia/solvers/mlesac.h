@@ -45,21 +45,24 @@
 
 namespace theia {
 
-template <class Datum, class Model>
-class Mlesac : public SampleConsensusEstimator<Datum, Model> {
+template <class ModelEstimator>
+class Mlesac : public SampleConsensusEstimator<ModelEstimator> {
  public:
-  explicit Mlesac(const int min_sample_size)
-      : SampleConsensusEstimator<Datum, Model>(min_sample_size) {}
+  typedef typename ModelEstimator::Datum Datum;
+  typedef typename ModelEstimator::Model Model;
+
+  Mlesac(const RansacParameters& ransac_params, const ModelEstimator& estimator)
+      : SampleConsensusEstimator<ModelEstimator>(ransac_params, estimator) {}
   ~Mlesac() {}
 
   // Initializes the random sampler and mle support measurement.
-  bool Initialize(const RansacParameters& ransac_params) {
+  bool Initialize() {
     Sampler<Datum>* random_sampler =
-        new RandomSampler<Datum>(this->min_sample_size_);
+        new RandomSampler<Datum>(this->estimator_.SampleSize());
     QualityMeasurement* mle_support =
-        new MLEQualityMeasurement(ransac_params.error_thresh);
-    return SampleConsensusEstimator<Datum, Model>::Initialize(
-        ransac_params, random_sampler, mle_support);
+        new MLEQualityMeasurement(this->ransac_params_.error_thresh);
+    return SampleConsensusEstimator<ModelEstimator>::Initialize(random_sampler,
+                                                                mle_support);
   }
 };
 

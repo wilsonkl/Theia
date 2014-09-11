@@ -32,12 +32,12 @@
 // Please contact the author of this library if you have any questions.
 // Author: Victor Fragoso (vfragoso@cs.ucsb.edu)
 
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+
 #include <algorithm>
 #include <utility>
 #include <vector>
-
-#include <Eigen/Core>
-#include <Eigen/Geometry>
 
 #include "gtest/gtest.h"
 #include "theia/solvers/estimator.h"
@@ -297,6 +297,8 @@ class HomographyEstimator : public Estimator<Correspondence, Matrix3d> {
   HomographyEstimator() {}
   ~HomographyEstimator() {}
 
+  double SampleSize() const { return 4; }
+
   bool EstimateModel(const vector<Correspondence>& data,
                      vector<Matrix3d>* models) const override {
     vector<Vector2d> image_1_points;
@@ -410,13 +412,14 @@ TEST(EvsacTest, HomographyEstimationWithEvsacSampling) {
   }
   HomographyEstimator homography_estimator;
   Matrix3d homography;
-  const double kPredictorThreshold = 0.65;
-  Evsac<Correspondence, Matrix3d>
-      evsac_homography(4, distances, kPredictorThreshold, MLE);
   RansacParameters params;
   params.error_thresh = 5.0;  // 5px of error
-  evsac_homography.Initialize(params);
-  evsac_homography.Estimate(data, homography_estimator, &homography);
+  const double kPredictorThreshold = 0.65;
+  Evsac<HomographyEstimator> evsac_homography(
+      params, homography_estimator, distances, kPredictorThreshold, MLE);
+  evsac_homography.Initialize();
+  RansacSummary summary;
+  evsac_homography.Estimate(data, &homography, &summary);
   EXPECT_LT((homography_gt - homography).norm() / 9.0, 1.0);
   VLOG(1) << "Estimate: \n" << homography << "\n GroundTruth: \n"
           << homography_gt;

@@ -97,14 +97,30 @@ struct RansacParameters {
   bool use_Tdd_test;
 };
 
-template <class Datum, class Model> class SampleConsensusEstimator {
- public:
-  explicit SampleConsensusEstimator(const int min_num_correspondences)
-      : min_sample_size_(min_num_correspondences) {}
+// A struct to hold useful outputs of Ransac-like methods.
+struct RansacSummary {
+  // Contains the indices of all inliers.
+  std::vector<int> inliers;
 
-  bool Initialize(const RansacParameters& ransac_params);
+  // The number of iterations performed before stopping RANSAC.
+  int num_iterations;
+
+  // The confidence in the solution.
+  double confidence;
+};
+
+template <class ModelEstimator> class SampleConsensusEstimator {
+ public:
+  typedef typename ModelEstimator::Datum Datum;
+  typedef typename ModelEstimator::Model Model;
+
+  SampleConsensusEstimator(const RansacParameters& ransac_params,
+                           const ModelEstimator& estimator);
+
+  virtual bool Initialize() { return true; }
 
   virtual ~SampleConsensusEstimator() {}
+
   // Computes the best-fitting model using RANSAC. Returns false if RANSAC
   // calculation fails and true (with the best_model output) if successful.
   // Params:
@@ -114,92 +130,79 @@ template <class Datum, class Model> class SampleConsensusEstimator {
   //   best_model: The output parameter that will be filled with the best model
   //     estimated from RANSAC
   virtual bool Estimate(const std::vector<Datum>& data,
-                        const Estimator<Datum, Model>& estimator,
-                        Model* best_model);
-
-  // Return the number of inliers from the most recent call to Estimate.
-  int GetNumInliers() const { return num_inliers_; }
-
-  // Return the number of iterations used from the most recent call to Estimate.
-  int GetNumIterations() const { return num_iters_; }
+                        Model* best_model,
+                        RansacSummary* summary);
 
  protected:
   // This method is called from derived classes to set up the sampling scheme
   // and the method for computing inliers. It must be called by derived classes
   // unless they override the Estimate(...) method.
   //
-  // RansacParams: the ransac parameters to run the RANSAC scheme with.
   // sampler: The class that instantiates the sampling strategy for this
   //   particular type of sampling consensus.
   // quality_measurement: class that instantiates the quality measurement of
   //   the data. This determines the stopping criterion.
-  bool Initialize(const RansacParameters& ransac_params,
-                  Sampler<Datum>* sampler,
+  bool Initialize(Sampler<Datum>* sampler,
                   QualityMeasurement* quality_measurement);
 
   // Computes the maximum number of iterations required to ensure the inlier
   // ratio is the best with a probability corresponding to log_failure_prob.
-  int ComputeMaxIterations(const double inlier_ratio,
+  int ComputeMaxIterations(const double min_sample_size,
+                           const double inlier_ratio,
                            const double log_failure_prob) const;
 
-  // Minimal number of correspondences.
-  const int min_sample_size_;
-
-  // Our sampling strategy.
+  // The sampling strategy.
   std::unique_ptr<Sampler<Datum> > sampler_;
 
-  // Our quality metric for the estimated model and data.
+  // The quality metric for the estimated model and data.
   std::unique_ptr<QualityMeasurement> quality_measurement_;
 
   // Ransac parameters (see above struct).
-  RansacParameters ransac_params_;
+  const RansacParameters& ransac_params_;
 
-  // Number of iterations performed before succeeding.
-  int num_iters_;
-
-  // Number of inliers from the final result.
-  int num_inliers_;
+  // Estimator to use for generating models.
+  const ModelEstimator& estimator_;
 };
 
 // --------------------------- Implementation --------------------------------//
 
-template <class Datum, class Model>
-bool SampleConsensusEstimator<Datum, Model>::Initialize(
-    const RansacParameters& ransac_params) {
+template <class ModelEstimator>
+SampleConsensusEstimator<ModelEstimator>::SampleConsensusEstimator(
+    const RansacParameters& ransac_params, const ModelEstimator& estimator)
+    : ransac_params_(ransac_params), estimator_(estimator) {
   CHECK_GT(ransac_params.error_thresh, 0)
       << "Error threshold must be set to greater than zero";
   CHECK_LE(ransac_params.min_inlier_ratio, 1.0);
   CHECK_GT(ransac_params.min_inlier_ratio, 0.0);
   CHECK_LT(ransac_params.failure_probability, 1.0);
   CHECK_GT(ransac_params.failure_probability, 0.0);
-
-  ransac_params_ = ransac_params;
-  return true;
 }
 
-template <class Datum, class Model>
-bool SampleConsensusEstimator<Datum, Model>::Initialize(
-    const RansacParameters& ransac_params,
+template <class ModelEstimator>
+bool SampleConsensusEstimator<ModelEstimator>::Initialize(
     Sampler<Datum>* sampler,
     QualityMeasurement* quality_measurement) {
   CHECK_NOTNULL(sampler);
   CHECK_NOTNULL(quality_measurement);
   sampler_.reset(sampler);
-  sampler_->Initialize();
+  if (!sampler_->Initialize()) {
+    return false;
+  }
 
   quality_measurement_.reset(quality_measurement);
-  quality_measurement_->Initialize();
-  return Initialize(ransac_params);
+  return quality_measurement_->Initialize();
 }
 
-template <class Datum, class Model>
-int SampleConsensusEstimator<Datum, Model>::ComputeMaxIterations(
-    const double inlier_ratio, const double log_failure_prob) const {
+template <class ModelEstimator>
+int SampleConsensusEstimator<ModelEstimator>::ComputeMaxIterations(
+    const double min_sample_size,
+    const double inlier_ratio,
+    const double log_failure_prob) const {
   CHECK_GT(inlier_ratio, 0.0);
 
   int num_iterations = 1;
   if (inlier_ratio < 1.0) {
-    double num_samples = min_sample_size_;
+    double num_samples = min_sample_size;
     if (ransac_params_.use_Tdd_test) {
       // If we use the T_{1,1} test, we have to adapt the number of samples
       // that needs to be generated accordingly since we use another
@@ -214,21 +217,25 @@ int SampleConsensusEstimator<Datum, Model>::ComputeMaxIterations(
   return std::min(num_iterations, ransac_params_.max_iterations);
 }
 
-template <class Datum, class Model>
-bool SampleConsensusEstimator<Datum, Model>::Estimate(
-    const std::vector<Datum>& data, const Estimator<Datum, Model>& estimator,
-    Model* best_model) {
+template <class ModelEstimator>
+bool SampleConsensusEstimator<ModelEstimator>::Estimate(
+    const std::vector<Datum>& data,
+    Model* best_model,
+    RansacSummary* summary) {
   CHECK_GT(data.size(), 0)
       << "Cannot perform estimation with 0 data measurements!";
   CHECK_NOTNULL(sampler_.get());
   CHECK_NOTNULL(quality_measurement_.get());
+  CHECK_NOTNULL(summary);
 
   double best_quality = static_cast<double>(QualityMeasurement::INVALID);
   int max_iterations = ransac_params_.max_iterations;
   const double log_failure_prob = log(ransac_params_.failure_probability);
 
-  for (num_iters_ = 0; num_iters_ < max_iterations; num_iters_++) {
-    // Sample subset. Proceed if successfully sampled.
+  for (summary->num_iterations = 0;
+       summary->num_iterations < max_iterations;
+       summary->num_iterations++) {
+      // Sample subset. Proceed if successfully sampled.
     std::vector<Datum> data_subset;
     if (!sampler_->Sample(data, &data_subset)) {
       continue;
@@ -237,13 +244,13 @@ bool SampleConsensusEstimator<Datum, Model>::Estimate(
     // Estimate model from subset. Skip to next iteration if the model fails to
     // estimate.
     std::vector<Model> temp_models;
-    if (!estimator.EstimateModel(data_subset, &temp_models)) {
+    if (!estimator_.EstimateModel(data_subset, &temp_models)) {
       continue;
     }
 
     // Calculate residuals from estimated model.
     for (const Model& temp_model : temp_models) {
-      std::vector<double> residuals = estimator.Residuals(data, temp_model);
+      std::vector<double> residuals = estimator_.Residuals(data, temp_model);
 
       // Determine quality of the generated model.
       double sample_quality =
@@ -255,6 +262,7 @@ bool SampleConsensusEstimator<Datum, Model>::Estimate(
         *best_model = temp_model;
         best_quality = sample_quality;
         max_iterations = ComputeMaxIterations(
+            estimator_.SampleSize(),
             std::max(quality_measurement_->GetInlierRatio(),
                      ransac_params_.min_inlier_ratio),
             log_failure_prob);
@@ -262,8 +270,14 @@ bool SampleConsensusEstimator<Datum, Model>::Estimate(
     }
   }
 
-  num_inliers_ =
-      estimator.GetNumInliers(data, *best_model, ransac_params_.error_thresh);
+  summary->inliers =
+      estimator_.GetInliers(data, *best_model, ransac_params_.error_thresh);
+  const double inlier_ratio =
+      static_cast<double>(summary->inliers.size()) / data.size();
+  summary->confidence =
+      1.0 - pow(1.0 - pow(inlier_ratio, estimator_.SampleSize()),
+                summary->num_iterations);
+
   return true;
 }
 

@@ -66,6 +66,7 @@ class LineEstimator : public Estimator<Point, Line> {
   LineEstimator() {}
   ~LineEstimator() {}
 
+  double SampleSize() const { return 2; }
   bool EstimateModel(const vector<Point>& data,
                      std::vector<Line>* models) const {
     Line model;

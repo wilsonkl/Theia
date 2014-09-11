@@ -44,38 +44,41 @@
 
 namespace theia {
 // Estimate a model using EVSAC sampler.
-template <class Datum, class Model>
-class Evsac : public SampleConsensusEstimator<Datum, Model> {
+template <class ModelEstimator>
+class Evsac : public SampleConsensusEstimator<ModelEstimator> {
  public:
+  typedef typename ModelEstimator::Datum Datum;
+  typedef typename ModelEstimator::Model Model;
+
   // Params:
-  // min_num_samples: The minimum number of samples to produce a model.
   // sorted_distances:  The matrix containing k L2 sorted distances. The
   //   matrix has num. of query features as rows and k columns.
   // predictor_threshold:  The threshold used to decide correct or
   //   incorrect matches/correspondences. The recommended value is 0.65.
   // fitting_method:  The fiting method MLE or QUANTILE_NLS (see statx doc).
   //   The recommended fitting method is the MLE estimation.
-  Evsac(const int min_sample_size,
+  Evsac(const RansacParameters& ransac_params,
+        const ModelEstimator& estimator,
         const Eigen::MatrixXd& sorted_distances,
         const double predictor_threshold,
         const FittingMethod fitting_method) :
-      SampleConsensusEstimator<Datum, Model>(min_sample_size),
+      SampleConsensusEstimator<ModelEstimator>(ransac_params, estimator),
       sorted_distances_(sorted_distances),
-      predictor_threshold_(predictor_threshold), fitting_method_(fitting_method)
-  {}
+      predictor_threshold_(predictor_threshold),
+      fitting_method_(fitting_method) {}
 
   ~Evsac() {}
 
-  bool Initialize(const RansacParameters& ransac_params) {
+  bool Initialize() {
     Sampler<Datum>* prosac_sampler =
-        new EvsacSampler<Datum>(this->min_sample_size_,
+        new EvsacSampler<Datum>(this->estimator_.SampleSize(),
                                 this->sorted_distances_,
                                 this->predictor_threshold_,
                                 this->fitting_method_);
     QualityMeasurement* inlier_support =
-        new InlierSupport(ransac_params.error_thresh);
-    return SampleConsensusEstimator<Datum, Model>::Initialize(
-        ransac_params, prosac_sampler, inlier_support);
+        new InlierSupport(this->ransac_params_.error_thresh);
+    return SampleConsensusEstimator<ModelEstimator>::Initialize(prosac_sampler,
+                                                                inlier_support);
   }
 
  protected:

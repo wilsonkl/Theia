@@ -49,20 +49,23 @@ namespace theia {
 // Estimate a model using PROSAC. The Estimate method is inherited, but for
 // PROSAC requires the data to be in sorted order by quality (with highest
 // quality at index 0).
-template <class Datum, class Model>
-class Prosac : public SampleConsensusEstimator<Datum, Model> {
+template <class ModelEstimator>
+class Prosac : public SampleConsensusEstimator<ModelEstimator> {
  public:
-  explicit Prosac(const int min_sample_size)
-      : SampleConsensusEstimator<Datum, Model>(min_sample_size) {}
+  typedef typename ModelEstimator::Datum Datum;
+  typedef typename ModelEstimator::Model Model;
+
+  Prosac(const RansacParameters& ransac_params, const ModelEstimator& estimator)
+      : SampleConsensusEstimator<ModelEstimator>(ransac_params, estimator) {}
   ~Prosac() {}
 
-  bool Initialize(const RansacParameters& ransac_params) {
+  bool Initialize() {
     Sampler<Datum>* prosac_sampler =
-        new ProsacSampler<Datum>(this->min_sample_size_);
+        new ProsacSampler<Datum>(this->estimator_.SampleSize());
     QualityMeasurement* inlier_support =
-        new InlierSupport(ransac_params.error_thresh);
-    return SampleConsensusEstimator<Datum, Model>::Initialize(
-        ransac_params, prosac_sampler, inlier_support);
+        new InlierSupport(this->ransac_params_.error_thresh);
+    return SampleConsensusEstimator<ModelEstimator>::Initialize(
+        prosac_sampler, inlier_support);
   }
 };
 }  // namespace theia

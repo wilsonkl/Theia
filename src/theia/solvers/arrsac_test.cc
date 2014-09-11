@@ -48,13 +48,19 @@ namespace {
 
 // Create a testable instance of ARRSAC (i.e. move protected methods to public
 // so that we can easily test it).
-template <class Datum, class Model>
-class TestableArrsac : public Arrsac<Datum, Model> {
+template <class ModelEstimator>
+class TestableArrsac : public Arrsac<ModelEstimator> {
  public:
-  TestableArrsac(int min_sample_size, int max_candidate_hyps = 500,
+  typedef typename ModelEstimator::Datum Datum;
+  typedef typename ModelEstimator::Model Model;
+
+  TestableArrsac(const RansacParameters& ransac_params,
+                 const ModelEstimator& estimator,
+                 int max_candidate_hyps = 500,
                  int block_size = 100)
-      : Arrsac<Datum, Model>(min_sample_size, max_candidate_hyps, block_size) {}
-  using Arrsac<Datum, Model>::GenerateInitialHypothesisSet;
+      : Arrsac<ModelEstimator>(ransac_params, estimator, max_candidate_hyps,
+                               block_size) {}
+  using Arrsac<ModelEstimator>::GenerateInitialHypothesisSet;
 };
 
 struct Point {
@@ -76,6 +82,8 @@ class LineEstimator : public Estimator<Point, Line> {
  public:
   LineEstimator() {}
   ~LineEstimator() {}
+
+  double SampleSize() const { return 2; }
 
   bool EstimateModel(const vector<Point>& data,
                      std::vector<Line>* models) const {
@@ -112,12 +120,12 @@ TEST(ArrsacTest, InitializeHypothesisSet) {
 
   LineEstimator estimator;
   vector<Line> initial_hypothesis;
-  TestableArrsac<Point, Line> arrsac_line(2);
   RansacParameters params;
   params.error_thresh = 1.0;
-  arrsac_line.Initialize(params);
+  TestableArrsac<LineEstimator> arrsac_line(params, estimator);
+  arrsac_line.Initialize();
   int num_iterations = arrsac_line.GenerateInitialHypothesisSet(
-      input_points, estimator, &initial_hypothesis);
+      input_points, &initial_hypothesis);
   ASSERT_GT(num_iterations, 0);
 }
 
@@ -135,11 +143,13 @@ TEST(ArrsacTest, Estimate) {
   }
   LineEstimator estimator;
   Line fitted_line;
-  TestableArrsac<Point, Line> arrsac_line(2);
   RansacParameters params;
   params.error_thresh = 1.0;
-  arrsac_line.Initialize(params);
-  CHECK(arrsac_line.Estimate(input_points, estimator, &fitted_line));
+  TestableArrsac<LineEstimator> arrsac_line(params, estimator);
+  arrsac_line.Initialize();
+
+  RansacSummary summary;
+  CHECK(arrsac_line.Estimate(input_points, &fitted_line, &summary));
   ASSERT_NEAR(fitted_line.m, 1.0, 0.1);
 }
 
@@ -163,11 +173,13 @@ TEST(ArrsacTest, EstimateWithQuality) {
   LineEstimator estimator;
 
   Line fitted_line;
-  TestableArrsac<Point, Line> arrsac_line(2);
   RansacParameters params;
   params.error_thresh = 1.0;
-  arrsac_line.Initialize(params);
-  CHECK(arrsac_line.Estimate(input_points, estimator, &fitted_line));
+  TestableArrsac<LineEstimator> arrsac_line(params, estimator);
+  arrsac_line.Initialize();
+
+  RansacSummary summary;
+  CHECK(arrsac_line.Estimate(input_points, &fitted_line, &summary));
   ASSERT_NEAR(fitted_line.m, 1.0, 0.02);
 }
 

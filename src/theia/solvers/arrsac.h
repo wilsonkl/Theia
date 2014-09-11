@@ -43,7 +43,6 @@
 #include <vector>
 
 #include "theia/math/probability/sequential_probability_ratio.h"
-#include "theia/solvers/estimator.h"
 #include "theia/solvers/inlier_support.h"
 #include "theia/solvers/sample_consensus_estimator.h"
 #include "theia/solvers/random_sampler.h"
@@ -67,24 +66,28 @@ bool CompareScoredData(ScoredData<Datum> i, ScoredData<Datum> j) {
   return i.score < j.score;
 }
 
-template <class Datum, class Model>
-class Arrsac : public SampleConsensusEstimator<Datum, Model> {
+template <class ModelEstimator>
+class Arrsac : public SampleConsensusEstimator<ModelEstimator> {
  public:
+  typedef typename ModelEstimator::Datum Datum;
+  typedef typename ModelEstimator::Model Model;
+
   // Params:
-  //   min_sample_size: The minimum number of samples needed to estimate a
-  //     model.
   //   max_candidate_hyps: Maximum number of hypotheses in the initial
   //     hypothesis set
   //   block_size: Number of data points a hypothesis is evaluated against
   //     before preemptive ordering is used.
-  Arrsac(int min_sample_size, int max_candidate_hyps = 500,
+  Arrsac(const RansacParameters& ransac_params,
+         const ModelEstimator& estimator,
+         int max_candidate_hyps = 500,
          int block_size = 100)
-      : SampleConsensusEstimator<Datum, Model>(min_sample_size),
+      : SampleConsensusEstimator<ModelEstimator>(ransac_params, estimator),
         max_candidate_hyps_(max_candidate_hyps),
         block_size_(block_size),
         sigma_(0.05),
         epsilon_(0.1),
         inlier_confidence_(0.95) {}
+
   ~Arrsac() {}
 
   // Set sigma and epsilon SPRT params (see sequential_probability_ratio_test.h
@@ -102,12 +105,11 @@ class Arrsac : public SampleConsensusEstimator<Datum, Model> {
   // Algorithm 2 in Raguram et. al.'s ARRSAC paper.
   // Params:
   //   data: Input data to generate a model from.
-  //   estimator: Derived class used to esimate the model.
   //   best_model: Output parameter that will be filled with the best estimated
   //     model on success.
   // Return: true on successful estimation, false otherwise.
-  bool Estimate(const std::vector<Datum>& data,
-                const Estimator<Datum, Model>& estimator, Model* best_model);
+  bool Estimate(const std::vector<Datum>& data, Model* best_model,
+                RansacSummary* summary);
 
   // This is sort of a hack. We make this method protected so that we can test
   // it easily. See arrsac_test.cc for more.
@@ -117,7 +119,6 @@ class Arrsac : public SampleConsensusEstimator<Datum, Model> {
   // hypotheses will be used to generate more hypotheses in the Compute
   // method. Returns the set of initial hypotheses.
   int GenerateInitialHypothesisSet(const std::vector<Datum>& data_input,
-                                   const Estimator<Datum, Model>& estimator,
                                    std::vector<Model>* accepted_hypotheses);
 
  private:
@@ -141,10 +142,9 @@ class Arrsac : public SampleConsensusEstimator<Datum, Model> {
 
 // -------------------------- Implementation -------------------------- //
 
-template <class Datum, class Model>
-int Arrsac<Datum, Model>::GenerateInitialHypothesisSet(
+template <class ModelEstimator>
+int Arrsac<ModelEstimator>::GenerateInitialHypothesisSet(
     const std::vector<Datum>& data_input,
-    const Estimator<Datum, Model>& estimator,
     std::vector<Model>* accepted_hypotheses) {
   //   set parameters for SPRT test, calculate initial value of A
   double decision_threshold = CalculateSPRTDecisionThreshold(sigma_, epsilon_);
@@ -166,8 +166,8 @@ int Arrsac<Datum, Model>::GenerateInitialHypothesisSet(
   double rejected_accum_inlier_ratio = 0;
 
   // RandomSampler and PROSAC Sampler.
-  RandomSampler<Datum> random_sampler(this->min_sample_size_);
-  ProsacSampler<Datum> prosac_sampler(this->min_sample_size_);
+  RandomSampler<Datum> random_sampler(this->estimator_.SampleSize());
+  ProsacSampler<Datum> prosac_sampler(this->estimator_.SampleSize());
   random_sampler.Initialize();
   prosac_sampler.Initialize();
 
@@ -178,13 +178,13 @@ int Arrsac<Datum, Model>::GenerateInitialHypothesisSet(
       std::vector<Datum> prosac_subset;
       prosac_sampler.SetSampleNumber(k);
       prosac_sampler.Sample(data_input, &prosac_subset);
-      estimator.EstimateModel(prosac_subset, &hypotheses);
+      this->estimator_.EstimateModel(prosac_subset, &hypotheses);
     } else {
       // Generate hypothesis h(k) with subset generated from inliers of a
       // previous hypothesis.
       std::vector<Datum> random_subset;
       random_sampler.Sample(data, &random_subset);
-      estimator.EstimateModel(random_subset, &hypotheses);
+      this->estimator_.EstimateModel(random_subset, &hypotheses);
 
       inner_ransac_its++;
       if (inner_ransac_its == max_inner_ransac_its) {
@@ -198,7 +198,7 @@ int Arrsac<Datum, Model>::GenerateInitialHypothesisSet(
       double observed_inlier_ratio;
       // Evaluate hypothesis h(k) with SPRT.
       std::vector<double> residuals =
-          estimator.Residuals(data_input, hypothesis);
+          this->estimator_.Residuals(data_input, hypothesis);
       bool sprt_test = SequentialProbabilityRatioTest(
           residuals, this->ransac_params_.error_thresh, sigma_, epsilon_,
           decision_threshold, &num_tested_points, &observed_inlier_ratio);
@@ -228,7 +228,7 @@ int Arrsac<Datum, Model>::GenerateInitialHypothesisSet(
         // Set U_in = support of hypothesis h(k).
         data.clear();
         for (int i = 0; i < data_input.size(); i++) {
-          if (estimator.Error(data_input[i], hypothesis) <
+          if (this->estimator_.Error(data_input[i], hypothesis) <
               this->ransac_params_.error_thresh)
             data.push_back(data_input[i]);
         }
@@ -251,13 +251,13 @@ int Arrsac<Datum, Model>::GenerateInitialHypothesisSet(
   return k;
 }
 
-template <class Datum, class Model>
-bool Arrsac<Datum, Model>::Estimate(const std::vector<Datum>& data,
-                                    const Estimator<Datum, Model>& estimator,
-                                    Model* best_model) {
+template <class ModelEstimator>
+bool Arrsac<ModelEstimator>::Estimate(const std::vector<Datum>& data,
+                                      Model* best_model,
+                                      RansacSummary* summary) {
   // Generate Initial Hypothesis Test
   std::vector<Model> initial_hypotheses;
-  int k = GenerateInitialHypothesisSet(data, estimator, &initial_hypotheses);
+  int k = GenerateInitialHypothesisSet(data, &initial_hypotheses);
 
   // Score initial set.
   std::vector<ScoredData<Model> > hypotheses(initial_hypotheses.size());
@@ -265,13 +265,13 @@ bool Arrsac<Datum, Model>::Estimate(const std::vector<Datum>& data,
     hypotheses[i] = ScoredData<Model>(initial_hypotheses[i], 0.0);
     // Calculate inlier score for the hypothesis.
     for (int j = 0; j <= block_size_; j++) {
-      if (estimator.Error(data[j], hypotheses[i].data) <
+      if (this->estimator_.Error(data[j], hypotheses[i].data) <
           this->ransac_params_.error_thresh)
         hypotheses[i].score += 1.0;
     }
   }
 
-  RandomSampler<Datum> random_sampler(this->min_sample_size_);
+  RandomSampler<Datum> random_sampler(this->estimator_.SampleSize());
   random_sampler.Initialize();
 
   // Preemptive Evaluation
@@ -292,7 +292,7 @@ bool Arrsac<Datum, Model>::Estimate(const std::vector<Datum>& data,
 
     // Score the hypotheses using data point i.
     for (int j = 0; j < hypotheses.size(); j++) {
-      if (estimator.Error(data[i], hypotheses[j].data) <
+      if (this->estimator_.Error(data[i], hypotheses[j].data) <
           this->ransac_params_.error_thresh)
         hypotheses[j].score += 1.0;
     }
@@ -328,12 +328,12 @@ bool Arrsac<Datum, Model>::Estimate(const std::vector<Datum>& data,
 
           // Estimate new hypothesis model.
           std::vector<Model> estimated_models;
-          estimator.EstimateModel(data_random_subset, &estimated_models);
+          this->estimator_.EstimateModel(data_random_subset, &estimated_models);
           for (const Model& estimated_model : estimated_models) {
             ScoredData<Model> new_hypothesis(estimated_model, 0.0);
             // Score the newly generated model.
             for (int l = 0; l < i; l++)
-              if (estimator.Error(data[l], new_hypothesis.data) <
+              if (this->estimator_.Error(data[l], new_hypothesis.data) <
                   this->ransac_params_.error_thresh)
                 new_hypothesis.score += 1.0;
             // Add newly generated model to the hypothesis set.
@@ -356,8 +356,13 @@ bool Arrsac<Datum, Model>::Estimate(const std::vector<Datum>& data,
   }
 
   // Grab inliers to refine the model.
-  this->num_inliers_ = estimator
-      .GetNumInliers(data, *best_model, this->ransac_params_.error_thresh);
+  summary->inliers = this->estimator_
+      .GetInliers(data, *best_model, this->ransac_params_.error_thresh);
+  const double inlier_ratio =
+      static_cast<double>(summary->inliers.size()) / data.size();
+  summary->confidence =
+      1.0 - pow(1.0 - pow(inlier_ratio, this->estimator_.SampleSize()),
+                summary->num_iterations);
 
   return true;
 }
