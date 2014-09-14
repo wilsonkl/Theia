@@ -25,12 +25,6 @@ resectioning algorithms. We attempted to make each method as general as possible
 
 * :ref:`section-five_point_focal_length_radial_distortion`
 
-You can include the Pose module in your code with the following line:
-
-.. code-block:: c++
-
-  #include <theia/pose.h>
-
 .. _section-p3p:
 
 Perspective Three Point (P3P)

@@ -10,12 +10,6 @@ Math
 
 At the root of computer vision is a heavy amount of math and probability. Theia contains various math functions implemented with a generic interface for ease of use.
 
-You can include the Math module with the following line:
-
-.. code-block:: c++
-
-  #include <theia/math.h>
-
 .. _section-closed_form_poly:
 
 Closed Form Polynomial Solver

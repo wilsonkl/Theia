@@ -123,3 +123,13 @@ Submitting a change to Theia
 
    Publish your responses to the comments, and wait for a new round
    of reviews.
+
+5. Before submitting, make sure you are synced to the latest commit in the
+   repo. To do this, simply run the command:
+
+   .. code-block:: bash
+
+      git pull --rebase origin master
+
+   This will pull the latest changes without interfering with your current
+   patch.

@@ -15,12 +15,6 @@ efficiency or accuracy of the estimation. We have implemented a templated class
 that makes using RANSAC for estimation extremely easy as well as simple to
 extend.
 
-This module can be included in your code with:
-
-.. code-block:: c++
-
-  #include <theia/ransac.h>
-
 **NOTE**: For the descriptions below, we often use the term "RANSAC" to mean the general strategy of model estimation via sample consensus. Most of the time, "RANSAC" refers to RANSAC and the variants we have implemented.
 
 The following RANSAC methods are implemented in Theia:
@@ -29,7 +23,6 @@ The following RANSAC methods are implemented in Theia:
 * :class:`Prosac`
 * :class:`Mlesac`
 * :class:`Arrsac`
-* :class:`Recon`
 * :class:`Evsac`
 
 :class:`Estimator`

@@ -8,14 +8,7 @@
 Features
 ========
 
-Feature detection and description is a major area of focus in Computer Vision. While SIFT remains the gold standard because of its robustness and matching performance, many other detectors and descriptors are used and often have other competitive advantages. Theia presents friendly classes for feature detection and decription such that the interface is always the same regardless of the methods used.
-
-This module can be included in your code with:
-
-.. code-block:: c++
-
-  #include <theia/features.h>
-
+Feature detection and description is a major area of focus in Computer Vision. While SIFT remains the gold standard because of its robustness and matching performance, many other detectors and descriptors are used and often have other competitive advantages. Theia presents friendly classes for feature detection and decription such that the interface is always the same regardless of the methods used. Note that all keypoint and descriptor extraction methods we perform automatic conversion to grayscal images if necessary.
 
 :class:`Keypoint`
 =================
@@ -83,7 +76,7 @@ Detecting keypoints with Theia is very simple, and we have implemented a number 
     :func:`Initialize()` function must be called before using the keypoint
     detector.
 
-  .. function:: bool DetectKeypoints(const GrayImage& input_image, std::vector<Keypoint>* output_keypoints)
+  .. function:: bool DetectKeypoints(const FloatImage& input_image, std::vector<Keypoint>* output_keypoints)
 
     ``input_image``: The image that you want to detect keypoints on.
 
@@ -95,7 +88,7 @@ Detecting keypoints with Theia is very simple, and we have implemented a number 
 
     // Assume var keypoint_detector was created with one of the constructors below.
 
-    GrayImage input_image(input_image_filename);
+    FloatImage input_image(input_image_filename);
     const bool initialization_success = keypoint_detector.Initialize();
 
     // Container for the detected keypoints.
@@ -105,20 +98,6 @@ Detecting keypoints with Theia is very simple, and we have implemented a number 
 
 
 The following keypoint detectors have been implemented in Theia (class constructors are given):
-
-.. function:: FastDetector::FastDetector(int threshold, bool nonmax_suppression, bool strength)
-
-    Set the ``threshold`` for keypoint scores (usually 20 is a good threshold) and
-    indicated whether you want to perform nonmaximum suppression. Set ``score`` to
-    `true` if you want the corner strength to be set for each keypoint that is
-    detected.
-
-.. function:: HarrisDetector::HarrisDetector(int num_corners, double blur, double blur_sigma)
-
-    Set the maximum number of corners to detect. Parameters ``blur`` and
-    ``blur_sigma`` specify the amount of blurring to add to the image before
-    detecting corners. Default values for ``blur`` and ``blur_sigma`` are 1.0 and
-    3.0 respectively.
 
 .. function:: SiftDetector::SiftDetector(int num_octaves, int num_scale_levels, int first_octave)
 
@@ -174,8 +153,8 @@ Theia uses a semi-generic interface for all descriptor types, namely, floating p
     :func:`Initialize()` function must be called before using the descriptor
     extractor.
 
-  .. function:: bool DescriptorExtractor::ComputeDescriptor(const GrayImage& input_image, const Keypoint& keypoint, Eigen::Vector2d* feature_position, Eigen::VectorXf* float_descriptor)
-  .. function:: bool DescriptorExtractor::ComputeDescriptor(const GrayImage& input_image, const Keypoint& keypoint, Eigen::Vector2d* feature_position, Eigen::BinaryVectorXf* binary_descriptor)
+  .. function:: bool DescriptorExtractor::ComputeDescriptor(const FloatImage& input_image, const Keypoint& keypoint, Eigen::Vector2d* feature_position, Eigen::VectorXf* float_descriptor)
+  .. function:: bool DescriptorExtractor::ComputeDescriptor(const FloatImage& input_image, const Keypoint& keypoint, Eigen::Vector2d* feature_position, Eigen::BinaryVectorXf* binary_descriptor)
 
     This method computes the descriptor of a single keypoint.
 
@@ -193,8 +172,8 @@ Theia uses a semi-generic interface for all descriptor types, namely, floating p
 
     ``returns``: True on success, false on failure.
 
-  .. function:: bool DescriptorExtractor::ComputeDescriptors(const GrayImage& input_image, const std::vector<Keypoint>& keypoints, std::vector<Eigen::Vector2d>* feature_positions, std::vector<Eigen::VectorXf>* float_descriptors)
-  .. function:: bool DescriptorExtractor::ComputeDescriptors(const GrayImage& input_image, const std::vector<Keypoint>& keypoints, std::vector<Eigen::Vector2d>* feature_positions, std::vector<Eigen::BinaryVectorXf>* binary_descriptors)
+  .. function:: bool DescriptorExtractor::ComputeDescriptors(const FloatImage& input_image, const std::vector<Keypoint>& keypoints, std::vector<Eigen::Vector2d>* feature_positions, std::vector<Eigen::VectorXf>* float_descriptors)
+  .. function:: bool DescriptorExtractor::ComputeDescriptors(const FloatImage& input_image, const std::vector<Keypoint>& keypoints, std::vector<Eigen::Vector2d>* feature_positions, std::vector<Eigen::BinaryVectorXf>* binary_descriptors)
 
     Compute many descriptors simultaneous from the input keypoints. Note that
     note all keypoints are guaranteed to result in a descriptor. Only valid
@@ -216,7 +195,7 @@ Theia uses a semi-generic interface for all descriptor types, namely, floating p
   .. code-block:: c++
 
     // Open image we want to extract features from.
-    GrayImage input_image(input_image_filename);
+    FloatImage input_image(input_image_filename);
 
     // Detect keypoints.
     SiftDetector sift_keypoint_detector;
@@ -243,10 +222,6 @@ Theia uses a semi-generic interface for all descriptor types, namely, floating p
       sift_extractor.ComputeDescriptors(image, sift_keypoints, &feature_positions, &sift_descriptors)
 
 We implement the following descriptor extractors (and corresponding descriptors) in Theia (constructors are given).
-
-.. function:: PatchDescriptorExtractor::PatchDescriptorExtractor(int patch_rows, int patch_cols)
-
-  Specify the size of the patch to extract from the image.
 
 .. function:: SiftDescriptorExtractor::SiftDescriptorExtractor(int num_octaves, int num_scale_levels, int first_octave)
 

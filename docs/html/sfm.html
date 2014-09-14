@@ -82,10 +82,6 @@
 <p>Theia has implementations of many common Structure from Motion (sfm) algorithms. We
 attempt to use a generic interface whenever possible so as to maximize
 compatibility with other libraries.</p>
-<p>You can include the SfM module in your code with the following line:</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="cp">#include &lt;theia/sfm.h&gt;</span>
-</pre></div>
-</div>
 <div class="section" id="projection-matrix">
 <h2>Projection Matrix<a class="headerlink" href="#projection-matrix" title="Permalink to this headline">¶</a></h2>
 <p>We provide two convenience matrices that are commonly used in multiview geometry. The first is a <tt class="xref cpp cpp-class docutils literal"><span class="pre">TransformationMatrix</span></tt> which is an affine transformation matrix composed of rotation and translation of the form: <span class="math">\(\left[R | t\right]\)</span>, i.e., the extrinsic parameters of a camera. The <tt class="xref cpp cpp-class docutils literal"><span class="pre">TransformationMatrix</span></tt> is merely a typedef of the Eigen affine transformation matrix. Similarly, a <tt class="xref cpp cpp-class docutils literal"><span class="pre">ProjectionMatrix</span></tt> class is defined that representsthe intrinsic and extrinsic parameters, nameley matrices of the form: <span class="math">\(K\left[R | t \right]\)</span> where <span class="math">\(K\)</span> is a 3x3 matrix of the camera intrinsics (e.g., focal length, principle point, and radial distortion). The <tt class="xref cpp cpp-class docutils literal"><span class="pre">ProjectionMatrix</span></tt> is merely a typedef of an Eigen 3x4 matrix.</p>
@@ -409,8 +405,8 @@ t\)</span>.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="DlsSimilarityTransform__std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Quaterniond:P.std::vector:Eigen::Vector3d:P.std::vector:double:P">
-void <tt class="descname">DlsSimilarityTransform</tt><big>(</big>const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>ray_origin</em>, const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>ray_direction</em>, const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>world_point</em>, std::vector&lt;Eigen::Quaterniond&gt;* <em>solution_rotation</em>, std::vector&lt;Eigen::Vector3d&gt;* <em>solution_translation</em>, std::vector&lt;double&gt;* <em>solution_scale</em><big>)</big><a class="headerlink" href="#DlsSimilarityTransform__std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Quaterniond:P.std::vector:Eigen::Vector3d:P.std::vector:double:P" title="Permalink to this definition">¶</a></dt>
+<dt id="gDlsSimilarityTransform__std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Quaterniond:P.std::vector:Eigen::Vector3d:P.std::vector:double:P">
+void <tt class="descname">gDlsSimilarityTransform</tt><big>(</big>const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>ray_origin</em>, const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>ray_direction</em>, const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>world_point</em>, std::vector&lt;Eigen::Quaterniond&gt;* <em>solution_rotation</em>, std::vector&lt;Eigen::Vector3d&gt;* <em>solution_translation</em>, std::vector&lt;double&gt;* <em>solution_scale</em><big>)</big><a class="headerlink" href="#gDlsSimilarityTransform__std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Quaterniond:P.std::vector:Eigen::Vector3d:P.std::vector:double:P" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the solution to the generalized pose and scale problem based on the
 paper &#8220;gDLS: A Scalable Solution to the Generalized Pose and Scale Problem&#8221;
 by Sweeney et. al. <a class="reference internal" href="bibliography.html#sweeneygdls">[SweeneyGDLS]</a>. Given image rays from one coordinate

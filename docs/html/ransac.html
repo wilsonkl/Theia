@@ -85,10 +85,6 @@ research has gone into making RANSAC extensions and variants that increase the
 efficiency or accuracy of the estimation. We have implemented a templated class
 that makes using RANSAC for estimation extremely easy as well as simple to
 extend.</p>
-<p>This module can be included in your code with:</p>
-<div class="highlight-c++"><div class="highlight"><pre><span class="cp">#include &lt;theia/ransac.h&gt;</span>
-</pre></div>
-</div>
 <p><strong>NOTE</strong>: For the descriptions below, we often use the term &#8220;RANSAC&#8221; to mean the general strategy of model estimation via sample consensus. Most of the time, &#8220;RANSAC&#8221; refers to RANSAC and the variants we have implemented.</p>
 <p>The following RANSAC methods are implemented in Theia:</p>
 <ul class="simple">
@@ -96,7 +92,7 @@ extend.</p>
 <li><a class="reference internal" href="#Prosac" title="Prosac"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Prosac</span></tt></a></li>
 <li><a class="reference internal" href="#Mlesac" title="Mlesac"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Mlesac</span></tt></a></li>
 <li><a class="reference internal" href="#Arrsac" title="Arrsac"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Arrsac</span></tt></a></li>
-<li><tt class="xref cpp cpp-class docutils literal"><span class="pre">Recon</span></tt></li>
+<li><a class="reference internal" href="#Evsac" title="Evsac"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Evsac</span></tt></a></li>
 </ul>
 <div class="section" id="estimator">
 <h2><a class="reference internal" href="#Estimator" title="Estimator"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Estimator</span></tt></a><a class="headerlink" href="#estimator" title="Permalink to this headline">¶</a></h2>
@@ -362,7 +358,35 @@ results. This results in a very fast method which can be used for real-time appl
 <p><tt class="docutils literal"><span class="pre">block_size</span></tt>: Number of data points a hypothesis is evaluated against before preemptive ordering is used.</p>
 </dd></dl>
 
-<p><strong>NOTE</strong>: This method works for all the unit tests currently in Theia, but needs to be tested further to ensure correctness. Use with caution.</p>
+<p><strong>NOTE</strong>: This method works for all the unit tests currently in
+Theia, but needs to be tested further to ensure correctness. Use with
+caution.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="Evsac">
+<em class="property">class </em><tt class="descname">Evsac</tt><a class="headerlink" href="#Evsac" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evsac is a method proposed by <a class="reference internal" href="bibliography.html#fragoso">[Fragoso]</a> that models the smallest
+nearest-neighbor (NN) matching distances as an inlier distribution
+and an outlier distribution to compute weights for
+getting a non-uniform sampling strategy. The computed non-uniform
+sampling strategy tends to achieve a fast convergence, even when the
+inlier ratio is small.</p>
+<dl class="function">
+<dt id="Evsac::Evsac__RansacParametersCR.ModelEstimatorCR.Eigen::MatrixXdCR.doubleC.FittingMethodC">
+ <tt class="descname">Evsac</tt><big>(</big>const RansacParameters&amp; <em>ransac_params</em>, const ModelEstimator&amp; <em>estimator</em>, const Eigen::MatrixXd&amp; <em>sorted_distances</em>, const double <em>predictor_threshold</em>, const FittingMethod <em>fitting_method</em><big>)</big><a class="headerlink" href="#Evsac::Evsac__RansacParametersCR.ModelEstimatorCR.Eigen::MatrixXdCR.doubleC.FittingMethodC" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">ransac_params</span></tt>: The ransac parameters.</p>
+<p><tt class="docutils literal"><span class="pre">estimator</span></tt>: The model estimator to use.</p>
+<p><tt class="docutils literal"><span class="pre">sorted_distances</span></tt>: The matrix containing k L2 sorted
+distances in ascending order. The matrix has num. of query
+features as rows and k columns.</p>
+<p><tt class="docutils literal"><span class="pre">predictor_threshold</span></tt>: The threshold used to decide correct or
+incorrect matches/correspondences. The threshold must be in the
+range of (0, 1.0). The recommended value is 0.65.</p>
+<p><tt class="docutils literal"><span class="pre">fitting_method</span></tt>:  The fitting method MLE or QUANTILE_NLS.
+The recommended fitting method is the MLE estimation.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
