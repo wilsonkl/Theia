@@ -46,7 +46,7 @@
 
 namespace theia {
 template<class T> class Image;
-typedef Image<float> GrayImage;
+typedef Image<float> FloatImage;
 
 // This interface class is meant to define all descriptor extractors. From a
 // high level, there are two types of descriptors (and extractors): float and
@@ -69,13 +69,13 @@ class DescriptorExtractor {
   virtual bool Initialize() { return true; }
 
   // Computes a floatdescriptor at a single keypoint.
-  virtual bool ComputeDescriptor(const GrayImage& image,
+  virtual bool ComputeDescriptor(const FloatImage& image,
                                  const Keypoint& keypoint,
                                  Eigen::Vector2d* feature_position,
                                  Eigen::VectorXf* descriptor) = 0;
 
   // Computes a binary descriptor at a single keypoint.
-  virtual bool ComputeDescriptor(const GrayImage& image,
+  virtual bool ComputeDescriptor(const FloatImage& image,
                                  const Keypoint& keypoint,
                                  Eigen::Vector2d* feature_position,
                                  Eigen::BinaryVectorX* descriptor) = 0;
@@ -87,14 +87,14 @@ class DescriptorExtractor {
   // features (e.g., keypoints near the edge of an image). Returns true on
   // success, false on failure.
   virtual bool ComputeDescriptors(
-      const GrayImage& image,
+      const FloatImage& image,
       const std::vector<Keypoint>& keypoints,
       std::vector<Eigen::Vector2d>* feature_positions,
       std::vector<Eigen::VectorXf>* descriptors);
 
   // Same as above, but for binary descriptors.
   virtual bool ComputeDescriptors(
-      const GrayImage& image,
+      const FloatImage& image,
       const std::vector<Keypoint>& keypoints,
       std::vector<Eigen::Vector2d>* feature_positions,
       std::vector<Eigen::BinaryVectorX>* descriptors);
@@ -115,13 +115,13 @@ class FloatDescriptorExtractor : public DescriptorExtractor {
   virtual bool Initialize() { return true; }
 
   // Computes a floatdescriptor at a single keypoint.
-  virtual bool ComputeDescriptor(const GrayImage& image,
+  virtual bool ComputeDescriptor(const FloatImage& image,
                                  const Keypoint& keypoint,
                                  Eigen::Vector2d* feature_position,
                                  Eigen::VectorXf* descriptor) = 0;
 
   // Computes a binary descriptor at a single keypoint.
-  bool ComputeDescriptor(const GrayImage& image,
+  bool ComputeDescriptor(const FloatImage& image,
                          const Keypoint& keypoint,
                          Eigen::Vector2d* feature_position,
                          Eigen::BinaryVectorX* descriptor) {
@@ -132,7 +132,7 @@ class FloatDescriptorExtractor : public DescriptorExtractor {
 
   // Compute the descriptors for multiple keypoints in a given image.
   virtual bool ComputeDescriptors(
-      const GrayImage& image,
+      const FloatImage& image,
       const std::vector<Keypoint>& keypoints,
       std::vector<Eigen::Vector2d>* feature_positions,
       std::vector<Eigen::VectorXf>* descriptors) {
@@ -142,7 +142,7 @@ class FloatDescriptorExtractor : public DescriptorExtractor {
 
   // Same as above, but for binary descriptors.
   bool ComputeDescriptors(
-      const GrayImage& image,
+      const FloatImage& image,
       const std::vector<Keypoint>& keypoints,
       std::vector<Eigen::Vector2d>* feature_positions,
       std::vector<Eigen::BinaryVectorX>* descriptors) {
@@ -165,7 +165,7 @@ class BinaryDescriptorExtractor : public DescriptorExtractor {
   virtual bool Initialize() { return true; }
 
   // Computes a floatdescriptor at a single keypoint.
-  bool ComputeDescriptor(const GrayImage& image,
+  bool ComputeDescriptor(const FloatImage& image,
                          const Keypoint& keypoint,
                          Eigen::Vector2d* feature_position,
                          Eigen::VectorXf* descriptor) {
@@ -175,7 +175,7 @@ class BinaryDescriptorExtractor : public DescriptorExtractor {
   }
 
   // Computes a binary descriptor at a single keypoint.
-  virtual bool ComputeDescriptor(const GrayImage& image,
+  virtual bool ComputeDescriptor(const FloatImage& image,
                                  const Keypoint& keypoint,
                                  Eigen::Vector2d* feature_position,
                                  Eigen::BinaryVectorX* descriptor) = 0;
@@ -183,7 +183,7 @@ class BinaryDescriptorExtractor : public DescriptorExtractor {
 
   // Compute the descriptors for multiple keypoints in a given image.
   bool ComputeDescriptors(
-      const GrayImage& image,
+      const FloatImage& image,
       const std::vector<Keypoint>& keypoints,
       std::vector<Eigen::Vector2d>* feature_positions,
       std::vector<Eigen::VectorXf>* descriptors) {
@@ -194,7 +194,7 @@ class BinaryDescriptorExtractor : public DescriptorExtractor {
 
   // Same as above, but for binary descriptors.
   virtual bool ComputeDescriptors(
-      const GrayImage& image,
+      const FloatImage& image,
       const std::vector<Keypoint>& keypoints,
       std::vector<Eigen::Vector2d>* feature_positions,
       std::vector<Eigen::BinaryVectorX>* descriptors) {

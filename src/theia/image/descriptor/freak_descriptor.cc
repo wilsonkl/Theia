@@ -362,7 +362,7 @@ bool FreakDescriptorExtractor::ComputeDescriptors(
     const FloatImage& image, const std::vector<Keypoint>& keypoints,
     std::vector<Eigen::Vector2d>* feature_positions,
     std::vector<Eigen::BinaryVectorX>* descriptors) {
-  Image<uchar> uchar_image(image);
+  Image<uchar> uchar_image(image.AsGrayscaleImage());
   Image<uchar> img_integral = uchar_image.Integrate();
 
   // used to save pattern scale index corresponding to each keypoints

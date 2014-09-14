@@ -37,20 +37,23 @@
 #include <Eigen/Core>
 
 #include "theia/alignment/alignment.h"
+#include "theia/image/image.h"
 #include "theia/image/keypoint_detector/keypoint.h"
 
 namespace theia {
+
 // Compute the descriptor for multiple keypoints in a given image.
 bool DescriptorExtractor::ComputeDescriptors(
-    const GrayImage& image,
+    const FloatImage& image,
     const std::vector<Keypoint>& keypoints,
     std::vector<Eigen::Vector2d>* feature_positions,
     std::vector<Eigen::VectorXf>* descriptors) {
+  const FloatImage& gray_image = image.AsGrayscaleImage();
   descriptors->reserve(keypoints.size());
   for (const Keypoint& img_keypoint : keypoints) {
     Eigen::VectorXf descriptor;
     Eigen::Vector2d feature_position;
-    if (ComputeDescriptor(image, img_keypoint, &feature_position,
+    if (ComputeDescriptor(gray_image, img_keypoint, &feature_position,
                           &descriptor)) {
       feature_positions->push_back(feature_position);
       descriptors->push_back(descriptor);
@@ -62,15 +65,16 @@ bool DescriptorExtractor::ComputeDescriptors(
 }
 
 bool DescriptorExtractor::ComputeDescriptors(
-    const GrayImage& image,
+    const FloatImage& image,
     const std::vector<Keypoint>& keypoints,
     std::vector<Eigen::Vector2d>* feature_positions,
     std::vector<Eigen::BinaryVectorX>* descriptors) {
+  const FloatImage& gray_image = image.AsGrayscaleImage();
   descriptors->reserve(keypoints.size());
   for (const Keypoint& img_keypoint : keypoints) {
     Eigen::BinaryVectorX descriptor;
     Eigen::Vector2d feature_position;
-    if (ComputeDescriptor(image, img_keypoint, &feature_position,
+    if (ComputeDescriptor(gray_image, img_keypoint, &feature_position,
                           &descriptor)) {
       feature_positions->push_back(feature_position);
       descriptors->push_back(descriptor);

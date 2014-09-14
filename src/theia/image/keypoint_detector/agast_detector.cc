@@ -77,7 +77,7 @@ bool AgastDetector::DetectKeypoints(const FloatImage& image,
                                     std::vector<Keypoint>* keypoints) {
   ast_detector_->set_imageSize(image.Cols(), image.Rows());
   // Convert to uchar for algorithm.
-  Image<unsigned char> uchar_image(image);
+  Image<unsigned char> uchar_image(image.AsGrayscaleImage());
 
   // Perform nonmax suppresion if necessary.
   // TODO(cmsweeney): investigate how well the branch predictor is at making
