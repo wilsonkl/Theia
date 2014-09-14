@@ -50,7 +50,7 @@ std::string img_filename = THEIA_TEST_DATA_DIR + std::string("/") +
                            FLAGS_test_img;
 
 TEST(AgastDetector, Sanity) {
-  GrayImage input_img(img_filename);
+  FloatImage input_img(img_filename);
 
   // Get the keypoints our way.
   AgastDetector agast_detector;

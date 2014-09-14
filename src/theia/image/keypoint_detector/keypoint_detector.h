@@ -42,7 +42,7 @@
 
 namespace theia {
 template<class T> class Image;
-typedef Image<float> GrayImage;
+typedef Image<float> FloatImage;
 
 // A pure virtual class for keypoint detectors. We assume that the keypoint
 // detectors only use grayimages for now.
@@ -59,7 +59,7 @@ class KeypointDetector {
   // Detect keypoints using the desired method. This method will allocate the
   // Keypoint pointers in the vector with new, but the caller owns the data
   // returned (and must delete the pointers).
-  virtual bool DetectKeypoints(const GrayImage& image,
+  virtual bool DetectKeypoints(const FloatImage& image,
                                std::vector<Keypoint>* keypoints) = 0;
 
  private:

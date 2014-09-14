@@ -32,11 +32,11 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#include <cvd/image.h>
 #include <gflags/gflags.h>
 #include <stdio.h>
 #include <string>
 
+#include "cimg/Cimg.h"
 #include "gtest/gtest.h"
 #include "theia/image/image.h"
 #include "theia/util/random.h"
@@ -45,223 +45,97 @@ DEFINE_string(test_img, "image/test1.jpg", "Name of test image file.");
 
 namespace theia {
 namespace {
+using cimg_library::CImg;
+
 std::string img_filename =
     THEIA_TEST_DATA_DIR + std::string("/") + FLAGS_test_img;
 
-#define ASSERT_RGB_IMG_EQ(cvd_img, theia_img, rows, cols)       \
-  for (int i = 0; i < rows; i++) {                              \
-    for (int j = 0; j < cols; j++) {                            \
-      ASSERT_EQ(cvd_img[i][j].red, theia_img[i][j].red);        \
-      ASSERT_EQ(cvd_img[i][j].green, theia_img[i][j].green);    \
-      ASSERT_EQ(cvd_img[i][j].blue, theia_img[i][j].blue);      \
-    }                                                           \
+#define ASSERT_RGB_IMG_EQ(cimg_img, theia_img, rows, cols)     \
+  ASSERT_EQ(cimg_img.width(), theia_img.Cols());               \
+  ASSERT_EQ(cimg_img.height(), theia_img.Rows());              \
+  ASSERT_EQ(cimg_img.spectrum(), theia_img.Channels());        \
+  ASSERT_EQ(theia_img.Channels(), 3);                          \
+  ASSERT_EQ(cimg_img.depth(), 1);                              \
+  for (int i = 0; i < cols; i++) {                             \
+    for (int j = 0; j < rows; j++) {                           \
+      ASSERT_EQ(cimg_img(i, j, 0, 0), theia_img(i, j, 0));     \
+      ASSERT_EQ(cimg_img(i, j, 0, 1), theia_img(i, j, 1));     \
+      ASSERT_EQ(cimg_img(i, j, 0, 2), theia_img(i, j, 2));     \
+    }                                                          \
   }
 
-
-#define ASSERT_GRAY_IMG_EQ(cvd_img, theia_img, rows, cols)      \
-  for (int i = 0; i < rows; i++)                                \
-    for (int j = 0; j < cols; j++)                              \
-      ASSERT_EQ(cvd_img[i][j], theia_img[i][j]);                \
+#define ASSERT_GRAY_IMG_EQ(cimg_img, theia_img, rows, cols)     \
+  ASSERT_EQ(cimg_img.width(), theia_img.Cols());                \
+  ASSERT_EQ(cimg_img.height(), theia_img.Rows());               \
+  ASSERT_EQ(cimg_img.spectrum(), theia_img.Channels());         \
+  ASSERT_EQ(theia_img.Channels(), 1);                           \
+  ASSERT_EQ(cimg_img.depth(), 1);                               \
+  for (int i = 0; i < cols; i++)                                \
+    for (int j = 0; j < rows; j++)                              \
+      ASSERT_EQ(cimg_img(i, j), theia_img(i, j));               \
 
 }  // namespace
 
 // Test that inputting the old fashioned way is the same as through our class.
 TEST(Image, RGBInput) {
-  CVD::Image<RGBPixel> cvd_img = CVD::img_load(img_filename);
+  CImg<float> cimg_img(img_filename.c_str());
+  FloatImage theia_img(img_filename);
 
-  RGBImage theia_img(img_filename);
-
-  int rows = cvd_img.size().y;
-  int cols = cvd_img.size().x;
+  int rows = cimg_img.height();
+  int cols = cimg_img.width();
 
   // Assert each pixel value is exactly the same!
-  ASSERT_RGB_IMG_EQ(cvd_img, theia_img, rows, cols);
+  ASSERT_RGB_IMG_EQ(cimg_img, theia_img, rows, cols);
 }
 
 // Test that width and height methods work.
 TEST(Image, RGBColsRows) {
-  CVD::Image<RGBPixel> cvd_img = CVD::img_load(img_filename);
-  RGBImage theia_img(img_filename);
+  CImg<float> cimg_img(img_filename.c_str());
+  FloatImage theia_img(img_filename);
 
-  int true_height = cvd_img.size().y;
-  int true_width = cvd_img.size().x;
+  int true_height = cimg_img.height();
+  int true_width = cimg_img.width();
 
   ASSERT_EQ(theia_img.Cols(), true_width);
   ASSERT_EQ(theia_img.Rows(), true_height);
-}
-
-TEST(Image, RGBGetImage) {
-  CVD::Image<RGBPixel> cvd_img = CVD::img_load(img_filename);
-  RGBImage theia_img(img_filename);
-  CVD::Image<RGBPixel> theia_cvd_img = theia_img.GetCVDImage();
-
-  int rows = cvd_img.size().y;
-  int cols = cvd_img.size().x;
-
-  // Assert each pixel value is exactly the same!
-  ASSERT_RGB_IMG_EQ(cvd_img, theia_cvd_img, rows, cols);
-}
-
-TEST(Image, RGBClone) {
-  RGBImage theia_img(img_filename);
-  RGBImage theia2_img = theia_img.Clone();
-
-  int rows = theia_img.Rows();
-  int cols = theia_img.Cols();
-
-  ASSERT_RGB_IMG_EQ(theia_img, theia2_img, rows, cols);
-}
-
-TEST(Image, RGBSubImage) {
-  // test that subimage-ing the same image is equal!
-  RGBImage theia_img(img_filename);
-  int rows = theia_img.Rows();
-  int cols = theia_img.Cols();
-  RGBSubImage theia_img_dup = theia_img.GetSubImage(0, 0, rows, cols);
-
-  ASSERT_RGB_IMG_EQ(theia_img, theia_img_dup, rows, cols);
-
-  // Test that random image patches from CVD and Image are equal.
-  CVD::Image<RGBPixel> cvd_img = CVD::img_load(img_filename);
-  InitRandomGenerator();
-  int patch_size = 10;
-  for (int its = 0; its < 1000; its++) {
-    int rand_row = RandInt(0, rows - patch_size - 1);
-    int rand_col = RandInt(0, cols - patch_size - 1);
-    CVD::SubImage<RGBPixel> cvd_sub =
-        cvd_img.sub_image(CVD::ImageRef(rand_col, rand_row),
-                          CVD::ImageRef(patch_size, patch_size));
-    RGBSubImage theia_sub = theia_img.GetSubImage(rand_row, rand_col,
-                                                  patch_size, patch_size);
-    ASSERT_RGB_IMG_EQ(cvd_sub, theia_sub, patch_size, patch_size);
-  }
-}
-
-// Test that SubImage is actually just a reference to the original image instead
-// of a copy
-TEST(Image, RGBChangeSubImage) {
-  RGBImage theia_img(img_filename);
-
-  // Grab a subimage.
-  RGBSubImage theia_img_sub = theia_img.GetSubImage(50, 50, 50, 50);
-
-  // Change a pixel in the original image.
-  theia_img[50][50] = RGBPixel(0, 0, 0);
-
-  // See if the change propogates to the subimage.
-  ASSERT_EQ(theia_img[50][50].red, theia_img_sub[0][0].red);
-  ASSERT_EQ(theia_img[50][50].green, theia_img_sub[0][0].green);
-  ASSERT_EQ(theia_img[50][50].blue, theia_img_sub[0][0].blue);
-}
-
-TEST(Image, RGBFillSubImage) {
-  RGBImage theia_img(img_filename);
-  RGBSubImage theia_img_sub = theia_img.GetSubImage(50, 50, 50, 50);
-  theia_img_sub.Fill(RGBPixel(0, 0, 0));
-  for (int i = 0; i < 50; i++) {
-    for (int j = 0; j < 50; j++) {
-      ASSERT_EQ(theia_img_sub[i][j].red, 0);
-      ASSERT_EQ(theia_img_sub[i][j].green, 0);
-      ASSERT_EQ(theia_img_sub[i][j].blue, 0);
-    }
-  }
 }
 
 // Test that inputting the old fashioned way is the same as through our class.
-TEST(Image, GrayInput) {
-  CVD::Image<float> cvd_img = CVD::img_load(img_filename);
-  GrayImage theia_img(img_filename);
+TEST(Image, ConvertToGrayscaleImage) {
+  CImg<float> cimg_img(img_filename.c_str());
+  CImg<float> gray_img(cimg_img.RGBtoYCbCr().channel(0));
+  FloatImage theia_img(img_filename);
+  theia_img.ConvertToGrayscaleImage();
 
-  int rows = cvd_img.size().y;
-  int cols = cvd_img.size().x;
-
-  // Assert each pixel value is exactly the same!
-  ASSERT_GRAY_IMG_EQ(cvd_img, theia_img, rows, cols);
-}
-
-// Test that width and height methods work.
-TEST(Image, GrayColsRows) {
-  CVD::Image<float> cvd_img = CVD::img_load(img_filename);
-  GrayImage theia_img(img_filename);
-
-  int true_height = cvd_img.size().y;
-  int true_width = cvd_img.size().x;
-
-  ASSERT_EQ(theia_img.Cols(), true_width);
-  ASSERT_EQ(theia_img.Rows(), true_height);
-}
-
-TEST(Image, GrayGetImage) {
-  CVD::Image<float> cvd_img = CVD::img_load(img_filename);
-  GrayImage theia_img(img_filename);
-  CVD::Image<float> theia_cvd_img = theia_img.GetCVDImage();
-
-  int rows = cvd_img.size().y;
-  int cols = cvd_img.size().x;
+  int rows = cimg_img.height();
+  int cols = cimg_img.width();
 
   // Assert each pixel value is exactly the same!
-  ASSERT_GRAY_IMG_EQ(cvd_img, theia_cvd_img, rows, cols);
+  ASSERT_GRAY_IMG_EQ(gray_img, theia_img, rows, cols);
 }
 
-TEST(Image, GrayClone) {
-  GrayImage theia_img(img_filename);
-  GrayImage theia2_img = theia_img.Clone();
+TEST(Image, ConvertToRGBImage) {
+  const CImg<float> cimg_img(img_filename.c_str());
+  const CImg<float>& gray_cimg = cimg_img.get_RGBtoYCbCr().get_channel(0);
 
-  int rows = theia_img.Rows();
-  int cols = theia_img.Cols();
+  CImg<float> rgb_img = gray_cimg;
+  rgb_img.resize(cimg_img.width(), cimg_img.height(), cimg_img.depth(),
+                 3);
 
-  ASSERT_GRAY_IMG_EQ(theia_img, theia2_img, rows, cols);
-}
-
-TEST(Image, GraySubImage) {
-  // test that subimage-ing the same image is equal!
-  GrayImage theia_img(img_filename);
-  int rows = theia_img.Rows();
-  int cols = theia_img.Cols();
-  GraySubImage theia_img_dup = theia_img.GetSubImage(0, 0, rows, cols);
-
-  ASSERT_GRAY_IMG_EQ(theia_img, theia_img_dup, rows, cols);
-
-  // Test that random image patches from CVD and Image are equal.
-  CVD::Image<float> cvd_img = CVD::img_load(img_filename);
-  InitRandomGenerator();
-  int patch_size = 10;
-  for (int its = 0; its < 1000; its++) {
-    int rand_row = RandInt(0, rows - patch_size - 1);
-    int rand_col = RandInt(0, cols - patch_size - 1);
-    CVD::SubImage<float> cvd_sub =
-        cvd_img.sub_image(CVD::ImageRef(rand_col, rand_row),
-                          CVD::ImageRef(patch_size, patch_size));
-    GraySubImage theia_sub = theia_img.GetSubImage(rand_row, rand_col,
-                                                   patch_size, patch_size);
-    ASSERT_GRAY_IMG_EQ(cvd_sub, theia_sub, patch_size, patch_size);
+  cimg_forXY(rgb_img, x, y) {
+    CHECK_EQ(rgb_img(x, y, 0, 0), rgb_img(x, y, 0, 1));
+    CHECK_EQ(rgb_img(x, y, 0, 0), rgb_img(x, y, 0, 2));
   }
-}
 
-// Test that SubImage is actually just a reference to the original image instead
-// of a copy
-TEST(Image, GrayChangeSubImage) {
-  GrayImage theia_img(img_filename);
+  FloatImage theia_img(img_filename);
+  theia_img.ConvertToGrayscaleImage();
+  theia_img.ConvertToRGBImage();
 
-  // Grab a subimage.
-  GraySubImage theia_img_sub = theia_img.GetSubImage(50, 50, 50, 50);
+  int rows = cimg_img.height();
+  int cols = cimg_img.width();
 
-  // Change a pixel in the original image.
-  theia_img[50][50] = 0;
-
-  // See if the change propogates to the subimage.
-  ASSERT_EQ(theia_img[50][50], theia_img_sub[0][0]);
-}
-
-TEST(Image, GrayFillSubImage) {
-  GrayImage theia_img(img_filename);
-  GraySubImage theia_img_sub = theia_img.GetSubImage(50, 50, 50, 50);
-  theia_img_sub.Fill(0.0);
-  for (int i = 0; i < 50; i++) {
-    for (int j = 0; j < 50; j++) {
-      ASSERT_EQ(theia_img_sub[i][j], 0);
-    }
-  }
+  // Assert each pixel value is exactly the same!
+  ASSERT_RGB_IMG_EQ(rgb_img, theia_img, rows, cols);
 }
 
 }  // namespace theia

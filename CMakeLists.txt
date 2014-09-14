@@ -173,19 +173,10 @@ ELSE (CERES_FOUND)
 ENDIF (CERES_FOUND)
 MESSAGE("-- Found Ceres library: ${CERES_LIBRARIES}")
 
-# LibCVD
-FIND_PACKAGE(CVD REQUIRED)
-IF (CVD_FOUND)
-  MESSAGE("-- Found CVD header in: ${CVD_INCLUDE_DIRS}")
-ELSE (CVD_FOUND)
-  MESSAGE(FATAL_ERROR "Can't find LibCVD.")
-ENDIF (CVD_FOUND)
-
 INCLUDE_DIRECTORIES(
   include
   src
   ${CERES_INCLUDE_DIR}
-  ${CVD_INCLUDE_DIR}
   ${GFLAGS_INCLUDE_DIRS}
   ${GLOG_INCLUDE_DIRS}
   ${EIGEN_INCLUDE_DIRS})
@@ -226,18 +217,20 @@ ELSE (OPENMP)
   MESSAGE("-- Building without OpenMP.")
 ENDIF (OPENMP)
 
-
 # build Third party libraries included in distro.
 ADD_SUBDIRECTORY(libraries)
 INCLUDE_DIRECTORIES(
   libraries
   ${agast_SOURCE_DIR}
+  ${cimg_SOURCE_DIR}
+  ${cimg_INCLUDE_DIR}
   ${gtest_SOURCE_DIR}/include
   ${gtest_SOURCE_DIR}
   ${hayai_SOURCE_DIR}
   ${lemon_SOURCE_DIR}
   ${optimo_SOURCE_DIR}
   ${statx_SOURCE_DIR}
+  ${stlplus3_SOURCE_DIR}
   ${vlfeat_SOURCE_DIR})
 
 INCLUDE("${CMAKE_MODULE_PATH}/OptimizeTheiaCompilerFlags.cmake")
@@ -331,5 +324,4 @@ INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/TheiaConfig.cmake"
               "${CMAKE_SOURCE_DIR}/cmakeFindModules/FindEigen.cmake"
               "${CMAKE_SOURCE_DIR}/cmakeFindModules/FindGlog.cmake"
               "${CMAKE_SOURCE_DIR}/cmakeFindModules/FindGflags.cmake"
-              "${CMAKE_SOURCE_DIR}/cmakeFindModules/FindCVD.cmake"
               DESTINATION ${CMAKECONFIG_INSTALL_DIR})

@@ -43,7 +43,7 @@ DEFINE_string(img_input_dir, "input", "Directory of two input images.");
 DEFINE_string(img_output_dir, "output", "Name of output image file.");
 
 using theia::BruteForceImageMatcher;
-using theia::GrayImage;
+using theia::FloatImage;
 using theia::ImageCanvas;
 using theia::Keypoint;
 using theia::L2;
@@ -53,8 +53,19 @@ int main(int argc, char *argv[]) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
 
-  GrayImage left_image(FLAGS_img_input_dir + std::string("/img1.png"));
-  GrayImage right_image(FLAGS_img_input_dir + std::string("/img2.png"));
+  FloatImage left_image(FLAGS_img_input_dir + std::string("/img1.png"));
+  left_image.ConvertToGrayscaleImage();
+  FloatImage right_image(FLAGS_img_input_dir + std::string("/img2.png"));
+  right_image.ConvertToGrayscaleImage();
+
+  ImageCanvas image_canvas;
+  LOG(INFO) << "adding left image";
+  image_canvas.AddImage(left_image);
+  LOG(INFO) << "adding right image";
+  image_canvas.AddImage(right_image);
+  LOG(INFO) << "writing";
+  image_canvas.Write(FLAGS_img_output_dir +
+                     std::string("/sift_descriptors.png"));
 
   // Detect keypoints.
   VLOG(0) << "detecting keypoints";
@@ -90,14 +101,11 @@ int main(int argc, char *argv[]) {
           << " to match SIFT descriptors";
 
   // Get an image canvas to draw the features on.
-  ImageCanvas image_canvas;
-  image_canvas.AddImage(left_image);
-  image_canvas.AddImage(right_image);
   image_canvas.DrawMatchedFeatures(0, left_positions,
                                    1, right_positions,
                                    matches,
                                    0.1);
-
+  LOG(INFO) << "writing";
   image_canvas.Write(FLAGS_img_output_dir +
-                     std::string("/sift_descriptors.png"));
+                     std::string("/sift_descriptors_matched.png"));
 }

@@ -385,7 +385,7 @@ bool RoiPredicate(const float minX, const float minY, const float maxX,
 
 // Computes a descriptor at a single keypoint.
 bool BriskDescriptorExtractor::ComputeDescriptor(
-    const GrayImage& image, const Keypoint& keypoint,
+    const FloatImage& image, const Keypoint& keypoint,
     Eigen::Vector2d* feature_position, Eigen::BinaryVectorX* descriptor) {
   std::vector<Keypoint> keypoints;
   keypoints.push_back(keypoint);
@@ -404,7 +404,7 @@ bool BriskDescriptorExtractor::ComputeDescriptor(
 
 // computes the descriptor
 bool BriskDescriptorExtractor::ComputeDescriptors(
-    const GrayImage& image, const std::vector<Keypoint>& keypoints,
+    const FloatImage& image, const std::vector<Keypoint>& keypoints,
     std::vector<Eigen::Vector2d>* feature_positions,
     std::vector<Eigen::BinaryVectorX>* descriptors) {
 
@@ -447,7 +447,7 @@ bool BriskDescriptorExtractor::ComputeDescriptors(
 
   // first, calculate the integral image over the whole image:
   // current integral image
-  Image<uchar> uchar_image = image.ConvertTo<uchar>();
+  Image<uchar> uchar_image(image);
   Image<int> _integral = uchar_image.Integrate<int>();
   int* _values = new int[points_];  // for temporary use
 

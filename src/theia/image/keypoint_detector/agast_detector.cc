@@ -73,12 +73,11 @@ void AgastDetector::SetThreshold(int threshold) {
   ast_detector_->set_threshold(threshold);
 }
 
-bool AgastDetector::DetectKeypoints(const GrayImage& image,
+bool AgastDetector::DetectKeypoints(const FloatImage& image,
                                     std::vector<Keypoint>* keypoints) {
   ast_detector_->set_imageSize(image.Cols(), image.Rows());
   // Convert to uchar for algorithm.
-  Image<unsigned char> uchar_image = image.ConvertTo<unsigned char>();
-
+  Image<unsigned char> uchar_image(image);
 
   // Perform nonmax suppresion if necessary.
   // TODO(cmsweeney): investigate how well the branch predictor is at making

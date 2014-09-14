@@ -1,4 +1,3 @@
-
 // Copyright (C) 2013 The Regents of the University of California (Regents).
 // All rights reserved.
 //
@@ -48,7 +47,7 @@ extern "C" {
 namespace theia {
 
 template<class T> class Image;
-typedef Image<float> GrayImage;
+typedef Image<float> FloatImage;
 
 class SiftDescriptorExtractor : public FloatDescriptorExtractor {
  public:
@@ -64,19 +63,19 @@ class SiftDescriptorExtractor : public FloatDescriptorExtractor {
   ~SiftDescriptorExtractor();
 
   // Computes a descriptor at a single keypoint.
-  bool ComputeDescriptor(const GrayImage& image,
+  bool ComputeDescriptor(const FloatImage& image,
                          const Keypoint& keypoint,
                          Eigen::Vector2d* feature_position,
                          Eigen::VectorXf* descriptor);
 
   // Compute multiple descriptors for keypoints from a single image.
-  bool ComputeDescriptors(const GrayImage& image,
+  bool ComputeDescriptors(const FloatImage& image,
                           const std::vector<Keypoint>& keypoints,
                           std::vector<Eigen::Vector2d>* feature_position,
                           std::vector<Eigen::VectorXf>* descriptors);
 
   bool DetectAndExtractDescriptors(
-      const GrayImage& image,
+      const FloatImage& image,
       std::vector<Eigen::Vector2d>* feature_position,
       std::vector<Eigen::VectorXf>* descriptors);
 

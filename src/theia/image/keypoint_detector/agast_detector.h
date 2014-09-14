@@ -45,7 +45,7 @@
 
 namespace theia {
 template<class T> class Image;
-typedef Image<float> GrayImage;
+typedef Image<float> FloatImage;
 
 // Detect keypoints using the AGAST method from "Adaptive and Generic Corner
 // Detection Based on the Accelerated Segment Test" by Mair et. al.
@@ -75,7 +75,7 @@ class AgastDetector : public KeypointDetector {
   void SetThreshold(int threshold);
 
   // Detect the AGAST keypoints in the image.
-  bool DetectKeypoints(const GrayImage& image,
+  bool DetectKeypoints(const FloatImage& image,
                        std::vector<Keypoint>* keypoints);
 
  private:
