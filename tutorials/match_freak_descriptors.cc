@@ -47,7 +47,7 @@ using theia::FreakDescriptorExtractor;
 using theia::BriskDetector;
 using theia::BruteForceImageMatcher;
 using theia::BruteForceMatcher;
-using theia::GrayImage;
+using theia::FloatImage;
 using theia::Hamming;
 using theia::ImageCanvas;
 using theia::Keypoint;
@@ -56,8 +56,10 @@ int main(int argc, char *argv[]) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
 
-  GrayImage left_image(FLAGS_img_input_dir + std::string("/img1.png"));
-  GrayImage right_image(FLAGS_img_input_dir + std::string("/img2.png"));
+  FloatImage left_image(FLAGS_img_input_dir + std::string("/img1.png"));
+  left_image.ConvertToGrayscaleImage();
+  FloatImage right_image(FLAGS_img_input_dir + std::string("/img2.png"));
+  right_image.ConvertToGrayscaleImage();
 
   // Detect keypoints.
   VLOG(0) << "detecting keypoints";

@@ -50,7 +50,7 @@ SiftDescriptorExtractor::~SiftDescriptorExtractor() {
 }
 
 bool SiftDescriptorExtractor::ComputeDescriptor(
-    const GrayImage& image, const Keypoint& keypoint,
+    const FloatImage& image, const Keypoint& keypoint,
     Eigen::Vector2d* feature_position, Eigen::VectorXf* descriptor) {
   CHECK(keypoint.has_scale() && keypoint.has_orientation())
       << "Keypoint must have scale and orientation to compute a SIFT "
@@ -77,7 +77,7 @@ bool SiftDescriptorExtractor::ComputeDescriptor(
   // The VLFeat functions take in a non-const image pointer so that it can
   // calculate gaussian pyramids. Obviously, we do not want to break our const
   // input, so the best solution (for now) is to copy the image.
-  GrayImage mutable_image = image.Clone();
+  FloatImage mutable_image = image;
 
   // Calculate the first octave to process.
   int vl_status =
@@ -99,7 +99,7 @@ bool SiftDescriptorExtractor::ComputeDescriptor(
 }
 
 bool SiftDescriptorExtractor::ComputeDescriptors(
-    const GrayImage& image, const std::vector<Keypoint>& keypoints,
+    const FloatImage& image, const std::vector<Keypoint>& keypoints,
     std::vector<Eigen::Vector2d>* feature_positions,
     std::vector<Eigen::VectorXf>* descriptors) {
   // If the filter has been set, but is not usable for the input image (i.e. the
@@ -128,7 +128,7 @@ bool SiftDescriptorExtractor::ComputeDescriptors(
   // The VLFeat functions take in a non-const image pointer so that it can
   // calculate gaussian pyramids. Obviously, we do not want to break our const
   // input, so the best solution (for now) is to copy the image.
-  GrayImage mutable_image = image.Clone();
+  FloatImage mutable_image = image;
 
   // Calculate the first octave to process.
   int vl_status =
@@ -155,7 +155,7 @@ bool SiftDescriptorExtractor::ComputeDescriptors(
 }
 
 bool SiftDescriptorExtractor::DetectAndExtractDescriptors(
-    const GrayImage& image, std::vector<Eigen::Vector2d>* feature_positions,
+    const FloatImage& image, std::vector<Eigen::Vector2d>* feature_positions,
     std::vector<Eigen::VectorXf>* descriptors) {
   // If the filter has been set, but is not usable for the input image (i.e. the
   // width and height are different) then we must make a new filter. Adding this
@@ -174,7 +174,7 @@ bool SiftDescriptorExtractor::DetectAndExtractDescriptors(
   // The VLFeat functions take in a non-const image pointer so that it can
   // calculate gaussian pyramids. Obviously, we do not want to break our const
   // input, so the best solution (for now) is to copy the image.
-  GrayImage mutable_image = image.Clone();
+  FloatImage mutable_image = image;
 
   // Calculate the first octave to process.
   int vl_status =

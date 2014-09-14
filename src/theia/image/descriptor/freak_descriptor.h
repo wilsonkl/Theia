@@ -44,7 +44,7 @@
 
 namespace theia {
 template <class T> class Image;
-typedef Image<float> GrayImage;
+typedef Image<float> FloatImage;
 
 class FreakDescriptorExtractor : public BinaryDescriptorExtractor {
  public:
@@ -66,7 +66,7 @@ class FreakDescriptorExtractor : public BinaryDescriptorExtractor {
   bool Initialize();
 
   // Computes a descriptor at a single keypoint.
-  bool ComputeDescriptor(const GrayImage& image,
+  bool ComputeDescriptor(const FloatImage& image,
                          const Keypoint& keypoint,
                          Eigen::Vector2d* feature_position,
                          Eigen::BinaryVectorX* descriptor);
@@ -74,7 +74,7 @@ class FreakDescriptorExtractor : public BinaryDescriptorExtractor {
   // Compute multiple descriptors for keypoints from a single image. Note this
   // may return null for some of the descriptors if they cannot be computed!
   // Typically this only happens when it is too close to the border.
-  bool ComputeDescriptors(const GrayImage& image,
+  bool ComputeDescriptors(const FloatImage& image,
                           const std::vector<Keypoint>& keypoints,
                           std::vector<Eigen::Vector2d>* feature_positions,
                           std::vector<Eigen::BinaryVectorX>* descriptors);

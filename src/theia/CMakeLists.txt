@@ -42,14 +42,11 @@ SET(THEIA_SRC
   image/descriptor/brisk_descriptor.cc
   image/descriptor/descriptor_extractor.cc
   image/descriptor/freak_descriptor.cc
-  image/descriptor/patch_descriptor.cc
   image/descriptor/sift_descriptor.cc
   image/image_canvas.cc
   image/keypoint_detector/agast_detector.cc
   image/keypoint_detector/brisk_detector.cc
   image/keypoint_detector/brisk_impl.cc
-  image/keypoint_detector/fast_detector.cc
-  image/keypoint_detector/harris_detector.cc
   image/keypoint_detector/sift_detector.cc
   math/closed_form_polynomial_solver.cc
   math/polynomial.cc
@@ -78,10 +75,11 @@ SET(THEIA_SRC
 
 SET(THEIA_LIBRARY_DEPENDENCIES
   ${CERES_LIBRARIES}
-  ${CVD_LIBRARIES}
   ${GFLAGS_LIBRARIES}
   ${GLOG_LIBRARIES}
+  cimg
   statx
+  stlplus3
   vlfeat
   agast)
 
@@ -125,13 +123,10 @@ IF (BUILD_TESTING)
 
   GTEST(image/descriptor/brisk_descriptor)
   GTEST(image/descriptor/freak_descriptor)
-  GTEST(image/descriptor/patch_descriptor)
   GTEST(image/descriptor/sift_descriptor)
   GTEST(image/image)
   GTEST(image/keypoint_detector/agast_detector)
   GTEST(image/keypoint_detector/brisk_detector)
-  GTEST(image/keypoint_detector/fast_detector)
-  GTEST(image/keypoint_detector/harris_detector)
   GTEST(image/keypoint_detector/sift_detector)
   GTEST(math/closed_form_polynomial_solver)
   GTEST(math/matrix/gauss_jordan)

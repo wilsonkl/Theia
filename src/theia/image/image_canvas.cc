@@ -34,7 +34,7 @@
 
 #include "theia/image/image_canvas.h"
 
-#include <cvd/draw.h>
+#include <cimg/CImg.h>
 #include <glog/logging.h>
 
 #include <cmath>
@@ -47,21 +47,28 @@
 #define _USE_MATH_DEFINES
 
 namespace theia {
+
 // Add an image to the canvas such that all the images that have been added
 // are now side-by-side on the canvas. This is useful for feature matching.
-int ImageCanvas::AddImage(const GrayImage& image) {
-  RGBImage rgb_img(image.ConvertTo<RGBPixel>());
-  return AddImage(rgb_img);
-}
+int ImageCanvas::AddImage(const FloatImage& image) {
+  FloatImage rgb_image = image.AsRGBImage();
 
-int ImageCanvas::AddImage(const RGBImage& image) {
   if (pixel_offsets_.size() == 0) {
-    image_ = image.GetCVDImage().copy_from_me();
+    image_ = rgb_image.image_;
     pixel_offsets_.push_back(0);
   } else {
-    pixel_offsets_.push_back(image_.size().x);
-    CVD::Image<RGBPixel> image_copy = image_.copy_from_me();
-    CVD::joinImages(image_copy, image.GetCVDImage(), image_);
+    pixel_offsets_.push_back(image_.width());
+    // image_.resize(image_.width() + rgb_image.Cols(),
+    //               std::max(image_.height(), rgb_image.Rows()),
+    //               1,
+    //               3,
+    //               0);
+    // image_.draw_image(pixel_offsets_.back(),
+    //                   0,
+    //                   0,
+    //                   0,
+    //                   rgb_image.image_);
+    image_.append(rgb_image.image_);
   }
   return pixel_offsets_.size() - 1;
 }
@@ -75,8 +82,8 @@ void ImageCanvas::DrawCircle(int image_index, int x, int y, int radius,
 }
 // Draw a circle onto the canvas.
 void ImageCanvas::DrawCircle(int x, int y, int radius, const RGBPixel& color) {
-  std::vector<CVD::ImageRef> circle_pixels = CVD::getCircle(radius);
-  CVD::drawShape(image_, CVD::ImageRef(x, y), circle_pixels, color);
+  float cimg_color[3] = { color.r, color.g, color.b };
+  image_.draw_circle(x, y, radius, cimg_color);
 }
 
 // Draw a line in the image at image_index.
@@ -97,36 +104,8 @@ void ImageCanvas::DrawLine(int image_index1, int x1, int y1, int image_index2,
 // Draw a line onto the image canvas.
 void ImageCanvas::DrawLine(int x1, int y1, int x2, int y2,
                            const RGBPixel& color) {
-  CVD::drawLine(image_, x1, y1, x2, y2, color);
-}
-
-// Draw a cross in the image at image_index.
-void ImageCanvas::DrawCross(int image_index, int x, int y, int length,
-                            const RGBPixel& color) {
-  CHECK_GT(pixel_offsets_.size(), image_index)
-      << "Trying to draw in an image index that does not exist!";
-  DrawCross(pixel_offsets_[image_index] + x, y, length, color);
-}
-// Draw a cross onto the image canvas.
-void ImageCanvas::DrawCross(int x, int y, int length, const RGBPixel& color) {
-  CVD::drawCross(image_, CVD::ImageRef(x, y), length, color);
-}
-
-// Draw a box in the image at image_index.
-void ImageCanvas::DrawBox(int image_index,
-                          int x, int y,
-                          int x_length, int y_length,
-                          const RGBPixel& color) {
-  CHECK_GT(pixel_offsets_.size(), image_index)
-      << "Trying to draw in an image index that does not exist!";
-  DrawBox(pixel_offsets_[image_index] + x, y, x_length, y_length, color);
-}
-
-// Draw a box onto the image canvas.
-void ImageCanvas::DrawBox(int x, int y, int x_length, int y_length,
-                          const RGBPixel& color) {
-  CVD::drawBox(image_, CVD::ImageRef(x, y),
-               CVD::ImageRef(x + x_length, y + y_length), color);
+  double cimg_color[3] = { color.r, color.g, color.b };
+  image_.draw_line(x1, y1, x2, y2, cimg_color);
 }
 
 void ImageCanvas::DrawFeature(int image_index,
@@ -142,13 +121,13 @@ void ImageCanvas::DrawFeature(int image_index,
   // Draw line in direction of the orientation if applicable.
   DrawLine(image_index,
            x, y,
-           x + radius*cos(orientation), y + radius*sin(orientation),
+           x + radius * cos(orientation), y + radius * sin(orientation),
            color);
 }
 
 // Write the image canvas to a file.
 void ImageCanvas::Write(const std::string& output_name) {
-  CVD::img_save(image_, output_name);
+  image_.save(output_name.c_str());
 }
 
 template <>

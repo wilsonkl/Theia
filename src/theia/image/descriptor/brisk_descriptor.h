@@ -45,7 +45,7 @@
 
 namespace theia {
 template <class T> class Image;
-typedef Image<float> GrayImage;
+typedef Image<float> FloatImage;
 
 // BRISK Descriptor ported from reference code of Stefan Leutenegger, Margarita
 // Chli and Roland Siegwart, "BRISK: Binary Robust Invariant Scalable
@@ -62,20 +62,20 @@ class BriskDescriptorExtractor : public BinaryDescriptorExtractor {
   ~BriskDescriptorExtractor();
 
   // Computes a descriptor at a single keypoint.
-  bool ComputeDescriptor(const GrayImage& image,
+  bool ComputeDescriptor(const FloatImage& image,
                          const Keypoint& keypoint,
                          Eigen::Vector2d* feature_position,
                          Eigen::BinaryVectorX* descriptor);
 
   // Compute multiple descriptors for keypoints from a single image.
   bool ComputeDescriptors(
-      const GrayImage& image,
+      const FloatImage& image,
       const std::vector<Keypoint>& keypoints,
       std::vector<Eigen::Vector2d>* feature_positions,
       std::vector<Eigen::BinaryVectorX>* descriptors);
 
   bool DetectAndExtractDescriptors(
-      const GrayImage& image, std::vector<Eigen::Vector2d>* feature_positions,
+      const FloatImage& image, std::vector<Eigen::Vector2d>* feature_positions,
       std::vector<Eigen::BinaryVectorX>* descriptors);
 
  private:

@@ -40,6 +40,7 @@
 #include <agast/agast7_12s.h>
 #include <agast/agast5_8.h>
 #include <glog/logging.h>
+#include <Eigen/Core>
 #include <stdlib.h>
 #ifdef THEIA_USE_SSE
 #include <tmmintrin.h>
@@ -52,6 +53,8 @@
 namespace theia {
 namespace {
 typedef unsigned char uchar;
+typedef Eigen::Matrix<uchar, Eigen::Dynamic, Eigen::Dynamic> MatrixXu;
+
 // this is needed to avoid aliasing issues with the __m128i data type:
 #ifdef __GNUC__
 typedef unsigned char __attribute__((__may_alias__)) UCHAR_ALIAS;
@@ -86,7 +89,7 @@ void BriskScaleSpace::constructPyramid(const Image<unsigned char>& image) {
   pyramid_.clear();
 
   // fill the pyramid:
-  pyramid_.push_back(BriskLayer(image.Clone()));
+  pyramid_.push_back(BriskLayer(image));
   if (layers_ > 1) {
     pyramid_.push_back(
         BriskLayer(pyramid_.back(), BriskLayer::CommonParams::TWOTHIRDSAMPLE));
@@ -378,9 +381,9 @@ inline int BriskScaleSpace::getScoreBelow(const uint8_t layer,
 
 inline bool BriskScaleSpace::isMax2D(const uint8_t layer, const int x_layer,
                                      const int y_layer) {
-  const Image<unsigned char>& scores = pyramid_[layer].scores();
-  const int scorescols = scores.Cols();
-  const uchar* data = scores.Data() + y_layer * scorescols + x_layer;
+  const MatrixXu& scores = pyramid_[layer].scores();
+  const int scorescols = scores.cols();
+  const uchar* data = scores.data() + y_layer * scorescols + x_layer;
   // decision tree:
   const uchar center = (*data);
   data--;
@@ -447,11 +450,11 @@ inline bool BriskScaleSpace::isMax2D(const uint8_t layer, const int x_layer,
   if (deltasize != 0) {
     // in this case, we have to analyze the situation more carefully:
     // the values are gaussian blurred and then we really decide
-    data = scores.Data() + y_layer * scorescols + x_layer;
+    data = scores.data() + y_layer * scorescols + x_layer;
     int smoothedcenter =
         4 * center + 2 * (s_10 + s10 + s0_1 + s01) + s_1_1 + s1_1 + s_11 + s11;
     for (unsigned int i = 0; i < deltasize; i += 2) {
-      data = scores.Data() + (y_layer - 1 + delta[i + 1]) * scorescols +
+      data = scores.data() + (y_layer - 1 + delta[i + 1]) * scorescols +
              x_layer + delta[i] - 1;
       int othercenter = *data;
       data++;
@@ -658,7 +661,7 @@ inline float BriskScaleSpace::getScoreMaxAbove(const uint8_t layer,
   float y1;
 
   // the layer above
-  assert(layer + 1 < layers_);
+  CHECK_LT(layer + 1, layers_);
   BriskLayer& layerAbove = pyramid_[layer + 1];
 
   if (layer % 2 == 0) {
@@ -824,7 +827,7 @@ inline float BriskScaleSpace::getScoreMaxBelow(const uint8_t layer,
   }
 
   // the layer below
-  assert(layer > 0);
+  CHECK_GT(layer, 0);
   BriskLayer& layerBelow = pyramid_[layer - 1];
 
   // check the first row
@@ -1237,10 +1240,12 @@ inline float BriskScaleSpace::subpixel2D(const int s_0_0, const int s_0_1,
 }
 
 // construct a layer
-BriskLayer::BriskLayer(const Image<unsigned char>& img, float scale,
-                       float offset) {
-  img_ = img;
-  scores_ = Image<unsigned char>(img.Rows(), img.Cols(), 0.0);
+BriskLayer::BriskLayer(const Image<unsigned char>& img,
+                       float scale,
+                       float offset) : img_(img) {
+  scores_.resize(img.Rows(), img.Cols());
+  scores_.setZero();
+
   // attention: this means that the passed image reference must point to
   // persistent memory
   scale_ = scale;
@@ -1253,18 +1258,17 @@ BriskLayer::BriskLayer(const Image<unsigned char>& img, float scale,
 // derive a layer
 BriskLayer::BriskLayer(const BriskLayer& layer, int mode) {
   if (mode == CommonParams::HALFSAMPLE) {
-    img_ = Image<unsigned char>(layer.img().Rows() / 2, layer.img().Cols() / 2);
-    halfsample(layer.img(), img_);
+    layer.img().HalfSample(&img_);
     scale_ = layer.scale() * 2;
     offset_ = 0.5 * scale_ - 0.5;
   } else {
-    img_ = Image<unsigned char>(2 * (layer.img().Rows() / 3),
-                                2 * (layer.img().Cols() / 3));
-    twothirdsample(layer.img(), img_);
+    layer.img().TwoThirdsSample(&img_);
     scale_ = layer.scale() * 1.5;
     offset_ = 0.5 * scale_ - 0.5;
   }
-  scores_ = Image<unsigned char>(img_.Rows(), img_.Cols(), 0.0);
+  scores_.resize(img_.Rows(), img_.Cols());
+  scores_.setZero();
+
   oastDetector_.reset(new agast::OastDetector9_16(img_.Cols(), img_.Rows(), 0));
   agastDetector_5_8_.reset(
       new agast::AgastDetector5_8(img_.Cols(), img_.Rows(), 0));
@@ -1283,14 +1287,14 @@ void BriskLayer::getAgastPoints(uint8_t threshold,
 
   for (int i = 0; i < num; i++) {
     const int offs = keypoints[i].x + keypoints[i].y * imcols;
-    *(scores_.Data() + offs) = oastDetector_->cornerScore(img_.Data() + offs);
+    *(scores_.data() + offs) = oastDetector_->cornerScore(img_.Data() + offs);
   }
 }
 
 inline uint8_t BriskLayer::getAgastScore(int x, int y, uint8_t threshold) {
   if (x < 3 || y < 3) return 0;
   if (x >= img_.Cols() - 3 || y >= img_.Rows() - 3) return 0;
-  uint8_t& score = *(scores_.Data() + x + y * scores_.Cols());
+  uint8_t& score = *(scores_.data() + x + y * scores_.cols());
   if (score > 2) {
     return score;
   }
@@ -1342,16 +1346,15 @@ inline uint8_t BriskLayer::getAgastScore(float xf, float yf, uint8_t threshold,
 }
 
 // access gray values (smoothed/interpolated)
-inline uint8_t BriskLayer::value(const Image<unsigned char>& mat, float xf,
+inline uint8_t BriskLayer::value(const MatrixXu& mat, float xf,
                                  float yf, float scale) {
   // assert(!mat.empty());
-  CHECK_GT(mat.Rows(), 0);
-  CHECK_GT(mat.Cols(), 0);
+  CHECK_GT(mat.rows(), 0);
+  CHECK_GT(mat.cols(), 0);
   // get the position
   const int x = floor(xf);
   const int y = floor(yf);
-  const Image<unsigned char>& image = mat;
-  const int& imagecols = image.Cols();
+  const int& imagecols = mat.cols();
 
   // get the sigma_half:
   const float sigma_half = scale / 2;
@@ -1364,7 +1367,7 @@ inline uint8_t BriskLayer::value(const Image<unsigned char>& mat, float xf,
     const int r_y = (yf - y) * 1024;
     const int r_x_1 = (1024 - r_x);
     const int r_y_1 = (1024 - r_y);
-    const uchar* ptr = image.Data() + x + y * imagecols;
+    const uchar* ptr = mat.data() + x + y * imagecols;
     // just interpolate:
     ret_val = (r_x_1 * r_y_1 * static_cast<int>(*ptr));
     ptr++;
@@ -1410,7 +1413,7 @@ inline uint8_t BriskLayer::value(const Image<unsigned char>& mat, float xf,
   const int r_y1_i = r_y1 * scaling;
 
   // now the calculation:
-  const uchar* ptr = image.Data() + x_left + imagecols * y_top;
+  const uchar* ptr = mat.data() + x_left + imagecols * y_top;
   // first row:
   ret_val = A * static_cast<int>(*ptr);
   ptr++;
@@ -1441,26 +1444,6 @@ inline uint8_t BriskLayer::value(const Image<unsigned char>& mat, float xf,
   ret_val += C * static_cast<int>(*ptr);
 
   return 0xFF & ((ret_val + scaling2 / 2) / scaling2 / 1024);
-}
-
-// half sampling
-inline void BriskLayer::halfsample(const Image<unsigned char>& srcimg,
-                                   Image<unsigned char>& dstimg) {
-  // make sure the destination image is of the right size:
-  CHECK_EQ(srcimg.Cols() / 2, dstimg.Cols());
-  CHECK_EQ(srcimg.Rows() / 2, dstimg.Rows());
-
-  srcimg.HalfSample(&dstimg);
-}
-
-inline void BriskLayer::twothirdsample(const Image<unsigned char>& srcimg,
-                                       Image<unsigned char>& dstimg) {
-  // make sure the destination image is of the right size:
-  CHECK_EQ((srcimg.Cols() / 3) * 2, dstimg.Cols());
-  CHECK_EQ((srcimg.Rows() / 3) * 2, dstimg.Rows());
-
-  // CVD two thirds sample.
-  srcimg.TwoThirdsSample(&dstimg);
 }
 
 }  // namespace theia

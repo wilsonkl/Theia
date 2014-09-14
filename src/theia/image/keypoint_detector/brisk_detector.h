@@ -44,7 +44,7 @@
 
 namespace theia {
 template<class T> class Image;
-typedef Image<float> GrayImage;
+typedef Image<float> FloatImage;
 
 // Detect keypoints using the BRISK method from "BRISK: Binary Robust Invariant
 // Scalable Keypoints" by Leutenegger et. al. (ICCV 2011). This is a version
@@ -59,7 +59,7 @@ class BriskDetector : public KeypointDetector {
 
   ~BriskDetector() {}
 
-  bool DetectKeypoints(const GrayImage& image,
+  bool DetectKeypoints(const FloatImage& image,
                        std::vector<Keypoint>* keypoints);
 
  private:

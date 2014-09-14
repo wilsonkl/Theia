@@ -47,7 +47,7 @@ extern "C" {
 
 namespace theia {
 template<class T> class Image;
-typedef Image<float> GrayImage;
+typedef Image<float> FloatImage;
 
 // SIFT detector as originally proposed by David Lowe. This relies on the open
 // source software VLFeat (www.vlfeat.org) to detect keypoints.
@@ -65,7 +65,7 @@ class SiftDetector : public KeypointDetector {
   ~SiftDetector();
 
   // Given an image, detect keypoints using the sift descriptor.
-  bool DetectKeypoints(const GrayImage& image,
+  bool DetectKeypoints(const FloatImage& image,
                        std::vector<Keypoint>* keypoints);
  private:
   int num_octaves_;

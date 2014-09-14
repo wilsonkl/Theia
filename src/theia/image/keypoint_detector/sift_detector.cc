@@ -49,7 +49,7 @@ SiftDetector::~SiftDetector() {
     vl_sift_delete(sift_filter_);
 }
 
-bool SiftDetector::DetectKeypoints(const GrayImage& image,
+bool SiftDetector::DetectKeypoints(const FloatImage& image,
                                    std::vector<Keypoint>* keypoints) {
   // If the filter has been set, but is not usable for the input image (i.e. the
   // width and height are different) then we must make a new filter. Adding this
@@ -70,7 +70,7 @@ bool SiftDetector::DetectKeypoints(const GrayImage& image,
   // The VLFeat functions take in a non-const image pointer so that it can
   // calculate gaussian pyramids. Obviously, we do not want to break our const
   // input, so the best solution (for now) is to copy the image.
-  GrayImage mutable_image = image.Clone();
+  FloatImage mutable_image(image);
 
   // Calculate the first octave to process.
   int vl_status = vl_sift_process_first_octave(sift_filter_,

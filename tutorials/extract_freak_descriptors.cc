@@ -45,7 +45,7 @@ DEFINE_string(output_dir, ".", "Name of output image dir.");
 
 using theia::BriskDetector;
 using theia::FreakDescriptorExtractor;
-using theia::GrayImage;
+using theia::FloatImage;
 using theia::ImageCanvas;
 using theia::Keypoint;
 
@@ -53,7 +53,8 @@ int main(int argc, char *argv[]) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
 
-  GrayImage image(FLAGS_input_image);
+  FloatImage image(FLAGS_input_image);
+  image.ConvertToGrayscaleImage();
 
   // Detect keypoints.
   VLOG(0) << "detecting keypoints";

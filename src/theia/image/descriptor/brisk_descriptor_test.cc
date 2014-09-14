@@ -53,7 +53,7 @@ std::string img_filename = THEIA_TEST_DATA_DIR + std::string("/") +
 }  // namespace
 
 TEST(BriskDescriptor, Sanity) {
-  GrayImage input_img(img_filename);
+  FloatImage input_img(img_filename);
 
   // Get keypoints.
   BriskDetector brisk_detector;

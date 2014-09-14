@@ -45,6 +45,7 @@
 #include <agast/agast7_12s.h>
 #include <agast/agast5_8.h>
 #include <agast/cvWrapper.h>
+#include <Eigen/Core>
 #ifdef THEIA_USE_SSE
 #include <emmintrin.h>
 #endif
@@ -84,25 +85,23 @@ class BriskLayer {
 
   // accessors
   inline const Image<unsigned char>& img() const { return img_; }
-  inline const Image<unsigned char>& scores() const { return scores_; }
+  inline const Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>&
+  scores() const {
+    return scores_;
+  }
+
   inline float scale() const { return scale_; }
   inline float offset() const { return offset_; }
 
-  // half sampling
-  static inline void halfsample(const Image<unsigned char>& srcimg,
-                                Image<unsigned char>& dstimg);
-  // two third sampling
-  static inline void twothirdsample(const Image<unsigned char>& srcimg,
-                                    Image<unsigned char>& dstimg);
-
  private:
   // access gray values (smoothed/interpolated)
-  inline uint8_t value(const Image<unsigned char>& mat, float xf, float yf,
-                       float scale);
+  inline uint8_t value(
+      const Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>& mat,
+      float xf, float yf, float scale);
   // the image
   Image<unsigned char> img_;
   // its Fast scores
-  Image<unsigned char> scores_;
+  Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> scores_;
   // coordinate transformation
   float scale_;
   float offset_;

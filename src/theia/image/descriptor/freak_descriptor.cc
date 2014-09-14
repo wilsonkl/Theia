@@ -34,11 +34,11 @@
 //
 //  License of original FREAK code:
 //
-//	Copyright (C) 2011-2012  Signal processing laboratory 2, EPFL,
-//	Kirell Benzi (kirell.benzi@epfl.ch),
-//	Raphael Ortiz (raphael.ortiz@a3.epfl.ch)
-//	Alexandre Alahi (alexandre.alahi@epfl.ch)
-//	and Pierre Vandergheynst (pierre.vandergheynst@epfl.ch)
+// Copyright (C) 2011-2012  Signal processing laboratory 2, EPFL,
+// Kirell Benzi (kirell.benzi@epfl.ch),
+// Raphael Ortiz (raphael.ortiz@a3.epfl.ch)
+// Alexandre Alahi (alexandre.alahi@epfl.ch)
+// and Pierre Vandergheynst (pierre.vandergheynst@epfl.ch)
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are met:
@@ -340,7 +340,7 @@ bool FreakDescriptorExtractor::Initialize() {
 
 // Computes a descriptor at a single keypoint.
 bool FreakDescriptorExtractor::ComputeDescriptor(
-    const GrayImage& image, const Keypoint& keypoint,
+    const FloatImage& image, const Keypoint& keypoint,
     Eigen::Vector2d* feature_position, Eigen::BinaryVectorX* descriptor) {
   std::vector<Keypoint> keypoints;
   keypoints.push_back(keypoint);
@@ -359,10 +359,10 @@ bool FreakDescriptorExtractor::ComputeDescriptor(
 
 // Compute multiple descriptors for keypoints from a single image.
 bool FreakDescriptorExtractor::ComputeDescriptors(
-    const GrayImage& image, const std::vector<Keypoint>& keypoints,
+    const FloatImage& image, const std::vector<Keypoint>& keypoints,
     std::vector<Eigen::Vector2d>* feature_positions,
     std::vector<Eigen::BinaryVectorX>* descriptors) {
-  Image<uchar> uchar_image = image.ConvertTo<uchar>();
+  Image<uchar> uchar_image(image);
   Image<uchar> img_integral = uchar_image.Integrate();
 
   // used to save pattern scale index corresponding to each keypoints
@@ -562,10 +562,10 @@ uchar FreakDescriptorExtractor::MeanIntensity(
     const int r_x_1 = 1024 - r_x;
     const int r_y_1 = 1024 - r_y;
     // linear interpolation:
-    unsigned int ret_val = r_x_1 * r_y_1 * image[y][x];
-    ret_val = r_x * r_y_1 * image[y][x + 1];
-    ret_val = r_x * r_y * image[y + 1][x + 1];
-    ret_val = r_x_1 * r_y * image[y + 1][x];
+    unsigned int ret_val = r_x_1 * r_y_1 * image(x, y);
+    ret_val = r_x * r_y_1 * image(x + 1, y);
+    ret_val = r_x * r_y * image(x + 1, y + 1);
+    ret_val = r_x_1 * r_y * image(x, y + 1);
     // return the rounded mean
     ret_val += 2 * 1024 * 1024;
     return static_cast<uchar>(ret_val / (4 * 1024 * 1024));
@@ -582,10 +582,10 @@ uchar FreakDescriptorExtractor::MeanIntensity(
   const int y_bottom = static_cast<int>(yf + radius + 1.5);
 
   // bottom right corner
-  int ret_val = integral[y_bottom][x_right];
-  ret_val -= integral[y_bottom][x_left];
-  ret_val += integral[y_top][x_left];
-  ret_val -= integral[y_top][x_right];
+  int ret_val = integral(x_right, y_bottom);
+  ret_val -= integral(x_left, y_bottom);
+  ret_val += integral(x_left, y_top);
+  ret_val -= integral(x_right, y_top);
   ret_val = ret_val / ((x_right - x_left) * (y_bottom - y_top));
   return ret_val;
 }

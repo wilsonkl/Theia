@@ -42,9 +42,9 @@
 
 namespace theia {
 
-bool BriskDetector::DetectKeypoints(const GrayImage& image,
+bool BriskDetector::DetectKeypoints(const FloatImage& image,
                                     std::vector<Keypoint>* keypoints) {
-  Image<unsigned char> uchar_image = image.ConvertTo<unsigned char>();
+  UcharImage uchar_image(image);
   brisk_scale_space_.constructPyramid(uchar_image);
   brisk_scale_space_.getKeypoints(threshold_, keypoints);
   return true;

@@ -62,6 +62,13 @@ namespace theia {
 // NOTE: ImageCanvas objects are always an rgb image underneath so that pixels
 // drawn onto the canvas can be color, even if the image is not. Again, this can
 // be useful for visualization and matching.
+struct RGBPixel{
+  float r;
+  float g;
+  float b;
+  RGBPixel(const float r, const float g, const float b) : r(r), g(g), b(b) {}
+};
+
 class ImageCanvas {
  public:
   ImageCanvas() {}
@@ -69,8 +76,7 @@ class ImageCanvas {
 
   // Add an image to the canvas such that all the images that have been added
   // are now side-by-side on the canvas. This is useful for feature matching.
-  int AddImage(const GrayImage& image);
-  int AddImage(const RGBImage& image);
+  int AddImage(const FloatImage& image);
 
   // Draw a circle in the image at image_index.
   void DrawCircle(int image_index, int x, int y, int radius,
@@ -85,19 +91,6 @@ class ImageCanvas {
                 int y2, const RGBPixel& color);
   // Draw a line onto the image canvas.
   void DrawLine(int x1, int y1, int x2, int y2, const RGBPixel& color);
-
-  // Draw a cross in the image at image_index.
-  void DrawCross(int image_index, int x, int y, int length,
-                 const RGBPixel& color);
-  // Draw a cross onto the image canvas.
-  void DrawCross(int x, int y, int length, const RGBPixel& color);
-
-  // Draw a box in the image at image_index.
-  void DrawBox(int image_index, int x, int y, int x_length, int y_length,
-               const RGBPixel& color);
-  // Draw a box onto the image canvas.
-  void DrawBox(int x, int y, int x_length, int y_length,
-               const RGBPixel& color);
 
   // Draw feature in the image at image_index. We template these methods so that
   // you can use Keypoint or Descriptor types.
@@ -147,7 +140,7 @@ class ImageCanvas {
                    const RGBPixel& color);
   // The local copy of the canvas. This can be comprised of image(s), shape(s),
   // and more.
-  CVD::Image<RGBPixel> image_;
+  cimg_library::CImg<float> image_;
 
   // Contains the starting x coordinate of the image corresponding to the
   // index. This makes it easy to draw points relative to a particular image
@@ -236,9 +229,9 @@ void ImageCanvas::DrawMatchedFeatures(
   for (int i = 0; i < matches.size(); i++) {
     const Feature& base = features1[matches[i].feature1_ind];
     const Feature& match = features2[matches[i].feature2_ind];
-    RGBPixel color(RandDouble(0, 1.0),
-                   RandDouble(0, 1.0),
-                   RandDouble(0, 1.0));
+    RGBPixel color(RandDouble(0, 255.0),
+                   RandDouble(0, 255.0),
+                   RandDouble(0, 255.0));
     DrawFeature(image_index1, base, color, scale);
     DrawFeature(image_index2, match, color, scale);
     DrawLine(pixel_offsets_[image_index1] + base.x(),
