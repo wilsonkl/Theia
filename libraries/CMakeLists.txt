@@ -8,9 +8,6 @@ ADD_SUBDIRECTORY(agast)
 # CImg for image input/output
 ADD_SUBDIRECTORY(cimg)
 
-# Add Lemon graph library
-ADD_SUBDIRECTORY(lemon)
-
 # Add Optimo
 ADD_SUBDIRECTORY(optimo)
 
