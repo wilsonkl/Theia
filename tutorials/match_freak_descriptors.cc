@@ -43,13 +43,13 @@
 DEFINE_string(img_input_dir, "input", "Directory of two input images.");
 DEFINE_string(img_output_dir, "output", "Name of output image file.");
 
-using theia::FreakDescriptorExtractor;
 using theia::BriskDetector;
-using theia::BruteForceImageMatcher;
-using theia::BruteForceMatcher;
+using theia::BruteForceFeatureMatcher;
 using theia::FloatImage;
+using theia::FreakDescriptorExtractor;
 using theia::Hamming;
 using theia::ImageCanvas;
+using theia::FeatureMatcherOptions;
 using theia::Keypoint;
 
 int main(int argc, char *argv[]) {
@@ -95,11 +95,14 @@ int main(int argc, char *argv[]) {
   VLOG(0) << "right descriptors size = " << right_descriptors.size();
 
   // Match descriptors!
-  BruteForceImageMatcher<Hamming> brute_force_image_matcher;
-  std::vector<theia::FeatureMatch<int> > matches;
+  BruteForceFeatureMatcher<Hamming> brute_force_image_matcher;
+  FeatureMatcherOptions options;
+  std::vector<theia::FeatureMatch> matches;
   clock_t t = clock();
-  brute_force_image_matcher.MatchSymmetricAndDistanceRatio(
-      left_descriptors, right_descriptors, &matches, 0.8, 128);
+  brute_force_image_matcher.Match(options,
+                                  left_descriptors,
+                                  right_descriptors,
+                                  &matches);
   t = clock() - t;
   VLOG(0) << "It took " << (static_cast<float>(t) / CLOCKS_PER_SEC)
           << " to match FREAK descriptors";

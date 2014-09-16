@@ -42,8 +42,9 @@
 DEFINE_string(img_input_dir, "input", "Directory of two input images.");
 DEFINE_string(img_output_dir, "output", "Name of output image file.");
 
-using theia::BruteForceImageMatcher;
+using theia::BruteForceFeatureMatcher;
 using theia::FloatImage;
+using theia::FeatureMatcherOptions;
 using theia::ImageCanvas;
 using theia::Keypoint;
 using theia::L2;
@@ -54,9 +55,7 @@ int main(int argc, char *argv[]) {
   google::InitGoogleLogging(argv[0]);
 
   FloatImage left_image(FLAGS_img_input_dir + std::string("/img1.png"));
-  left_image.ConvertToGrayscaleImage();
   FloatImage right_image(FLAGS_img_input_dir + std::string("/img2.png"));
-  right_image.ConvertToGrayscaleImage();
 
   ImageCanvas image_canvas;
   LOG(INFO) << "adding left image";
@@ -87,15 +86,14 @@ int main(int argc, char *argv[]) {
           << " descriptors in right image.";
 
   // Match descriptors!
-  BruteForceImageMatcher<L2> brute_force_image_matcher;
-  std::vector<theia::FeatureMatch<float> > matches;
+  BruteForceFeatureMatcher<L2> brute_force_image_matcher;
+  FeatureMatcherOptions options;
+  std::vector<theia::FeatureMatch> matches;
   clock_t t = clock();
-  brute_force_image_matcher.MatchSymmetricAndDistanceRatio(
-      left_descriptors,
-      right_descriptors,
-      &matches,
-      0.8,
-      128);
+  brute_force_image_matcher.Match(options,
+                                  left_descriptors,
+                                  right_descriptors,
+                                  &matches);
   t = clock() - t;
   VLOG(0) << "It took " << (static_cast<float>(t)/CLOCKS_PER_SEC)
           << " to match SIFT descriptors";

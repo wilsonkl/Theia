@@ -46,7 +46,7 @@
 #include "theia/image/keypoint_detector/keypoint.h"
 #include "theia/util/random.h"
 #include "theia/util/util.h"
-#include "theia/vision/matching/image_matcher.h"
+#include "theia/vision/matching/feature_matcher.h"
 
 namespace theia {
 
@@ -121,12 +121,12 @@ class ImageCanvas {
 
   // Draw matching features in the image by drawing a line from features1[i]
   // to features2[i].
-  template<class Feature, class T>
+  template<class Feature>
   void DrawMatchedFeatures(int image_index1,
                            const std::vector<Feature>& features1,
                            int image_index2,
                            const std::vector<Feature>& features2,
-                           const std::vector<FeatureMatch<T> >& matches,
+                           const std::vector<FeatureMatch>& matches,
                            double scale = 10.0);
 
   // Write the image canvas to a file.
@@ -218,11 +218,11 @@ void ImageCanvas::DrawFeatures(const std::vector<Feature>& features,
 }
 
 // Draw matching features in the image.
-template<class Feature, class T>
+template<class Feature>
 void ImageCanvas::DrawMatchedFeatures(
     int image_index1, const std::vector<Feature>& features1,
     int image_index2, const std::vector<Feature>& features2,
-    const std::vector<FeatureMatch<T> >& matches,
+    const std::vector<FeatureMatch>& matches,
     double scale) {
   CHECK_GT(pixel_offsets_.size(), std::max(image_index1, image_index2));
   InitRandomGenerator();

@@ -49,13 +49,14 @@ namespace theia {
 
 // Squared Euclidean distance functor. We let Eigen handle the SSE optimization.
 struct L2 {
-  typedef float ResultType;
+  typedef float DistanceType;
+  typedef Eigen::VectorXf DescriptorType;
 
-  ResultType operator()(const Eigen::VectorXf& descriptor_a,
-                        const Eigen::VectorXf& descriptor_b) const {
+  DistanceType operator()(const Eigen::VectorXf& descriptor_a,
+                          const Eigen::VectorXf& descriptor_b) const {
     DCHECK_EQ(descriptor_a.size(), descriptor_b.size());
     Eigen::VectorXf temp = descriptor_b - descriptor_a;
-    ResultType dist = temp.squaredNorm();
+    DistanceType dist = temp.squaredNorm();
     return dist;
   }
 };
@@ -63,10 +64,11 @@ struct L2 {
 // Haming distance functor. We break the binary descriptor down into bytes and
 // use a lookup table to make the xor really fast.
 struct Hamming {
-  typedef int ResultType;
+  typedef int DistanceType;
+  typedef Eigen::BinaryVectorX DescriptorType;
 
-  ResultType operator()(const Eigen::BinaryVectorX& descriptor_a,
-                        const Eigen::BinaryVectorX& descriptor_b) const {
+  DistanceType operator()(const Eigen::BinaryVectorX& descriptor_a,
+                          const Eigen::BinaryVectorX& descriptor_b) const {
     DCHECK_EQ(descriptor_a.size(), descriptor_b.size());
     static constexpr unsigned char pop_count_table[] = {
       0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2,

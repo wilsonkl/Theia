@@ -38,11 +38,11 @@
 #include <Eigen/Eigenvalues>
 #include <Eigen/Geometry>
 #include <glog/logging.h>
-#include <theia/theia.h>
-
 #include <cmath>
 #include <vector>
 
+#include "theia/alignment/alignment.h"
+#include "theia/util/random.h"
 #include "theia/vision/sfm/pose/dls_impl.h"
 
 namespace theia {
