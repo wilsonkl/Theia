@@ -35,6 +35,7 @@
 #ifndef THEIA_IMAGE_IMAGE_H_
 #define THEIA_IMAGE_IMAGE_H_
 
+#include <cimg/Cimg.h>
 #include <glog/logging.h>
 
 #include <algorithm>
@@ -44,7 +45,6 @@
 #include <string>
 #include <vector>
 
-#include "cimg/Cimg.h"
 #include "theia/util/util.h"
 
 namespace theia {

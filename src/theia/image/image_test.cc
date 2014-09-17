@@ -32,11 +32,11 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
+#include <cimg/Cimg.h>
 #include <gflags/gflags.h>
 #include <stdio.h>
 #include <string>
 
-#include "cimg/Cimg.h"
 #include "gtest/gtest.h"
 #include "theia/image/image.h"
 #include "theia/util/random.h"

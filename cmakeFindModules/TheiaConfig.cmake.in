@@ -1,4 +1,4 @@
-# Config file for Theia Solver - Find Theia & dependencies.
+# Config file for Theia - Find Theia & dependencies.
 #
 # This file is used by CMake when FIND_PACKAGE( Theia ) is invoked (and
 # the directory containing this file is present in CMAKE_MODULE_PATH).
@@ -144,12 +144,16 @@ SET(THEIA_LIBRARIES theia)
 # Add the libraries included with the distribution.
 SET(THEIA_INTERNAL_LIB_PREFIX ${THEIA_INCLUDE_DIR}/theia/libraries)
 SET(THEIA_INTERNAL_LIBS_INCLUDES
-  ${THEIA_INTERNAL_LIB_PREFIX}/libraries
-  ${THEIA_INTERNAL_LIB_PREFIX}/gtest/include
+  ${THEIA_INTERNAL_LIB_PREFIX}
+  ${THEIA_INTERNAL_LIB_PREFIX}/agast
+  ${THEIA_INTERNAL_LIB_PREFIX}/cimg
   ${THEIA_INTERNAL_LIB_PREFIX}/gtest
+  ${THEIA_INTERNAL_LIB_PREFIX}/gtest/include
   ${THEIA_INTERNAL_LIB_PREFIX}/hayai
-  ${THEIA_INTERNAL_LIB_PREFIX}/vlfeat
-  ${THEIA_INTERNAL_LIB_PREFIX}/agast)
+  ${THEIA_INTERNAL_LIB_PREFIX}/optimo
+  ${THEIA_INTERNAL_LIB_PREFIX}/statx
+  ${THEIA_INTERNAL_LIB_PREFIX}/stlplus3
+  ${THEIA_INTERNAL_LIB_PREFIX}/vlfeat)
 
 LIST(APPEND THEIA_INCLUDE_DIRS ${THEIA_INTERNAL_LIBS_INCLUDES})
 
