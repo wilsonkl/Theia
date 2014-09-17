@@ -32,117 +32,18 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#include "theia/data_loader/bundler_binary_file.h"
+#include "theia/io/bundler_binary_file.h"
 
 #include <Eigen/Core>
-#include <theia/theia.h>
 #include <cstdlib>
+#include <cstdio>
 #include <fstream>
+#include <glog/logging.h>
+#include <iostream>
 #include <string>
 #include <vector>
 
 namespace theia {
-
-// The sift key file has the following format:
-//
-// number_of_keypoints sift_descriptor_dimensions (both as ints)
-// for each descriptor:
-//   row col scale orientation (all as floats)
-//   128 ints describing sift descriptor. Normalizing this 128-vector to unit
-//     length will yield the float sift descriptor.
-bool ReadSiftKeyBinaryFile(const std::string& sift_key_file,
-                           std::vector<Eigen::Vector2d>* feature_position,
-                           std::vector<Eigen::VectorXf>* descriptor,
-                           std::vector<Keypoint>* keypoint) {
-  std::ifstream ifs(sift_key_file.c_str(), std::ios::in | std::ios::binary);
-  if (!ifs.is_open()) {
-    LOG(ERROR) << "Could not read the sift key binary file from "
-               << sift_key_file;
-    return false;
-  }
-
-  // Number of descriptors and the length of the descriptors.
-  int num_descriptors, len;
-  ifs.read(reinterpret_cast<char*>(&num_descriptors), sizeof(num_descriptors));
-  ifs.read(reinterpret_cast<char*>(&len), sizeof(len));
-  CHECK_EQ(len, 128);
-
-  feature_position->reserve(num_descriptors);
-  descriptor->reserve(num_descriptors);
-  if (keypoint != nullptr) {
-    keypoint->reserve(num_descriptors);
-  }
-  for (int i = 0; i < num_descriptors; i++) {
-    // Keypoint params = y, x, scale, orientation.
-    float keypoint_params[4];
-    ifs.read(reinterpret_cast<char*>(keypoint_params),
-             4 * sizeof(keypoint_params[0]));
-
-    // Set 2D position
-    feature_position->push_back(
-        Eigen::Vector2d(keypoint_params[1], keypoint_params[0]));
-    // Set keypoint if the output variable is not NULL.
-    if (keypoint != nullptr) {
-      Keypoint kp(keypoint_params[1], keypoint_params[0], Keypoint::SIFT);
-      kp.set_scale(keypoint_params[2]);
-      kp.set_orientation(keypoint_params[3]);
-      keypoint->push_back(kp);
-    }
-
-    Eigen::Matrix<uint8_t, Eigen::Dynamic, 1> int_desc(128);
-    ifs.read(reinterpret_cast<char*>(int_desc.data()),
-             int_desc.size() * sizeof(int_desc[0]));
-    Eigen::VectorXf float_descriptor = int_desc.cast<float>();
-    float_descriptor /= 255.0;
-    descriptor->push_back(float_descriptor);
-  }
-  ifs.close();
-
-  return true;
-}
-
-// Outputs the SIFT features in the same format as Lowe's sift key files, but
-// stores it as a binary file for faster loading.
-bool WriteSiftKeyBinaryFile(
-    const std::string& output_sift_key_file,
-    const std::vector<Eigen::Vector2d>& feature_position,
-    const std::vector<Eigen::VectorXf>& descriptor,
-    const std::vector<Keypoint>& keypoint) {
-  std::ofstream ofs(output_sift_key_file.c_str(),
-                    std::ios::out | std::ios::binary);
-  if (!ofs.is_open()) {
-    LOG(ERROR) << "Could not write the sift key binary file to "
-               << output_sift_key_file;
-    return false;
-  }
-
-  // Output number of descriptors and descriptor length.
-  const int num_descriptors = descriptor.size();
-  const int len = 128;
-  ofs.write(reinterpret_cast<const char*>(&num_descriptors),
-            sizeof(num_descriptors));
-  ofs.write(reinterpret_cast<const char*>(&len), sizeof(len));
-
-  // Output the sift descriptors.
-  for (int i = 0; i < num_descriptors; i++) {
-    // Output the keypoint information (x, y, scale, orientation).
-    float kp[4];
-    kp[0] = keypoint[i].y();
-    kp[1] = keypoint[i].x();
-    kp[2] = keypoint[i].scale();
-    kp[3] = keypoint[i].orientation();
-    ofs.write(reinterpret_cast<const char*>(kp), 4 * sizeof(kp[0]));
-
-    // Output the descriptor.
-    const Eigen::VectorXf float_scaled_desc = descriptor[i] * 255.0;
-    const Eigen::Matrix<uint8_t, Eigen::Dynamic, 1> int_desc =
-        float_scaled_desc.cast<uint8_t>();
-    ofs.write(reinterpret_cast<const char*>(int_desc.data()),
-              int_desc.size() * sizeof(int_desc[0]));
-  }
-  ofs.close();
-  return true;
-}
 
 // The bundle files contain the estimated scene and camera geometry have the
 // following format:

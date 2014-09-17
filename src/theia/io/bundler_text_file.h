@@ -32,8 +32,8 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_DATA_LOADER_BUNDLER_TEXT_FILE_H_
-#define THEIA_DATA_LOADER_BUNDLER_TEXT_FILE_H_
+#ifndef THEIA_IO_BUNDLER_TEXT_FILE_H_
+#define THEIA_IO_BUNDLER_TEXT_FILE_H_
 
 #include <Eigen/Core>
 #include <string>
@@ -66,17 +66,6 @@ bool ReadListsFile(const std::string& list_filename,
                    std::vector<std::string>* image_name,
                    std::vector<double>* exif_focal_length);
 
-// Reads a SIFT key files as computed by Lowe's SIFT software:
-// http://www.cs.ubc.ca/~lowe/keypoints/
-//
-// The vector keypoint will contain the x and y position, as well as the scale
-// and orientation of each feature. This variable may be set to NULL, in which
-// case the method ignores the keypoint vector.
-bool ReadSiftKeyTextFile(const std::string& sift_key_file,
-                         std::vector<Eigen::Vector2d>* feature_position,
-                         std::vector<Eigen::VectorXf>* descriptor,
-                         std::vector<Keypoint>* keypoint);
-
 // Loads all information from a bundler file. The bundler file includes 3D
 // points, camera poses, camera intrinsics, descriptors, and 2D-3D matches. This
 // method will not load the descriptors from the sift key files, it will only
@@ -101,4 +90,4 @@ bool ReadBundleTextFile(const std::string& bundle_file,
 
 }  // namespace theia
 
-#endif  // THEIA_DATA_LOADER_BUNDLER_TEXT_FILE_H_
+#endif  // THEIA_IO_BUNDLER_TEXT_FILE_H_

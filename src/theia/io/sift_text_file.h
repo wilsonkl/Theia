@@ -32,46 +32,28 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
+#ifndef THEIA_IO_BUNDLER_TEXT_FILE_H_
+#define THEIA_IO_BUNDLER_TEXT_FILE_H_
+
 #include <Eigen/Core>
-#include <glog/logging.h>
-#include <gflags/gflags.h>
 #include <string>
 #include <vector>
 
 #include "theia/io/bundler_text_file.h"
-#include "theia/io/bundler_binary_file.h"
+#include "theia/image/keypoint_detector/keypoint.h"
 
-DEFINE_string(input_bundle_file, "",
-              "Input bundle text file to convert. Should end in .out");
+namespace theia {
 
-DEFINE_string(output_bundle_file, "",
-              "Output bundle file in binary format. Should end in .bin");
+// Reads a SIFT key files as computed by Lowe's SIFT software:
+// http://www.cs.ubc.ca/~lowe/keypoints/
+//
+// The vector keypoint will contain the x and y position, as well as the scale
+// and orientation of each feature. This variable may be set to NULL, in which
+// case the method ignores the keypoint vector.
+bool ReadSiftKeyTextFile(const std::string& sift_key_file,
+                         std::vector<Eigen::VectorXf>* descriptor,
+                         std::vector<Keypoint>* keypoint);
 
-// This function will load the sift descriptors from the key text files and
-// convert them to binary files.
-bool ConvertBundleFile(const std::string& input_bundle_file,
-                       const std::string& output_bundle_file) {
-  // Read text file.
-  std::vector<theia::Camera> camera;
-  std::vector<Eigen::Vector3d> world_points;
-  std::vector<Eigen::Vector3f> world_points_color;
-  std::vector<theia::BundleViewList> view_list;
-  CHECK(theia::ReadBundleTextFile(input_bundle_file, &camera, &world_points,
-                                   &world_points_color, &view_list));
+}  // namespace theia
 
-  // Write binary file.
-  CHECK(
-      theia::WriteBundleBinaryFile(output_bundle_file, camera, world_points,
-                                   world_points_color, view_list));
-  return true;
-}
-
-int main(int argc, char* argv[]) {
-  google::InitGoogleLogging(argv[0]);
-  google::ParseCommandLineFlags(&argc, &argv, true);
-
-  // Load the SIFT descriptors into the cameras.
-  CHECK(ConvertBundleFile(FLAGS_input_bundle_file, FLAGS_output_bundle_file));
-
-  return 0;
-}
+#endif  // THEIA_IO_BUNDLER_TEXT_FILE_H_

@@ -35,10 +35,11 @@
 #include <Eigen/Core>
 #include <glog/logging.h>
 #include <gflags/gflags.h>
-#include <theia/theia.h>
-
 #include <string>
 #include <vector>
+
+#include "theia/io/sift_text_file.h"
+#include "theia/io/sift_binary_file.h"
 
 DEFINE_string(input_sift_key_file, "",
               "Input sift key text file to convert. Should end in .key");
@@ -51,15 +52,15 @@ DEFINE_string(output_sift_key_file, "",
 bool ConvertSiftKeyFile(const std::string& input_sift_key_file,
                         const std::string& output_sift_key_file) {
   // Read text file.
-  std::vector<Eigen::Vector2d> feature_position;
   std::vector<Eigen::VectorXf> descriptor;
   std::vector<theia::Keypoint> keypoint;
-  CHECK(theia::ReadSiftKeyTextFile(
-      input_sift_key_file, &feature_position, &descriptor, &keypoint));
+  CHECK(
+      theia::ReadSiftKeyTextFile(input_sift_key_file, &descriptor, &keypoint));
 
   // Write binary file.
-  CHECK(theia::WriteSiftKeyBinaryFile(
-      output_sift_key_file, feature_position, descriptor, keypoint));
+  CHECK(theia::WriteSiftKeyBinaryFile(output_sift_key_file,
+                                      descriptor,
+                                      keypoint));
 
   return true;
 }

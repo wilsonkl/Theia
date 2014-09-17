@@ -37,8 +37,6 @@ FILE(GLOB THEIA_HDRS *.h)
 
 # Add sources
 SET(THEIA_SRC
-  data_loader/bundler_binary_file.cc
-  data_loader/bundler_text_file.cc
   image/descriptor/brisk_descriptor.cc
   image/descriptor/descriptor_extractor.cc
   image/descriptor/freak_descriptor.cc
@@ -48,6 +46,10 @@ SET(THEIA_SRC
   image/keypoint_detector/brisk_detector.cc
   image/keypoint_detector/brisk_impl.cc
   image/keypoint_detector/sift_detector.cc
+  io/bundler_binary_file.cc
+  io/bundler_text_file.cc
+  io/sift_binary_file.cc
+  io/sift_text_file.cc
   math/closed_form_polynomial_solver.cc
   math/polynomial.cc
   math/probability/sequential_probability_ratio.cc

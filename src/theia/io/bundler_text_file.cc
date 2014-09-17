@@ -32,7 +32,7 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#include "theia/data_loader/bundler_text_file.h"
+#include "theia/io/bundler_text_file.h"
 
 #include <Eigen/Core>
 #include <glog/logging.h>
@@ -41,6 +41,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -96,77 +97,6 @@ bool ReadListsFile(const std::string& list_filename,
     }
     exif_focal_length->push_back(focal_length);
   }
-  return true;
-}
-
-// The sift key file has the following format:
-//
-// number_of_keypoints sift_descriptor_dimensions (both as ints)
-// for each descriptor:
-//   row col scale orientation (all as floats)
-//   128 ints describing sift descriptor. Normalizing this 128-vector to unit
-//     length will yield the true sift descriptor.
-// NOTE: We use getline and strtof which should be much faster than letting the
-// stream parse the string with operator >>.
-bool ReadSiftKeyTextFile(const std::string& sift_key_file,
-                         std::vector<Eigen::Vector2d>* feature_position,
-                         std::vector<Eigen::VectorXf>* descriptor,
-                         std::vector<Keypoint>* keypoint) {
-  FILE* fp = fopen(sift_key_file.c_str(), "r");
-  int num_descriptors, len;
-
-  if (fscanf(fp, "%d %d", &num_descriptors, &len) != 2) {
-    printf("Invalid keypoint file\n");
-    return 0;
-  }
-
-  CHECK_EQ(len, 128);
-
-  feature_position->reserve(num_descriptors);
-  descriptor->reserve(num_descriptors);
-  if (keypoint != nullptr) {
-    keypoint->reserve(num_descriptors);
-  }
-
-  for (int i = 0; i < num_descriptors; i++) {
-    float x, y, scale, ori;
-
-    if (fscanf(fp, "%f %f %f %f\n", &y, &x, &scale, &ori) != 4) {
-      printf("Invalid keypoint file format.");
-      return 0;
-    }
-
-    feature_position->push_back(Eigen::Vector2d(x, y));
-    if (keypoint != nullptr) {
-      Keypoint kp(x, y, Keypoint::SIFT);
-      kp.set_scale(scale);
-      kp.set_orientation(ori);
-      keypoint->push_back(kp);
-    }
-
-    char buf[1024];
-    Eigen::Matrix<uint8_t, Eigen::Dynamic, 1> int_descriptor(128);
-    uint8_t* p = int_descriptor.data();
-    for (int line = 0; line < 6; line++) {
-      fgets(buf, 1024, fp);
-      sscanf(buf, "%hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu "
-             "%hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu",
-             p + 0, p + 1, p + 2, p + 3, p + 4, p + 5, p + 6, p + 7, p + 8,
-             p + 9, p + 10, p + 11, p + 12, p + 13, p + 14, p + 15, p + 16,
-             p + 17, p + 18, p + 19);
-
-      p += 20;
-    }
-    fgets(buf, 1024, fp);
-    sscanf(buf, "%hhu %hhu %hhu %hhu %hhu %hhu %hhu %hhu", p + 0, p + 1,
-           p + 2, p + 3, p + 4, p + 5, p + 6, p + 7);
-
-    Eigen::VectorXf float_descriptor = int_descriptor.cast<float>();
-    float_descriptor /= 255.0;
-    descriptor->push_back(float_descriptor);
-  }
-
-  fclose(fp);
   return true;
 }
 

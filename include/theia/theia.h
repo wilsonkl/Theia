@@ -36,8 +36,6 @@
 #define THEIA_THEIA_H_
 
 #include "theia/alignment/alignment.h"
-#include "theia/data_loader/bundler_binary_file.h"
-#include "theia/data_loader/bundler_text_file.h"
 #include "theia/image/descriptor/brisk_descriptor.h"
 #include "theia/image/descriptor/descriptor_extractor.h"
 #include "theia/image/descriptor/freak_descriptor.h"
@@ -50,6 +48,10 @@
 #include "theia/image/keypoint_detector/keypoint.h"
 #include "theia/image/keypoint_detector/keypoint_detector.h"
 #include "theia/image/keypoint_detector/sift_detector.h"
+#include "theia/io/bundler_binary_file.h"
+#include "theia/io/bundler_text_file.h"
+#include "theia/io/sift_binary_file.h"
+#include "theia/io/sift_text_file.h"
 #include "theia/math/closed_form_polynomial_solver.h"
 #include "theia/math/distribution.h"
 #include "theia/math/matrix/gauss_jordan.h"
