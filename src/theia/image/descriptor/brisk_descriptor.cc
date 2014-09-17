@@ -385,34 +385,31 @@ bool RoiPredicate(const float minX, const float minY, const float maxX,
 
 // Computes a descriptor at a single keypoint.
 bool BriskDescriptorExtractor::ComputeDescriptor(
-    const FloatImage& image, const Keypoint& keypoint,
-    Eigen::Vector2d* feature_position, Eigen::BinaryVectorX* descriptor) {
+    const FloatImage& image,
+    const Keypoint& keypoint,
+    Eigen::BinaryVectorX* descriptor) {
   std::vector<Keypoint> keypoints;
   keypoints.push_back(keypoint);
-  std::vector<Eigen::Vector2d> feature_positions;
   std::vector<Eigen::BinaryVectorX> descriptors;
-  bool success =
-      ComputeDescriptors(image, keypoints, &feature_positions, &descriptors);
-  if (success) {
-    *feature_position = feature_positions[0];
-    *descriptor = descriptors[0];
-    return true;
-  } else {
+  const bool success =
+      ComputeDescriptors(image, &keypoints, &descriptors);
+  if (!success || keypoints.size() == 0) {
     return false;
   }
+
+  *descriptor = descriptors[0];
+  return true;
 }
 
 // computes the descriptor
 bool BriskDescriptorExtractor::ComputeDescriptors(
-    const FloatImage& image, const std::vector<Keypoint>& keypoints,
-    std::vector<Eigen::Vector2d>* feature_positions,
+    const FloatImage& image,
+    std::vector<Keypoint>* keypoints,
     std::vector<Eigen::BinaryVectorX>* descriptors) {
 
   // Remove keypoints very close to the border
-  size_t ksize = keypoints.size();
-  std::vector<int> kscales;  // remember the scale per keypoint
-  std::vector<bool> valid_keypoint(ksize, true);
-  kscales.resize(ksize);
+  size_t ksize = keypoints->size();
+  std::vector<int> kscales(ksize);  // remember the scale per keypoint
   static const float log2 = 0.693147180559945;
   static const float lb_scalerange = log(scale_range_) / (log2);
   static const float basicSize06 = basic_size_ * 0.6;
@@ -423,13 +420,15 @@ bool BriskDescriptorExtractor::ComputeDescriptors(
                              (log(1.45 * basic_size_ / (basicSize06)) / log2) +
                          0.5),
         0);
-  for (size_t k = 0; k < ksize; k++) {
+
+  for (size_t k = keypoints->size(); k--;) {
     unsigned int scale;
     if (scale_invariance_) {
-      scale = std::max(static_cast<int>(scales_ / lb_scalerange *
-                                            (log(12.0 * keypoints[k].scale() /
-                                                 (basicSize06)) / log2) + 0.5),
-                       0);
+      scale =
+          std::max(static_cast<int>(scales_ / lb_scalerange *
+                                        (log(12.0 * (*keypoints)[k].scale() /
+                                             (basicSize06)) / log2) + 0.5),
+                   0);
       // saturate
       if (scale >= scales_) scale = scales_ - 1;
       kscales[k] = scale;
@@ -440,8 +439,9 @@ bool BriskDescriptorExtractor::ComputeDescriptors(
     const int border = size_list_[scale];
     const int border_x = image.Cols() - border - 1;
     const int border_y = image.Rows() - border - 1;
-    if (RoiPredicate(border, border, border_x, border_y, keypoints[k])) {
-      valid_keypoint[k] = false;
+    if (RoiPredicate(border, border, border_x, border_y, (*keypoints)[k])) {
+      keypoints->erase(keypoints->begin() + k);
+      kscales.erase(kscales.begin() + k);
     }
   }
 
@@ -452,8 +452,8 @@ bool BriskDescriptorExtractor::ComputeDescriptors(
   int* _values = new int[points_];  // for temporary use
 
   // resize the descriptors:
-  descriptors->reserve(keypoints.size());
-  feature_positions->reserve(keypoints.size());
+  descriptors->reserve(keypoints->size());
+
   // now do the extraction for all keypoints:
 
   // temporary variables containing gray values at sample points:
@@ -463,12 +463,9 @@ bool BriskDescriptorExtractor::ComputeDescriptors(
   // the feature orientation
   int direction0;
   int direction1;
-  for (size_t k = 0; k < ksize; k++) {
-    if (!valid_keypoint[k]) {
-      continue;
-    }
+  for (size_t k = 0; k < keypoints->size(); k++) {
     int theta;
-    const Keypoint& kp = keypoints[k];
+    const Keypoint& kp = (*keypoints)[k];
     const int& scale = kscales[k];
     int shifter = 0;
     int* pvalues = _values;
@@ -478,8 +475,6 @@ bool BriskDescriptorExtractor::ComputeDescriptors(
     Eigen::BinaryVectorX binary_descriptor(512 / (8 * sizeof(uint8_t)));
     std::bitset<512>* descriptor_bits =
         reinterpret_cast<std::bitset<512>*>(binary_descriptor.data());
-
-    feature_positions->push_back(Eigen::Vector2d(x, y));
 
     if (!rotation_invariance_) {
       // don't compute the gradient direction, just assign a rotation of 0°

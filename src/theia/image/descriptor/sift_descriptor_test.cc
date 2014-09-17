@@ -55,23 +55,21 @@ TEST(SiftDescriptor, Sanity) {
   FloatImage input_img(img_filename);
 
   // Get keypoints.
-  SiftDetector fast_detector;
+  SiftDetector sift_detector;
   std::vector<Keypoint> sift_keypoints;
-  fast_detector.DetectKeypoints(input_img, &sift_keypoints);
+  sift_detector.DetectKeypoints(input_img, &sift_keypoints);
 
   // For each keypoint, extract the sift descriptors.
   SiftDescriptorExtractor sift_extractor;
 
-  Eigen::Vector2d position;
   Eigen::VectorXf descriptor;
-  EXPECT_TRUE(sift_extractor.ComputeDescriptor(input_img, sift_keypoints[0],
-                                               &position, &descriptor));
+  EXPECT_TRUE(sift_extractor.ComputeDescriptor(input_img,
+                                               sift_keypoints[0],
+                                               &descriptor));
 
-  std::vector<Eigen::Vector2d> positions;
   std::vector<Eigen::VectorXf> sift_descriptors;
   EXPECT_TRUE(sift_extractor.ComputeDescriptors(input_img,
-                                                sift_keypoints,
-                                                &positions,
+                                                &sift_keypoints,
                                                 &sift_descriptors));
 }
 

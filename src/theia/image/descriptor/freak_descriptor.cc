@@ -340,33 +340,32 @@ bool FreakDescriptorExtractor::Initialize() {
 
 // Computes a descriptor at a single keypoint.
 bool FreakDescriptorExtractor::ComputeDescriptor(
-    const FloatImage& image, const Keypoint& keypoint,
-    Eigen::Vector2d* feature_position, Eigen::BinaryVectorX* descriptor) {
+    const FloatImage& image,
+    const Keypoint& keypoint,
+    Eigen::BinaryVectorX* descriptor) {
   std::vector<Keypoint> keypoints;
   keypoints.push_back(keypoint);
-  std::vector<Eigen::Vector2d> feature_positions;
   std::vector<Eigen::BinaryVectorX> descriptors;
   bool success =
-      ComputeDescriptors(image, keypoints, &feature_positions, &descriptors);
-  if (success) {
-    *feature_position = feature_positions[0];
-    *descriptor = descriptors[0];
-    return true;
-  } else {
+      ComputeDescriptors(image, &keypoints, &descriptors);
+  if (!success || keypoints.size() == 0) {
     return false;
   }
+
+  *descriptor = descriptors[0];
+  return true;
 }
 
 // Compute multiple descriptors for keypoints from a single image.
 bool FreakDescriptorExtractor::ComputeDescriptors(
-    const FloatImage& image, const std::vector<Keypoint>& keypoints,
-    std::vector<Eigen::Vector2d>* feature_positions,
+    const FloatImage& image,
+    std::vector<Keypoint>* keypoints,
     std::vector<Eigen::BinaryVectorX>* descriptors) {
   Image<uchar> uchar_image(image.AsGrayscaleImage());
   Image<uchar> img_integral = uchar_image.Integrate();
 
   // used to save pattern scale index corresponding to each keypoints
-  std::vector<int> kp_scale_idx(keypoints.size());
+  std::vector<int> kp_scale_idx(keypoints->size());
   const float size_cst =
       static_cast<float>(kNumScales_ / (kLog2 * num_octaves_));
   uchar points_value[kNumPoints];
@@ -376,53 +375,54 @@ bool FreakDescriptorExtractor::ComputeDescriptors(
 
   // compute the scale index corresponding to the keypoint size and remove
   // keypoints close to the border.
-  descriptors->reserve(keypoints.size());
-  feature_positions->reserve(keypoints.size());
+  descriptors->reserve(keypoints->size());
   if (scale_invariant_) {
-    for (size_t k = keypoints.size(); k--;) {
+    for (size_t k = keypoints->size(); k--;) {
       // Is k non-zero? If so, decrement it and continue.
       kp_scale_idx[k] = std::max(
-          static_cast<int>(std::log(keypoints[k].scale() /
+          static_cast<int>(std::log((*keypoints)[k].scale() /
                                     kSmallestKeypointSize) * size_cst + 0.5),
           0);
-      if (kp_scale_idx[k] >= kNumScales_) kp_scale_idx[k] = kNumScales_ - 1;
+      if (kp_scale_idx[k] >= kNumScales_) {
+        kp_scale_idx[k] = kNumScales_ - 1;
+      }
 
       // Check if the description at this specific position and scale fits
       // inside the image.
-      if (keypoints[k].x() <= pattern_sizes_[kp_scale_idx[k]] ||
-          keypoints[k].y() <= pattern_sizes_[kp_scale_idx[k]] ||
-          keypoints[k].x() >= image.Cols() - pattern_sizes_[kp_scale_idx[k]] ||
-          keypoints[k].y() >= image.Rows() - pattern_sizes_[kp_scale_idx[k]]) {
-        continue;
-      } else {
-        feature_positions->push_back(
-            Eigen::Vector2d(keypoints[k].x(), keypoints[k].y()));
+      if ((*keypoints)[k].x() <= pattern_sizes_[kp_scale_idx[k]] ||
+          (*keypoints)[k].y() <= pattern_sizes_[kp_scale_idx[k]] ||
+          (*keypoints)[k].x() >=
+              image.Cols() - pattern_sizes_[kp_scale_idx[k]] ||
+          (*keypoints)[k].y() >=
+              image.Rows() - pattern_sizes_[kp_scale_idx[k]]) {
+        keypoints->erase(keypoints->begin() + k);
+        kp_scale_idx.erase(kp_scale_idx.begin() + k);
       }
     }
   } else {
     // Equivalent to the formula when the scale is normalized with a constant
-    // size of keypoints[k].size=3*SMALLEST_KP_SIZE.
+    // size of (*keypoints)[k].size=3*SMALLEST_KP_SIZE.
     int scIdx = std::max(static_cast<int>(1.0986122886681 * size_cst + 0.5), 0);
     if (scIdx >= kNumScales_) {
       scIdx = kNumScales_ - 1;
     }
-    for (size_t k = keypoints.size(); k--;) {
+    for (size_t k = keypoints->size(); k--;) {
       kp_scale_idx[k] = scIdx;
-      if (keypoints[k].x() <= pattern_sizes_[kp_scale_idx[k]] ||
-          keypoints[k].y() <= pattern_sizes_[kp_scale_idx[k]] ||
-          keypoints[k].x() >= image.Cols() - pattern_sizes_[kp_scale_idx[k]] ||
-          keypoints[k].y() >= image.Rows() - pattern_sizes_[kp_scale_idx[k]]) {
-        continue;
-      } else {
-        feature_positions->push_back(
-            Eigen::Vector2d(keypoints[k].x(), keypoints[k].y()));
+      if ((*keypoints)[k].x() <= pattern_sizes_[kp_scale_idx[k]] ||
+          (*keypoints)[k].y() <= pattern_sizes_[kp_scale_idx[k]] ||
+          (*keypoints)[k].x() >=
+              image.Cols() - pattern_sizes_[kp_scale_idx[k]] ||
+          (*keypoints)[k].y() >=
+              image.Rows() - pattern_sizes_[kp_scale_idx[k]]) {
+        keypoints->erase(keypoints->begin() + k);
+        kp_scale_idx.erase(kp_scale_idx.begin() + k);
       }
     }
   }
 
   // Estimate orientations, extract descriptors, extract the best comparisons
   // only.
-  for (size_t k = feature_positions->size(); k--;) {
+  for (size_t k = keypoints->size(); k--;) {
     Eigen::BinaryVectorX freak_descriptor(512 / (8 * sizeof(uint8_t)));
     // estimate orientation (gradient)
     if (!rotation_invariant_) {
@@ -432,8 +432,8 @@ bool FreakDescriptorExtractor::ComputeDescriptors(
       // get the points intensity value in the un-rotated pattern
       for (int i = kNumPoints; i--;) {
         points_value[i] = MeanIntensity(
-            uchar_image, img_integral, feature_positions->at(k).x(),
-            feature_positions->at(k).y(), kp_scale_idx[k], 0, i);
+            uchar_image, img_integral, keypoints->at(k).x(),
+            keypoints->at(k).y(), kp_scale_idx[k], 0, i);
       }
       direction0 = 0;
       direction1 = 0;
@@ -457,8 +457,8 @@ bool FreakDescriptorExtractor::ComputeDescriptors(
     // extract descriptor at the computed orientation
     for (int i = kNumPoints; i--;) {
       points_value[i] = MeanIntensity(
-          uchar_image, img_integral, feature_positions->at(k).x(),
-          feature_positions->at(k).y(), kp_scale_idx[k], theta_idx, i);
+          uchar_image, img_integral, keypoints->at(k).x(),
+          keypoints->at(k).y(), kp_scale_idx[k], theta_idx, i);
     }
 
 #ifdef THEIA_USE_SSE

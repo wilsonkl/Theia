@@ -45,42 +45,44 @@ namespace theia {
 // Compute the descriptor for multiple keypoints in a given image.
 bool DescriptorExtractor::ComputeDescriptors(
     const FloatImage& image,
-    const std::vector<Keypoint>& keypoints,
-    std::vector<Eigen::Vector2d>* feature_positions,
+    std::vector<Keypoint>* keypoints,
     std::vector<Eigen::VectorXf>* descriptors) {
   const FloatImage& gray_image = image.AsGrayscaleImage();
-  descriptors->reserve(keypoints.size());
-  for (const Keypoint& img_keypoint : keypoints) {
+  descriptors->reserve(keypoints->size());
+
+  auto keypoint_it = keypoints->begin();
+  while (keypoint_it != keypoints->end()) {
     Eigen::VectorXf descriptor;
-    Eigen::Vector2d feature_position;
-    if (ComputeDescriptor(gray_image, img_keypoint, &feature_position,
-                          &descriptor)) {
-      feature_positions->push_back(feature_position);
-      descriptors->push_back(descriptor);
-    } else {
-      return false;
+    if (!ComputeDescriptor(gray_image,
+                           *keypoint_it,
+                           &descriptor)) {
+      keypoint_it = keypoints->erase(keypoint_it);
+      continue;
     }
+
+    descriptors->push_back(descriptor);
   }
   return true;
 }
 
 bool DescriptorExtractor::ComputeDescriptors(
     const FloatImage& image,
-    const std::vector<Keypoint>& keypoints,
-    std::vector<Eigen::Vector2d>* feature_positions,
+    std::vector<Keypoint>* keypoints,
     std::vector<Eigen::BinaryVectorX>* descriptors) {
   const FloatImage& gray_image = image.AsGrayscaleImage();
-  descriptors->reserve(keypoints.size());
-  for (const Keypoint& img_keypoint : keypoints) {
+  descriptors->reserve(keypoints->size());
+
+  auto keypoint_it = keypoints->begin();
+  while (keypoint_it != keypoints->end()) {
     Eigen::BinaryVectorX descriptor;
-    Eigen::Vector2d feature_position;
-    if (ComputeDescriptor(gray_image, img_keypoint, &feature_position,
-                          &descriptor)) {
-      feature_positions->push_back(feature_position);
-      descriptors->push_back(descriptor);
-    } else {
-      return false;
+    if (!ComputeDescriptor(gray_image,
+                           *keypoint_it,
+                           &descriptor)) {
+      keypoint_it = keypoints->erase(keypoint_it);
+      continue;
     }
+
+    descriptors->push_back(descriptor);
   }
   return true;
 }

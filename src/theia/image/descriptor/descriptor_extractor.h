@@ -71,32 +71,27 @@ class DescriptorExtractor {
   // Computes a floatdescriptor at a single keypoint.
   virtual bool ComputeDescriptor(const FloatImage& image,
                                  const Keypoint& keypoint,
-                                 Eigen::Vector2d* feature_position,
                                  Eigen::VectorXf* descriptor) = 0;
 
   // Computes a binary descriptor at a single keypoint.
   virtual bool ComputeDescriptor(const FloatImage& image,
                                  const Keypoint& keypoint,
-                                 Eigen::Vector2d* feature_position,
                                  Eigen::BinaryVectorX* descriptor) = 0;
 
   // Compute the descriptors for multiple keypoints in a given image. This
-  // method will populate the feature_position and descriptors vectors
-  // accordingly. Only the features that could extract a valid descriptor are in
-  // these containers, so it is not guaranteed that all keypoints will extract a
-  // features (e.g., keypoints near the edge of an image). Returns true on
-  // success, false on failure.
+  // method will return all descriptors that could be extracted. If any
+  // descriptors could not be extracted at a given keypoint, that keypoint will
+  // be removed from the container. Returns true on success and false on
+  // failure.
   virtual bool ComputeDescriptors(
       const FloatImage& image,
-      const std::vector<Keypoint>& keypoints,
-      std::vector<Eigen::Vector2d>* feature_positions,
+      std::vector<Keypoint>* keypoints,
       std::vector<Eigen::VectorXf>* descriptors);
 
   // Same as above, but for binary descriptors.
   virtual bool ComputeDescriptors(
       const FloatImage& image,
-      const std::vector<Keypoint>& keypoints,
-      std::vector<Eigen::Vector2d>* feature_positions,
+      std::vector<Keypoint>* keypoints,
       std::vector<Eigen::BinaryVectorX>* descriptors);
 
  private:
@@ -117,13 +112,11 @@ class FloatDescriptorExtractor : public DescriptorExtractor {
   // Computes a floatdescriptor at a single keypoint.
   virtual bool ComputeDescriptor(const FloatImage& image,
                                  const Keypoint& keypoint,
-                                 Eigen::Vector2d* feature_position,
                                  Eigen::VectorXf* descriptor) = 0;
 
   // Computes a binary descriptor at a single keypoint.
   bool ComputeDescriptor(const FloatImage& image,
                          const Keypoint& keypoint,
-                         Eigen::Vector2d* feature_position,
                          Eigen::BinaryVectorX* descriptor) {
     LOG(FATAL) << "YOU ARE ATTEMPTING TO EXTRACT A BINARY DESCRIPTOR WITH A "
                   "FLOAT DESCRIPTOR EXTRACTOR";
@@ -133,18 +126,16 @@ class FloatDescriptorExtractor : public DescriptorExtractor {
   // Compute the descriptors for multiple keypoints in a given image.
   virtual bool ComputeDescriptors(
       const FloatImage& image,
-      const std::vector<Keypoint>& keypoints,
-      std::vector<Eigen::Vector2d>* feature_positions,
+      std::vector<Keypoint>* keypoints,
       std::vector<Eigen::VectorXf>* descriptors) {
     return DescriptorExtractor::ComputeDescriptors(
-        image, keypoints, feature_positions, descriptors);
+        image, keypoints, descriptors);
   }
 
   // Same as above, but for binary descriptors.
   bool ComputeDescriptors(
       const FloatImage& image,
-      const std::vector<Keypoint>& keypoints,
-      std::vector<Eigen::Vector2d>* feature_positions,
+      std::vector<Keypoint>* keypoints,
       std::vector<Eigen::BinaryVectorX>* descriptors) {
     LOG(FATAL) << "YOU ARE ATTEMPTING TO EXTRACT A BINARY DESCRIPTOR WITH A "
                   "FLOAT DESCRIPTOR EXTRACTOR";
@@ -167,7 +158,6 @@ class BinaryDescriptorExtractor : public DescriptorExtractor {
   // Computes a floatdescriptor at a single keypoint.
   bool ComputeDescriptor(const FloatImage& image,
                          const Keypoint& keypoint,
-                         Eigen::Vector2d* feature_position,
                          Eigen::VectorXf* descriptor) {
     LOG(FATAL) << "YOU ARE ATTEMPTING TO EXTRACT A FLOAT DESCRIPTOR WITH A " \
         "BINARY DESCRIPTOR EXTRACTOR";
@@ -177,15 +167,13 @@ class BinaryDescriptorExtractor : public DescriptorExtractor {
   // Computes a binary descriptor at a single keypoint.
   virtual bool ComputeDescriptor(const FloatImage& image,
                                  const Keypoint& keypoint,
-                                 Eigen::Vector2d* feature_position,
                                  Eigen::BinaryVectorX* descriptor) = 0;
 
 
   // Compute the descriptors for multiple keypoints in a given image.
   bool ComputeDescriptors(
       const FloatImage& image,
-      const std::vector<Keypoint>& keypoints,
-      std::vector<Eigen::Vector2d>* feature_positions,
+      std::vector<Keypoint>* keypoints,
       std::vector<Eigen::VectorXf>* descriptors) {
     LOG(FATAL) << "YOU ARE ATTEMPTING TO EXTRACT A FLOAT DESCRIPTOR WITH A "
                   "BINARY DESCRIPTOR EXTRACTOR";
@@ -195,11 +183,10 @@ class BinaryDescriptorExtractor : public DescriptorExtractor {
   // Same as above, but for binary descriptors.
   virtual bool ComputeDescriptors(
       const FloatImage& image,
-      const std::vector<Keypoint>& keypoints,
-      std::vector<Eigen::Vector2d>* feature_positions,
+      std::vector<Keypoint>* keypoints,
       std::vector<Eigen::BinaryVectorX>* descriptors) {
     return DescriptorExtractor::ComputeDescriptors(
-        image, keypoints, feature_positions, descriptors);
+        image, keypoints, descriptors);
   }
 
  private:

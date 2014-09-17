@@ -50,8 +50,9 @@ SiftDescriptorExtractor::~SiftDescriptorExtractor() {
 }
 
 bool SiftDescriptorExtractor::ComputeDescriptor(
-    const FloatImage& image, const Keypoint& keypoint,
-    Eigen::Vector2d* feature_position, Eigen::VectorXf* descriptor) {
+    const FloatImage& image,
+    const Keypoint& keypoint,
+    Eigen::VectorXf* descriptor) {
   CHECK(keypoint.has_scale() && keypoint.has_orientation())
       << "Keypoint must have scale and orientation to compute a SIFT "
       << "descriptor.";
@@ -91,7 +92,6 @@ bool SiftDescriptorExtractor::ComputeDescriptor(
 
   // Calculate the sift feature. Note that we are passing in a direct pointer to
   // the descriptor's underlying data.
-  *feature_position = Eigen::Vector2d(keypoint.x(), keypoint.y());
   *descriptor = Eigen::VectorXf(128);
   vl_sift_calc_keypoint_descriptor(sift_filter_, descriptor->data(),
                                    &sift_keypoint, keypoint.orientation());
@@ -99,8 +99,8 @@ bool SiftDescriptorExtractor::ComputeDescriptor(
 }
 
 bool SiftDescriptorExtractor::ComputeDescriptors(
-    const FloatImage& image, const std::vector<Keypoint>& keypoints,
-    std::vector<Eigen::Vector2d>* feature_positions,
+    const FloatImage& image,
+    std::vector<Keypoint>* keypoints,
     std::vector<Eigen::VectorXf>* descriptors) {
   // If the filter has been set, but is not usable for the input image (i.e. the
   // width and height are different) then we must make a new filter. Adding this
@@ -117,13 +117,16 @@ bool SiftDescriptorExtractor::ComputeDescriptors(
                                num_levels_, first_octave_);
 
   // Create the vl sift keypoint from the one passed in.
-  std::vector<VlSiftKeypoint> sift_keypoints(keypoints.size());
-  for (int i = 0; i < keypoints.size(); i++) {
-    CHECK(keypoints[i].has_scale() && keypoints[i].has_orientation())
+  std::vector<VlSiftKeypoint> sift_keypoints(keypoints->size());
+  for (int i = 0; i < keypoints->size(); i++) {
+    CHECK((*keypoints)[i].has_scale() && (*keypoints)[i].has_orientation())
         << "Keypoint must have scale and orientation to compute a SIFT "
         << "descriptor.";
-    vl_sift_keypoint_init(sift_filter_, &sift_keypoints[i], keypoints[i].x(),
-                          keypoints[i].y(), keypoints[i].scale());
+    vl_sift_keypoint_init(sift_filter_,
+                          &sift_keypoints[i],
+                          (*keypoints)[i].x(),
+                          (*keypoints)[i].y(),
+                          (*keypoints)[i].scale());
   }
   // The VLFeat functions take in a non-const image pointer so that it can
   // calculate gaussian pyramids. Obviously, we do not want to break our const
@@ -137,17 +140,15 @@ bool SiftDescriptorExtractor::ComputeDescriptors(
   // Proceed through the octaves we reach the same one as the keypoint.  We
   // first resize the descriptors vector so that the keypoint indicies will be
   // properly matched to the descriptors.
-  descriptors->resize(keypoints.size(), Eigen::VectorXf(128));
-  feature_positions->resize(keypoints.size());
+  descriptors->resize(keypoints->size(), Eigen::VectorXf(128));
   while (vl_status != VL_ERR_EOF) {
     // Go through each keypoint to see if it came from this octave.
     for (int i = 0; i < sift_keypoints.size(); i++) {
       if (sift_keypoints[i].o != sift_filter_->o_cur) continue;
-      feature_positions->at(i) =
-          Eigen::Vector2d(keypoints[i].x(), keypoints[i].y());
+
       vl_sift_calc_keypoint_descriptor(
           sift_filter_, (*descriptors)[i].data(), &sift_keypoints[i],
-          keypoints[i].orientation());
+          (*keypoints)[i].orientation());
     }
     vl_status = vl_sift_process_next_octave(sift_filter_);
   }
@@ -156,7 +157,7 @@ bool SiftDescriptorExtractor::ComputeDescriptors(
 
 bool SiftDescriptorExtractor::DetectAndExtractDescriptors(
     const FloatImage& image,
-    std::vector<Eigen::Vector2d>* feature_positions,
+    std::vector<Keypoint>* keypoints,
     std::vector<Eigen::VectorXf>* descriptors) {
   // If the filter has been set, but is not usable for the input image (i.e. the
   // width and height are different) then we must make a new filter. Adding this
@@ -199,8 +200,11 @@ bool SiftDescriptorExtractor::DetectAndExtractDescriptors(
         vl_sift_calc_keypoint_descriptor(
             sift_filter_, sift_descriptor.data(), &vl_keypoints[i],
             angles[j]);
-        feature_positions->push_back(
-            Eigen::Vector2d(vl_keypoints[i].x, vl_keypoints[i].y));
+
+        Keypoint keypoint(vl_keypoints[i].x, vl_keypoints[i].y, Keypoint::SIFT);
+        keypoint.set_scale(vl_keypoints[i].sigma);
+        keypoint.set_orientation(angles[j]);
+        keypoints->push_back(keypoint);
         descriptors->push_back(sift_descriptor);
       }
     }

@@ -153,8 +153,8 @@ Theia uses a semi-generic interface for all descriptor types, namely, floating p
     :func:`Initialize()` function must be called before using the descriptor
     extractor.
 
-  .. function:: bool DescriptorExtractor::ComputeDescriptor(const FloatImage& input_image, const Keypoint& keypoint, Eigen::Vector2d* feature_position, Eigen::VectorXf* float_descriptor)
-  .. function:: bool DescriptorExtractor::ComputeDescriptor(const FloatImage& input_image, const Keypoint& keypoint, Eigen::Vector2d* feature_position, Eigen::BinaryVectorXf* binary_descriptor)
+  .. function:: bool DescriptorExtractor::ComputeDescriptor(const FloatImage& input_image, const Keypoint& keypoint, Eigen::VectorXf* float_descriptor)
+  .. function:: bool DescriptorExtractor::ComputeDescriptor(const FloatImage& input_image, const Keypoint& keypoint, Eigen::BinaryVectorXf* binary_descriptor)
 
     This method computes the descriptor of a single keypoint.
 
@@ -162,18 +162,13 @@ Theia uses a semi-generic interface for all descriptor types, namely, floating p
 
     ``keypoint``: The keypoint that the descriptor will be computed from.
 
-    ``feature_position``: The 2D position of the feature. This position may be
-    refined from the position that the keypoint was detected at.
+    ``float_descriptor or binary_descriptor``: The descriptor computed for the
+    given keypoint.
 
-    ``float_descriptors or binary_descriptors``: A container for the descriptor
-    that has been created based on the type of descriptor that is being
-    extracted. EigeN::VectorXf is used for extracting float descriptors (e.g.,
-    SIFT) while Eigen::BinaryVectorX is used for float descriptors.
+    ``returns``: True on if the descriptor was extracted, false otherwise.
 
-    ``returns``: True on success, false on failure.
-
-  .. function:: bool DescriptorExtractor::ComputeDescriptors(const FloatImage& input_image, const std::vector<Keypoint>& keypoints, std::vector<Eigen::Vector2d>* feature_positions, std::vector<Eigen::VectorXf>* float_descriptors)
-  .. function:: bool DescriptorExtractor::ComputeDescriptors(const FloatImage& input_image, const std::vector<Keypoint>& keypoints, std::vector<Eigen::Vector2d>* feature_positions, std::vector<Eigen::BinaryVectorXf>* binary_descriptors)
+  .. function:: bool DescriptorExtractor::ComputeDescriptors(const FloatImage& input_image, std::vector<Keypoint>* keypoints, std::vector<Eigen::VectorXf>* float_descriptors)
+  .. function:: bool DescriptorExtractor::ComputeDescriptors(const FloatImage& input_image, std::vector<Keypoint>* keypoints, std::vector<Eigen::BinaryVectorXf>* binary_descriptors)
 
     Compute many descriptors simultaneous from the input keypoints. Note that
     note all keypoints are guaranteed to result in a descriptor. Only valid
@@ -181,15 +176,13 @@ Theia uses a semi-generic interface for all descriptor types, namely, floating p
 
     ``input_image``: The image that you want to detect keypoints on.
 
-    ``keypoints``: A vector of the keypoint pointers that will have descriptors
-    extracted.
-
-    ``feature_position``: The 2D position of the feature. This position may be
-    refined from the position that the keypoint was detected at.
+    ``keypoints``: An input vector of the keypoint pointers that will have
+    descriptors extracted. Keypoints that were not able to have a descriptor
+    extracted are removed.
 
     ``float_descriptors or binary_descriptors``: A container for the descriptors
     that have been created based on the type of descriptor that is being
-    extracted. EigeN::VectorXf is used for extracting float descriptors (e.g.,
+    extracted. Eigen::VectorXf is used for extracting float descriptors (e.g.,
     SIFT) while Eigen::BinaryVectorX is used for float descriptors.
 
   .. code-block:: c++
@@ -210,16 +203,14 @@ Theia uses a semi-generic interface for all descriptor types, namely, floating p
     const bool descriptor_init_succes = sift_extractor.Initialize();
 
     // E.g., compute a single descriptor
-    Eigen::Vector2d feature_pos;
     Eigen::VectorXf sift_descriptor;
     bool sift_success =
-      sift_extractor.ComputeDescriptor(input_image, keypoint[0], &feature_pos, &sift_descriptor);
+      sift_extractor.ComputeDescriptor(input_image, keypoint[0], &sift_descriptor);
 
     // E.g., compute many descriptors.
-    std::vector<Eigen::Vector2d> feature_positions;
     std::vector<Eigen::VectorXf> sift_descriptors;
     const bool extraction_success =
-      sift_extractor.ComputeDescriptors(image, sift_keypoints, &feature_positions, &sift_descriptors)
+      sift_extractor.ComputeDescriptors(image, &sift_keypoints, &sift_descriptors)
 
 We implement the following descriptor extractors (and corresponding descriptors) in Theia (constructors are given).
 

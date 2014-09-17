@@ -70,17 +70,19 @@ int main(int argc, char *argv[]) {
   VLOG(0) << "detecting keypoints";
   SiftDescriptorExtractor sift_detector;
   CHECK(sift_detector.Initialize());
-  std::vector<Eigen::Vector2d> left_positions;
+  std::vector<Keypoint> left_keypoints;
   std::vector<Eigen::VectorXf> left_descriptors;
-  sift_detector.DetectAndExtractDescriptors(left_image, &left_positions,
+  sift_detector.DetectAndExtractDescriptors(left_image,
+                                            &left_keypoints,
                                             &left_descriptors);
   VLOG(0) << "detected " << left_descriptors.size()
           << " descriptors in left image.";
 
   VLOG(0) << "detecting keypoints";
-  std::vector<Eigen::Vector2d> right_positions;
+  std::vector<Keypoint> right_keypoints;
   std::vector<Eigen::VectorXf> right_descriptors;
-  sift_detector.DetectAndExtractDescriptors(right_image, &right_positions,
+  sift_detector.DetectAndExtractDescriptors(right_image,
+                                            &right_keypoints,
                                             &right_descriptors);
   VLOG(0) << "detected " << right_descriptors.size()
           << " descriptors in right image.";
@@ -99,8 +101,8 @@ int main(int argc, char *argv[]) {
           << " to match SIFT descriptors";
 
   // Get an image canvas to draw the features on.
-  image_canvas.DrawMatchedFeatures(0, left_positions,
-                                   1, right_positions,
+  image_canvas.DrawMatchedFeatures(0, left_keypoints,
+                                   1, right_keypoints,
                                    matches,
                                    0.1);
   LOG(INFO) << "writing";

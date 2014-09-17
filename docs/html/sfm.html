@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -31,7 +30,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '0.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -331,7 +330,7 @@ coordinate that has been tracked through several, if not many, images.</p>
 <dt id="Triangulate__ProjectionMatrixCR.ProjectionMatrixCR.Eigen::Vector2dCR.Eigen::Vector2dCR.Eigen::Vector3dP">
 bool <tt class="descname">Triangulate</tt><big>(</big>const ProjectionMatrix&amp; <em>pose_left</em>, const ProjectionMatrix&amp; <em>pose_right</em>, const Eigen::Vector2d&amp; <em>point_left</em>, const Eigen::Vector2d&amp; <em>point_right</em>, Eigen::Vector3d* <em>triangulated_point</em><big>)</big><a class="headerlink" href="#Triangulate__ProjectionMatrixCR.ProjectionMatrixCR.Eigen::Vector2dCR.Eigen::Vector2dCR.Eigen::Vector3dP" title="Permalink to this definition">¶</a></dt>
 <dd><p>2-view triangulation using the DLT method described in
-<a class="reference internal" href="bibliography.html#hartleyzisserman">[HartleyZisserman]</a>. The poses are the (potentially calibrated) poses of the
+<a class="reference internal" href="bibliography.html#hartleyzisserman" id="id1">[HartleyZisserman]</a>. The poses are the (potentially calibrated) poses of the
 two cameras, and the points are the 2D image points of the matched features
 that will be used to triangulate the 3D point. If there was an error computing
 the triangulation (e.g., the point is found to be at infinity) then <tt class="docutils literal"><span class="pre">false</span></tt>
@@ -353,7 +352,7 @@ bool <tt class="descname">TriangulateNViewSVD</tt><big>(</big>const std::vector&
 bool <tt class="descname">TriangulateNView</tt><big>(</big>const std::vector&lt;ProjectionMatrix&gt;&amp; <em>poses</em>, const std::vector&lt;Eigen::Vector2d&gt;&amp; <em>points</em>, Eigen::Vector3d* <em>triangulated_point</em><big>)</big><a class="headerlink" href="#TriangulateNView__std::vector:ProjectionMatrix:CR.std::vector:Eigen::Vector2d:CR.Eigen::Vector3dP" title="Permalink to this definition">¶</a></dt>
 <dd><p>We provide two N-view triangluation methods that minimizes an algebraic
 approximation of the geometric error. The first is the classic SVD method
-presented in <a class="reference internal" href="bibliography.html#hartleyzisserman">[HartleyZisserman]</a>. The second is a custom algebraic
+presented in <a class="reference internal" href="bibliography.html#hartleyzisserman" id="id2">[HartleyZisserman]</a>. The second is a custom algebraic
 minimization. Note that we can derive an algebraic constraint where we note
 that the unit ray of an image observation can be stretched by depth
 <span class="math">\(\alpha\)</span> to meet the world point <span class="math">\(X\)</span> for each of the <span class="math">\(n\)</span>
@@ -399,7 +398,7 @@ points are aligned by correspondence (i.e. left[i] corresponds to right[i]).</p>
 <dt id="AlignPointCloudsUmeyama__iC.doubleCA.doubleCA.doubleA.doubleA.doubleP">
 void <tt class="descname">AlignPointCloudsUmeyama</tt><big>(</big>const int <em>num_points</em>, const double <em>left</em>[], const double <em>right</em>[], double <em>rotation</em>[3 * 3], double <em>translation</em>[3], double* <em>scale</em><big>)</big><a class="headerlink" href="#AlignPointCloudsUmeyama__iC.doubleCA.doubleCA.doubleA.doubleA.doubleP" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function estimates the 3D similiarty transformation using the least
-squares method of <a class="reference internal" href="bibliography.html#umeyama">[Umeyama]</a>. The returned rotation, translation, and scale
+squares method of <a class="reference internal" href="bibliography.html#umeyama" id="id3">[Umeyama]</a>. The returned rotation, translation, and scale
 align the left points to the right such that <span class="math">\(Right = s * R * Left +
 t\)</span>.</p>
 </dd></dl>
@@ -409,7 +408,7 @@ t\)</span>.</p>
 void <tt class="descname">gDlsSimilarityTransform</tt><big>(</big>const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>ray_origin</em>, const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>ray_direction</em>, const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>world_point</em>, std::vector&lt;Eigen::Quaterniond&gt;* <em>solution_rotation</em>, std::vector&lt;Eigen::Vector3d&gt;* <em>solution_translation</em>, std::vector&lt;double&gt;* <em>solution_scale</em><big>)</big><a class="headerlink" href="#gDlsSimilarityTransform__std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Quaterniond:P.std::vector:Eigen::Vector3d:P.std::vector:double:P" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the solution to the generalized pose and scale problem based on the
 paper &#8220;gDLS: A Scalable Solution to the Generalized Pose and Scale Problem&#8221;
-by Sweeney et. al. <a class="reference internal" href="bibliography.html#sweeneygdls">[SweeneyGDLS]</a>. Given image rays from one coordinate
+by Sweeney et. al. <a class="reference internal" href="bibliography.html#sweeneygdls" id="id4">[SweeneyGDLS]</a>. Given image rays from one coordinate
 system that correspond to 3D points in another coordinate system, this
 function computes the rotation, translation, and scale that will align the
 rays with the 3D points. This is used for applications such as loop closure
@@ -449,23 +448,6 @@ at least 4.</p>
             </a></p>
 
 <h3><a href="index.html">Theia</a></h3>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="building.html">Building Theia Library</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="documentation.html">Documentation</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="image.html">Image</a></li>
-<li class="toctree-l2"><a class="reference internal" href="features.html">Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ransac.html">Ransac</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pose.html">Pose and Resectioning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="math.html">Math</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Structure from Motion (SfM)</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributions.html">Contributing to Theia</a></li>
-<li class="toctree-l1"><a class="reference internal" href="acknowledgements.html">Acknowledgements</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
-</ul>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="math.html"

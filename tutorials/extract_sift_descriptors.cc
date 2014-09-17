@@ -55,45 +55,19 @@ int main(int argc, char *argv[]) {
   google::InitGoogleLogging(argv[0]);
 
   FloatImage image(FLAGS_input_image);
-  image.ConvertToGrayscaleImage();
 
-  // Detect keypoints.
-  VLOG(0) << "detecting keypoints";
-  SiftDetector keypoint_detector;
-  keypoint_detector.Initialize();
-  std::vector<Keypoint> sift_keypoints;
-  keypoint_detector.DetectKeypoints(image, &sift_keypoints);
-  VLOG(0) << "detected " << sift_keypoints.size() << " keypoints.";
-
-  // Extract descriptors.
-  VLOG(0) << "extracting descriptors.";
-  SiftDescriptorExtractor sift_extractor;
-  sift_extractor.Initialize();
-  std::vector<Eigen::Vector2d> feature_positions;
-  std::vector<Eigen::VectorXf> sift_descriptors;
-  sift_extractor.ComputeDescriptors(image, sift_keypoints, &feature_positions,
-                                    &sift_descriptors);
-  VLOG(0) << "extracted " << sift_descriptors.size() << " descriptors.";
-
-  // Get an image canvas to draw the features on.
-  ImageCanvas image_canvas;
-  image_canvas.AddImage(image);
-  image_canvas.DrawFeatures(sift_keypoints, theia::RGBPixel(0, 0, 1.0));
-  image_canvas.Write(FLAGS_output_dir +
-                     std::string("/detect_then_extract.png"));
-
-  // Detect and Extract in one shot!
-  VLOG(0) << "detect and extract together.";
-  std::vector<Eigen::Vector2d> feature_positions2;
+  std::vector<Keypoint> keypoints;
   std::vector<Eigen::VectorXf> sift_features;
   SiftDescriptorExtractor feature_extractor;
   feature_extractor.Initialize();
-  feature_extractor.DetectAndExtractDescriptors(image, &feature_positions2,
+  feature_extractor.DetectAndExtractDescriptors(image,
+                                                &keypoints,
                                                 &sift_features);
+  VLOG(0) << "extracted " << sift_features.size() << " descriptors.";
 
-  ImageCanvas image_canvas2;
-  image_canvas2.AddImage(image);
-  image_canvas2.DrawFeatures(feature_positions, theia::RGBPixel(0, 0, 1));
-  image_canvas2.Write(FLAGS_output_dir +
-                      std::string("/detect_and_extract.png"));
+  ImageCanvas image_canvas;
+  image_canvas.AddImage(image);
+  image_canvas.DrawFeatures(keypoints, theia::RGBPixel(0, 0, 1));
+  image_canvas.Write(FLAGS_output_dir +
+                     std::string("/detect_and_extract.png"));
 }

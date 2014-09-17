@@ -69,18 +69,15 @@ int main(int argc, char *argv[]) {
   VLOG(0) << "extracting descriptors.";
   FreakDescriptorExtractor freak_extractor(true, true, 1);
   CHECK(freak_extractor.Initialize());
-  std::vector<Eigen::Vector2d> feature_positions;
-  std::vector<Eigen::BinaryVectorX> pruned_descriptors;
+  std::vector<Eigen::BinaryVectorX> descriptors;
   clock_t t;
   t = clock();
   freak_extractor.ComputeDescriptors(image,
-                                     keypoints,
-                                     &feature_positions,
-                                     &pruned_descriptors);
+                                     &keypoints,
+                                     &descriptors);
   t = clock() - t;
   VLOG(0) << "It took " << (static_cast<float>(t)/CLOCKS_PER_SEC)
           << " to extract FREAK descriptors";
-  VLOG(0) << "pruned descriptors size = " << pruned_descriptors.size();
 
   // Match descriptors!
 

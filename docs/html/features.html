@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -31,7 +30,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '0.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -174,7 +173,7 @@ function. The caller is responsible for deleting the keypoints.</p>
 <dl class="function">
 <dt id="SiftDetector::SiftDetector__i.i.i">
  <tt class="descclassname">SiftDetector::</tt><tt class="descname">SiftDetector</tt><big>(</big>int <em>num_octaves</em>, int <em>num_scale_levels</em>, int <em>first_octave</em><big>)</big><a class="headerlink" href="#SiftDetector::SiftDetector__i.i.i" title="Permalink to this definition">¶</a></dt>
-<dd><p>The algorithm originally proposed by <a class="reference internal" href="bibliography.html#lowe">[Lowe]</a> that uses the <a class="reference external" href="http://www.vlfeat.org">VLFeat</a> as the underlying engine.</p>
+<dd><p>The algorithm originally proposed by <a class="reference internal" href="bibliography.html#lowe" id="id1">[Lowe]</a> that uses the <a class="reference external" href="http://www.vlfeat.org">VLFeat</a> as the underlying engine.</p>
 <p>Specify the number of image octaves, number of scale levels per octave, and
 where the first octave should start. The default constructor sets these values
 to values -1 (i.e., as many octaves as can be generated), 3, and 0 (i.e., the
@@ -184,7 +183,7 @@ source image)</p>
 <dl class="function">
 <dt id="AgastDetector::AgastDetector__AstPattern.i.b">
  <tt class="descclassname">AgastDetector::</tt><tt class="descname">AgastDetector</tt><big>(</big>AstPattern <em>pattern</em>, int <em>threshold</em>, bool <em>nonmax_suppression</em><big>)</big><a class="headerlink" href="#AgastDetector::AgastDetector__AstPattern.i.b" title="Permalink to this definition">¶</a></dt>
-<dd><p>The improved FAST detection scheme of <a class="reference internal" href="bibliography.html#mair">[Mair]</a> et al.</p>
+<dd><p>The improved FAST detection scheme of <a class="reference internal" href="bibliography.html#mair" id="id2">[Mair]</a> et al.</p>
 <p><tt class="docutils literal"><span class="pre">enum</span> <span class="pre">AstPattern</span></tt> specifies one of 4 types of sampling patterns for the
 AGAST corner detect: <tt class="docutils literal"><span class="pre">AGAST5_8</span></tt> is the AGAST pattern with an 8 pixel mask,
 <tt class="docutils literal"><span class="pre">AGAST7_12D</span></tt> is the AGAST diamond pattern with a 12 pixel mask,
@@ -197,7 +196,7 @@ found at the <a class="reference external" href="http://www6.in.tum.de/Main/Rese
 <dl class="function">
 <dt id="BriskDetector::BriskDetector__i.i">
  <tt class="descclassname">BriskDetector::</tt><tt class="descname">BriskDetector</tt><big>(</big>int <em>threshold</em>, int <em>num_octaves</em><big>)</big><a class="headerlink" href="#BriskDetector::BriskDetector__i.i" title="Permalink to this definition">¶</a></dt>
-<dd><p>The &#8220;Binary Robust Invariant Scalable Keypoints&#8221; algorithm of <a class="reference internal" href="bibliography.html#leutenegger">[Leutenegger]</a>
+<dd><p>The &#8220;Binary Robust Invariant Scalable Keypoints&#8221; algorithm of <a class="reference internal" href="bibliography.html#leutenegger" id="id3">[Leutenegger]</a>
 et al.</p>
 <p>Specify the threshold for keypoint scores (default is 30) and the number of
 octaves to downsample the image (default is 3).</p>
@@ -228,44 +227,39 @@ extractor.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="DescriptorExtractor::DescriptorExtractor::ComputeDescriptor__FloatImageCR.KeypointCR.Eigen::Vector2dP.Eigen::VectorXfP">
-bool <tt class="descclassname">DescriptorExtractor::</tt><tt class="descname">ComputeDescriptor</tt><big>(</big>const FloatImage&amp; <em>input_image</em>, const Keypoint&amp; <em>keypoint</em>, Eigen::Vector2d* <em>feature_position</em>, Eigen::VectorXf* <em>float_descriptor</em><big>)</big><a class="headerlink" href="#DescriptorExtractor::DescriptorExtractor::ComputeDescriptor__FloatImageCR.KeypointCR.Eigen::Vector2dP.Eigen::VectorXfP" title="Permalink to this definition">¶</a></dt>
+<dt id="DescriptorExtractor::DescriptorExtractor::ComputeDescriptor__FloatImageCR.KeypointCR.Eigen::VectorXfP">
+bool <tt class="descclassname">DescriptorExtractor::</tt><tt class="descname">ComputeDescriptor</tt><big>(</big>const FloatImage&amp; <em>input_image</em>, const Keypoint&amp; <em>keypoint</em>, Eigen::VectorXf* <em>float_descriptor</em><big>)</big><a class="headerlink" href="#DescriptorExtractor::DescriptorExtractor::ComputeDescriptor__FloatImageCR.KeypointCR.Eigen::VectorXfP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
-<dt id="DescriptorExtractor::DescriptorExtractor::ComputeDescriptor__FloatImageCR.KeypointCR.Eigen::Vector2dP.Eigen::BinaryVectorXfP">
-bool <tt class="descclassname">DescriptorExtractor::</tt><tt class="descname">ComputeDescriptor</tt><big>(</big>const FloatImage&amp; <em>input_image</em>, const Keypoint&amp; <em>keypoint</em>, Eigen::Vector2d* <em>feature_position</em>, Eigen::BinaryVectorXf* <em>binary_descriptor</em><big>)</big><a class="headerlink" href="#DescriptorExtractor::DescriptorExtractor::ComputeDescriptor__FloatImageCR.KeypointCR.Eigen::Vector2dP.Eigen::BinaryVectorXfP" title="Permalink to this definition">¶</a></dt>
+<dt id="DescriptorExtractor::DescriptorExtractor::ComputeDescriptor__FloatImageCR.KeypointCR.Eigen::BinaryVectorXfP">
+bool <tt class="descclassname">DescriptorExtractor::</tt><tt class="descname">ComputeDescriptor</tt><big>(</big>const FloatImage&amp; <em>input_image</em>, const Keypoint&amp; <em>keypoint</em>, Eigen::BinaryVectorXf* <em>binary_descriptor</em><big>)</big><a class="headerlink" href="#DescriptorExtractor::DescriptorExtractor::ComputeDescriptor__FloatImageCR.KeypointCR.Eigen::BinaryVectorXfP" title="Permalink to this definition">¶</a></dt>
 <dd><p>This method computes the descriptor of a single keypoint.</p>
 <p><tt class="docutils literal"><span class="pre">input_image</span></tt>: The image that you want to detect keypoints on.</p>
 <p><tt class="docutils literal"><span class="pre">keypoint</span></tt>: The keypoint that the descriptor will be computed from.</p>
-<p><tt class="docutils literal"><span class="pre">feature_position</span></tt>: The 2D position of the feature. This position may be
-refined from the position that the keypoint was detected at.</p>
-<p><tt class="docutils literal"><span class="pre">float_descriptors</span> <span class="pre">or</span> <span class="pre">binary_descriptors</span></tt>: A container for the descriptor
-that has been created based on the type of descriptor that is being
-extracted. EigeN::VectorXf is used for extracting float descriptors (e.g.,
-SIFT) while Eigen::BinaryVectorX is used for float descriptors.</p>
-<p><tt class="docutils literal"><span class="pre">returns</span></tt>: True on success, false on failure.</p>
+<p><tt class="docutils literal"><span class="pre">float_descriptor</span> <span class="pre">or</span> <span class="pre">binary_descriptor</span></tt>: The descriptor computed for the
+given keypoint.</p>
+<p><tt class="docutils literal"><span class="pre">returns</span></tt>: True on if the descriptor was extracted, false otherwise.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="DescriptorExtractor::DescriptorExtractor::ComputeDescriptors__FloatImageCR.std::vector:Keypoint:CR.std::vector:Eigen::Vector2d:P.std::vector:Eigen::VectorXf:P">
-bool <tt class="descclassname">DescriptorExtractor::</tt><tt class="descname">ComputeDescriptors</tt><big>(</big>const FloatImage&amp; <em>input_image</em>, const std::vector&lt;Keypoint&gt;&amp; <em>keypoints</em>, std::vector&lt;Eigen::Vector2d&gt;* <em>feature_positions</em>, std::vector&lt;Eigen::VectorXf&gt;* <em>float_descriptors</em><big>)</big><a class="headerlink" href="#DescriptorExtractor::DescriptorExtractor::ComputeDescriptors__FloatImageCR.std::vector:Keypoint:CR.std::vector:Eigen::Vector2d:P.std::vector:Eigen::VectorXf:P" title="Permalink to this definition">¶</a></dt>
+<dt id="DescriptorExtractor::DescriptorExtractor::ComputeDescriptors__FloatImageCR.std::vector:Keypoint:P.std::vector:Eigen::VectorXf:P">
+bool <tt class="descclassname">DescriptorExtractor::</tt><tt class="descname">ComputeDescriptors</tt><big>(</big>const FloatImage&amp; <em>input_image</em>, std::vector&lt;Keypoint&gt;* <em>keypoints</em>, std::vector&lt;Eigen::VectorXf&gt;* <em>float_descriptors</em><big>)</big><a class="headerlink" href="#DescriptorExtractor::DescriptorExtractor::ComputeDescriptors__FloatImageCR.std::vector:Keypoint:P.std::vector:Eigen::VectorXf:P" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
-<dt id="DescriptorExtractor::DescriptorExtractor::ComputeDescriptors__FloatImageCR.std::vector:Keypoint:CR.std::vector:Eigen::Vector2d:P.std::vector:Eigen::BinaryVectorXf:P">
-bool <tt class="descclassname">DescriptorExtractor::</tt><tt class="descname">ComputeDescriptors</tt><big>(</big>const FloatImage&amp; <em>input_image</em>, const std::vector&lt;Keypoint&gt;&amp; <em>keypoints</em>, std::vector&lt;Eigen::Vector2d&gt;* <em>feature_positions</em>, std::vector&lt;Eigen::BinaryVectorXf&gt;* <em>binary_descriptors</em><big>)</big><a class="headerlink" href="#DescriptorExtractor::DescriptorExtractor::ComputeDescriptors__FloatImageCR.std::vector:Keypoint:CR.std::vector:Eigen::Vector2d:P.std::vector:Eigen::BinaryVectorXf:P" title="Permalink to this definition">¶</a></dt>
+<dt id="DescriptorExtractor::DescriptorExtractor::ComputeDescriptors__FloatImageCR.std::vector:Keypoint:P.std::vector:Eigen::BinaryVectorXf:P">
+bool <tt class="descclassname">DescriptorExtractor::</tt><tt class="descname">ComputeDescriptors</tt><big>(</big>const FloatImage&amp; <em>input_image</em>, std::vector&lt;Keypoint&gt;* <em>keypoints</em>, std::vector&lt;Eigen::BinaryVectorXf&gt;* <em>binary_descriptors</em><big>)</big><a class="headerlink" href="#DescriptorExtractor::DescriptorExtractor::ComputeDescriptors__FloatImageCR.std::vector:Keypoint:P.std::vector:Eigen::BinaryVectorXf:P" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute many descriptors simultaneous from the input keypoints. Note that
 note all keypoints are guaranteed to result in a descriptor. Only valid
 descriptors (and feature positions) are returned in the output parameters.</p>
 <p><tt class="docutils literal"><span class="pre">input_image</span></tt>: The image that you want to detect keypoints on.</p>
-<p><tt class="docutils literal"><span class="pre">keypoints</span></tt>: A vector of the keypoint pointers that will have descriptors
-extracted.</p>
-<p><tt class="docutils literal"><span class="pre">feature_position</span></tt>: The 2D position of the feature. This position may be
-refined from the position that the keypoint was detected at.</p>
+<p><tt class="docutils literal"><span class="pre">keypoints</span></tt>: An input vector of the keypoint pointers that will have
+descriptors extracted. Keypoints that were not able to have a descriptor
+extracted are removed.</p>
 <p><tt class="docutils literal"><span class="pre">float_descriptors</span> <span class="pre">or</span> <span class="pre">binary_descriptors</span></tt>: A container for the descriptors
 that have been created based on the type of descriptor that is being
-extracted. EigeN::VectorXf is used for extracting float descriptors (e.g.,
+extracted. Eigen::VectorXf is used for extracting float descriptors (e.g.,
 SIFT) while Eigen::BinaryVectorX is used for float descriptors.</p>
 </dd></dl>
 
@@ -285,16 +279,14 @@ SIFT) while Eigen::BinaryVectorX is used for float descriptors.</p>
 <span class="k">const</span> <span class="kt">bool</span> <span class="n">descriptor_init_succes</span> <span class="o">=</span> <span class="n">sift_extractor</span><span class="p">.</span><span class="n">Initialize</span><span class="p">();</span>
 
 <span class="c1">// E.g., compute a single descriptor</span>
-<span class="n">Eigen</span><span class="o">::</span><span class="n">Vector2d</span> <span class="n">feature_pos</span><span class="p">;</span>
 <span class="n">Eigen</span><span class="o">::</span><span class="n">VectorXf</span> <span class="n">sift_descriptor</span><span class="p">;</span>
 <span class="kt">bool</span> <span class="n">sift_success</span> <span class="o">=</span>
-  <span class="n">sift_extractor</span><span class="p">.</span><span class="n">ComputeDescriptor</span><span class="p">(</span><span class="n">input_image</span><span class="p">,</span> <span class="n">keypoint</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">&amp;</span><span class="n">feature_pos</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sift_descriptor</span><span class="p">);</span>
+  <span class="n">sift_extractor</span><span class="p">.</span><span class="n">ComputeDescriptor</span><span class="p">(</span><span class="n">input_image</span><span class="p">,</span> <span class="n">keypoint</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">&amp;</span><span class="n">sift_descriptor</span><span class="p">);</span>
 
 <span class="c1">// E.g., compute many descriptors.</span>
-<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Eigen</span><span class="o">::</span><span class="n">Vector2d</span><span class="o">&gt;</span> <span class="n">feature_positions</span><span class="p">;</span>
 <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Eigen</span><span class="o">::</span><span class="n">VectorXf</span><span class="o">&gt;</span> <span class="n">sift_descriptors</span><span class="p">;</span>
 <span class="k">const</span> <span class="kt">bool</span> <span class="n">extraction_success</span> <span class="o">=</span>
-  <span class="n">sift_extractor</span><span class="p">.</span><span class="n">ComputeDescriptors</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">sift_keypoints</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">feature_positions</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sift_descriptors</span><span class="p">)</span>
+  <span class="n">sift_extractor</span><span class="p">.</span><span class="n">ComputeDescriptors</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sift_keypoints</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sift_descriptors</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -303,7 +295,7 @@ SIFT) while Eigen::BinaryVectorX is used for float descriptors.</p>
 <dl class="function">
 <dt id="SiftDescriptorExtractor::SiftDescriptorExtractor__i.i.i">
  <tt class="descclassname">SiftDescriptorExtractor::</tt><tt class="descname">SiftDescriptorExtractor</tt><big>(</big>int <em>num_octaves</em>, int <em>num_scale_levels</em>, int <em>first_octave</em><big>)</big><a class="headerlink" href="#SiftDescriptorExtractor::SiftDescriptorExtractor__i.i.i" title="Permalink to this definition">¶</a></dt>
-<dd><p>The algorithm originally proposed by <a class="reference internal" href="bibliography.html#lowe">[Lowe]</a> that uses the <a class="reference external" href="http://www.vlfeat.org">VLFeat</a> as the underlying engine.</p>
+<dd><p>The algorithm originally proposed by <a class="reference internal" href="bibliography.html#lowe" id="id4">[Lowe]</a> that uses the <a class="reference external" href="http://www.vlfeat.org">VLFeat</a> as the underlying engine.</p>
 <p>We only implement the standard 128-dimension descriptor. Specify the number
 of image octaves, number of scale levels per octave, and where the first
 octave should start. The default constructor sets these values to values -1
@@ -315,7 +307,7 @@ parameters.</p>
 <dl class="function">
 <dt id="FreakDescriptorExtractor::FreakDescriptorExtractor__b.b.i">
  <tt class="descclassname">FreakDescriptorExtractor::</tt><tt class="descname">FreakDescriptorExtractor</tt><big>(</big>bool <em>rotation_invariant</em>, bool <em>scale_invariant</em>, int <em>num_octaves</em><big>)</big><a class="headerlink" href="#FreakDescriptorExtractor::FreakDescriptorExtractor__b.b.i" title="Permalink to this definition">¶</a></dt>
-<dd><p>The &#8220;Fast Retina Keypoint&#8221; algorithm for binary descriptors proposed by <a class="reference internal" href="bibliography.html#alahi">[Alahi]</a> et al.</p>
+<dd><p>The &#8220;Fast Retina Keypoint&#8221; algorithm for binary descriptors proposed by <a class="reference internal" href="bibliography.html#alahi" id="id6">[Alahi]</a> et al.</p>
 <p><tt class="docutils literal"><span class="pre">rotation_invariant</span></tt>: Set to true if you want to normalize the orientation of the keypoints before computing the descriptor.</p>
 <p><tt class="docutils literal"><span class="pre">scale_invariant</span></tt>: Set to true if you want to normalize the scale of keypoints before computing the descriptor.</p>
 <p><tt class="docutils literal"><span class="pre">num_octaves</span></tt>: The number of octaves that the keypoints span.</p>
@@ -326,7 +318,7 @@ parameters.</p>
 <dl class="function">
 <dt id="BriskDescriptorExtractor::BriskDescriptorExtractor__b.b.float">
  <tt class="descclassname">BriskDescriptorExtractor::</tt><tt class="descname">BriskDescriptorExtractor</tt><big>(</big>bool <em>rotation_invariant</em>, bool <em>scale_invariant</em>, float <em>pattern_scale</em><big>)</big><a class="headerlink" href="#BriskDescriptorExtractor::BriskDescriptorExtractor__b.b.float" title="Permalink to this definition">¶</a></dt>
-<dd><p>The &#8220;Binary Robust Invariant Scalable Keypoints&#8221; algorithm for binary descriptors of <a class="reference internal" href="bibliography.html#leutenegger">[Leutenegger]</a>
+<dd><p>The &#8220;Binary Robust Invariant Scalable Keypoints&#8221; algorithm for binary descriptors of <a class="reference internal" href="bibliography.html#leutenegger" id="id7">[Leutenegger]</a>
 et al.</p>
 <p><tt class="docutils literal"><span class="pre">rotation_invariant</span></tt>: Set to true if you want to normalize the orientation of the keypoints before computing the descriptor.</p>
 <p><tt class="docutils literal"><span class="pre">scale_invariant</span></tt>: Set to true if you want to normalize the scale of keypoints before computing the descriptor.</p>
@@ -347,23 +339,6 @@ et al.</p>
             </a></p>
 
 <h3><a href="index.html">Theia</a></h3>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="building.html">Building Theia Library</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="documentation.html">Documentation</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="image.html">Image</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ransac.html">Ransac</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pose.html">Pose and Resectioning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="math.html">Math</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sfm.html">Structure from Motion (SfM)</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributions.html">Contributing to Theia</a></li>
-<li class="toctree-l1"><a class="reference internal" href="acknowledgements.html">Acknowledgements</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
-</ul>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="image.html"

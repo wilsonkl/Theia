@@ -65,18 +65,16 @@ class SiftDescriptorExtractor : public FloatDescriptorExtractor {
   // Computes a descriptor at a single keypoint.
   bool ComputeDescriptor(const FloatImage& image,
                          const Keypoint& keypoint,
-                         Eigen::Vector2d* feature_position,
                          Eigen::VectorXf* descriptor);
 
   // Compute multiple descriptors for keypoints from a single image.
   bool ComputeDescriptors(const FloatImage& image,
-                          const std::vector<Keypoint>& keypoints,
-                          std::vector<Eigen::Vector2d>* feature_position,
+                          std::vector<Keypoint>* keypoints,
                           std::vector<Eigen::VectorXf>* descriptors);
 
   bool DetectAndExtractDescriptors(
       const FloatImage& image,
-      std::vector<Eigen::Vector2d>* feature_position,
+      std::vector<Keypoint>* keypoints,
       std::vector<Eigen::VectorXf>* descriptors);
 
  private:

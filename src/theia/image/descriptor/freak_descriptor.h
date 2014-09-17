@@ -52,7 +52,8 @@ class FreakDescriptorExtractor : public BinaryDescriptorExtractor {
   //  rotation_invariant: Enable orientation normalization.
   //  scale_invariant: Enable scale normalization.
   //  num_octaves: Number of octaves covered by the keypoints.
-  FreakDescriptorExtractor(bool rotation_invariant, bool scale_invariant,
+  FreakDescriptorExtractor(bool rotation_invariant,
+                           bool scale_invariant,
                            int num_octaves)
       : rotation_invariant_(rotation_invariant),
         scale_invariant_(scale_invariant),
@@ -68,15 +69,13 @@ class FreakDescriptorExtractor : public BinaryDescriptorExtractor {
   // Computes a descriptor at a single keypoint.
   bool ComputeDescriptor(const FloatImage& image,
                          const Keypoint& keypoint,
-                         Eigen::Vector2d* feature_position,
                          Eigen::BinaryVectorX* descriptor);
 
   // Compute multiple descriptors for keypoints from a single image. Note this
   // may return null for some of the descriptors if they cannot be computed!
   // Typically this only happens when it is too close to the border.
   bool ComputeDescriptors(const FloatImage& image,
-                          const std::vector<Keypoint>& keypoints,
-                          std::vector<Eigen::Vector2d>* feature_positions,
+                          std::vector<Keypoint>* keypoints,
                           std::vector<Eigen::BinaryVectorX>* descriptors);
 
  private:

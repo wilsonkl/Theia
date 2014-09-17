@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -31,7 +30,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '0.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -99,7 +98,7 @@ bool <tt class="descname">PoseFromThreePoints</tt><big>(</big>const Eigen::Vecto
 <dd><p>Computes camera pose using the three point algorithm and returns all
 possible solutions (up to 4). Follows steps from the paper &#8220;A Novel
 Parameterization of the Perspective-Three-Point Problem for a direct
-computation of Absolute Camera position and Orientation&#8221; by <a class="reference internal" href="bibliography.html#kneip">[Kneip]</a>. This
+computation of Absolute Camera position and Orientation&#8221; by <a class="reference internal" href="bibliography.html#kneip" id="id1">[Kneip]</a>. This
 algorithm has been proven to be up to an order of magnitude faster than
 other methods. The output rotation and translation define world-to-camera
 transformation.</p>
@@ -123,7 +122,7 @@ poses.</p>
 bool <tt class="descname">FivePointRelativePose</tt><big>(</big>const Eigen::Vector2d <em>image1_points</em>[5], const Eigen::Vector2d <em>image2_points</em>[5], std::vector&lt;Eigen::Matrix3d&gt;* <em>rotation</em>, std::vector&lt;Eigen::Vector3d&gt;* <em>translation</em><big>)</big><a class="headerlink" href="#FivePointRelativePose__Eigen::Vector2dCA.Eigen::Vector2dCA.std::vector:Eigen::Matrix3d:P.std::vector:Eigen::Vector3d:P" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the relative pose between two cameras using 5 corresponding
 points. Algorithm is implemented based on &#8220;An Efficient Solution to the
-Five-Point Relative Pose Problem&#8221; by <a class="reference internal" href="bibliography.html#nister">[Nister]</a>. The rotation and translation
+Five-Point Relative Pose Problem&#8221; by <a class="reference internal" href="bibliography.html#nister" id="id2">[Nister]</a>. The rotation and translation
 returned are defined such that <span class="math">\(E=[t]_{\times} * R\)</span> and
 <span class="math">\(y^\top * E * x = 0\)</span> where <span class="math">\(y\)</span> are points from image2 and
 <span class="math">\(x\)</span> are points from image1.</p>
@@ -144,7 +143,7 @@ bool <tt class="descname">FourPointHomography</tt><big>(</big>const std::vector&
 <dd><p>Computes the 2D <a class="reference external" href="http://en.wikipedia.org/wiki/Homography_(computer_vision)">homography</a> mapping points
 in image 1 to image 2 such that: <span class="math">\(x' = Hx\)</span> where <span class="math">\(x\)</span> is a point in
 image 1 and <span class="math">\(x'\)</span> is a point in image 2. The algorithm implemented is
-the DLT algorithm based on algorithm 4.2 in <a class="reference internal" href="bibliography.html#hartleyzisserman">[HartleyZisserman]</a>.</p>
+the DLT algorithm based on algorithm 4.2 in <a class="reference internal" href="bibliography.html#hartleyzisserman" id="id3">[HartleyZisserman]</a>.</p>
 <p><tt class="docutils literal"><span class="pre">image_1_points</span></tt>: Image points from image 1. At least 4 points must be
 passed in.</p>
 <p><tt class="docutils literal"><span class="pre">image_2_points</span></tt>: Image points from image 2. At least 4 points must be
@@ -164,7 +163,7 @@ bool <tt class="descname">NormalizedEightPoint</tt><big>(</big>const std::vector
 image points between two images such that <span class="math">\(x' F x = 0\)</span> for all
 correspondences <span class="math">\(x\)</span> and <span class="math">\(x'\)</span> in images 1 and 2 respectively. The
 normalized eight point algorithm is a speedy estimation of the fundamental
-matrix (Alg 11.1 in <a class="reference internal" href="bibliography.html#hartleyzisserman">[HartleyZisserman]</a>) that minimizes an algebraic error.</p>
+matrix (Alg 11.1 in <a class="reference internal" href="bibliography.html#hartleyzisserman" id="id4">[HartleyZisserman]</a>) that minimizes an algebraic error.</p>
 <p><tt class="docutils literal"><span class="pre">image_1_points</span></tt>: Image points from image 1. At least 8 points must be
 passed in.</p>
 <p><tt class="docutils literal"><span class="pre">image_2_points</span></tt>: Image points from image 2. At least 8 points must be
@@ -182,7 +181,7 @@ all correspondences <span class="math">\(x\)</span> and <span class="math">\(x'\
 respectively. The gold standard algorithm computes an initial estimation of
 the fundmental matrix from the <a class="reference internal" href="#NormalizedEightPoint__std::vector:Eigen::Vector2d:CR.std::vector:Eigen::Vector2d:CR.Eigen::Matrix3dP" title="NormalizedEightPoint"><tt class="xref cpp cpp-func docutils literal"><span class="pre">NormalizedEightPoint()</span></tt></a> then uses
 Levenberg-Marquardt to minimize the geometric error (i.e., reprojection
-error) according to algorithm 11.3 in <a class="reference internal" href="bibliography.html#hartleyzisserman">[HartleyZisserman]</a>.</p>
+error) according to algorithm 11.3 in <a class="reference internal" href="bibliography.html#hartleyzisserman" id="id6">[HartleyZisserman]</a>.</p>
 <p><tt class="docutils literal"><span class="pre">image_1_points</span></tt>: Image points from image 1. At least 8 points must be
 passed in.</p>
 <p><tt class="docutils literal"><span class="pre">image_2_points</span></tt>: Image points from image 2. At least 8 points must be
@@ -200,7 +199,7 @@ passed in.</p>
 <dt id="DlsPnp__std::vector:Eigen::Vector2d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Quaterniond:P.std::vector:Eigen::Vector3d:P">
 void <tt class="descname">DlsPnp</tt><big>(</big>const std::vector&lt;Eigen::Vector2d&gt;&amp; <em>feature_position</em>, const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>world_point</em>, std::vector&lt;Eigen::Quaterniond&gt;* <em>solution_rotation</em>, std::vector&lt;Eigen::Vector3d&gt;* <em>solution_translation</em><big>)</big><a class="headerlink" href="#DlsPnp__std::vector:Eigen::Vector2d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Quaterniond:P.std::vector:Eigen::Vector3d:P" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the camera pose using the Perspective N-point method from &#8220;A Direct
-Least-Squares (DLS) Method for PnP&#8221; by <a class="reference internal" href="bibliography.html#hesch">[Hesch]</a> and Stergios Roumeliotis. This
+Least-Squares (DLS) Method for PnP&#8221; by <a class="reference internal" href="bibliography.html#hesch" id="id7">[Hesch]</a> and Stergios Roumeliotis. This
 method is extremely scalable and highly accurate for the PnP problem. A
 minimum of 4 points are required, but there is no maximum number of points
 allowed as this is a least-squared approach. Theoretically, up to 27 solutions
@@ -226,7 +225,7 @@ least 4.</p>
 <dt id="FourPointPoseAndFocalLength__std::vector:Eigen::Vector2d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Matrix:double.3.4::P">
 int <tt class="descname">FourPointPoseAndFocalLength</tt><big>(</big>const std::vector&lt;Eigen::Vector2d&gt;&amp; <em>feature_positions</em>, const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>world_points</em>, std::vector&lt;Eigen::Matrix&lt;double, 3, 4&gt;&gt;* <em>projection_matrices</em><big>)</big><a class="headerlink" href="#FourPointPoseAndFocalLength__std::vector:Eigen::Vector2d:CR.std::vector:Eigen::Vector3d:CR.std::vector:Eigen::Matrix:double.3.4::P" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the camera pose and unknown focal length of an image given four 2D-3D
-correspondences, following the method of <a class="reference internal" href="bibliography.html#bujnak">[Bujnak]</a>. This method involves
+correspondences, following the method of <a class="reference internal" href="bibliography.html#bujnak" id="id8">[Bujnak]</a>. This method involves
 computing a grobner basis from a modified constraint of the focal length and
 pose projection.</p>
 <p><tt class="docutils literal"><span class="pre">feature_position</span></tt>: Normalized image rays corresponding to model points. Must
@@ -249,7 +248,7 @@ are of the form <span class="math">\(P = K * [R | t]\)</span>.</p>
 <dt id="FivePointFocalLengthRadialDistortion__std::vector:Eigen::Vector2d:CR.std::vector:Eigen::Vector3d:CR.iC.std::vector:Eigen::Matrix:double.3.4::P.std::vector:std::vector:double::P">
 bool <tt class="descname">FivePointFocalLengthRadialDistortion</tt><big>(</big>const std::vector&lt;Eigen::Vector2d&gt;&amp; <em>feature_positions</em>, const std::vector&lt;Eigen::Vector3d&gt;&amp; <em>world_points</em>, const int <em>num_radial_distortion_params</em>, std::vector&lt;Eigen::Matrix&lt;double, 3, 4&gt;&gt;* <em>projection_matrices</em>, std::vector&lt;std::vector&lt;double&gt;&gt;* <em>radial_distortions</em><big>)</big><a class="headerlink" href="#FivePointFocalLengthRadialDistortion__std::vector:Eigen::Vector2d:CR.std::vector:Eigen::Vector3d:CR.iC.std::vector:Eigen::Matrix:double.3.4::P.std::vector:std::vector:double::P" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the absolute pose, focal length, and radial distortion of a camera
-using five 3D-to-2D correspondences <a class="reference internal" href="bibliography.html#kukelova">[Kukelova]</a>. The method solves for the
+using five 3D-to-2D correspondences <a class="reference internal" href="bibliography.html#kukelova" id="id9">[Kukelova]</a>. The method solves for the
 projection matrix (up to scale) by using a cross product constraint on the
 standard projection equation. This allows for simple solution to the first two
 rows of the projection matrix, and the third row (which contains the focal
@@ -287,23 +286,6 @@ radial distortion parameters (up to 3, but however many were specified in
             </a></p>
 
 <h3><a href="index.html">Theia</a></h3>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="building.html">Building Theia Library</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="documentation.html">Documentation</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="image.html">Image</a></li>
-<li class="toctree-l2"><a class="reference internal" href="features.html">Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ransac.html">Ransac</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Pose and Resectioning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="math.html">Math</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sfm.html">Structure from Motion (SfM)</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributions.html">Contributing to Theia</a></li>
-<li class="toctree-l1"><a class="reference internal" href="acknowledgements.html">Acknowledgements</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
-</ul>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="ransac.html"

@@ -62,19 +62,17 @@ TEST(FreakDescriptor, Sanity) {
   // For each keypoint, extract the freak descriptors.
   FreakDescriptorExtractor freak_extractor;
   EXPECT_TRUE(freak_extractor.Initialize());
-  Eigen::Vector2d position;
   Eigen::BinaryVectorX descriptor;
   // We need to make sure we pick a point away from the border so that a
   // descriptor can actually be extracted.
   CHECK_GT(brisk_keypoints.size(), 100);
-  EXPECT_TRUE(freak_extractor.ComputeDescriptor(input_img, brisk_keypoints[100],
-                                                &position, &descriptor));
+  EXPECT_TRUE(freak_extractor.ComputeDescriptor(input_img,
+                                                brisk_keypoints[100],
+                                                &descriptor));
 
-  std::vector<Eigen::Vector2d> feature_positions;
   std::vector<Eigen::BinaryVectorX> freak_descriptors;
   EXPECT_TRUE(freak_extractor.ComputeDescriptors(input_img,
-                                                 brisk_keypoints,
-                                                 &feature_positions,
+                                                 &brisk_keypoints,
                                                  &freak_descriptors));
 }
 

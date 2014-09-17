@@ -57,9 +57,7 @@ int main(int argc, char *argv[]) {
   google::InitGoogleLogging(argv[0]);
 
   FloatImage left_image(FLAGS_img_input_dir + std::string("/img1.png"));
-  left_image.ConvertToGrayscaleImage();
   FloatImage right_image(FLAGS_img_input_dir + std::string("/img2.png"));
-  right_image.ConvertToGrayscaleImage();
 
   // Detect keypoints.
   VLOG(0) << "detecting keypoints";
@@ -82,16 +80,16 @@ int main(int argc, char *argv[]) {
   FreakDescriptorExtractor freak_extractor;
   CHECK(freak_extractor.Initialize());
 
-  std::vector<Eigen::Vector2d> left_positions;
   std::vector<Eigen::BinaryVectorX> left_descriptors;
-  freak_extractor.ComputeDescriptors(left_image, left_keypoints,
-                                     &left_positions, &left_descriptors);
+  freak_extractor.ComputeDescriptors(left_image,
+                                     &left_keypoints,
+                                     &left_descriptors);
   VLOG(0) << "left descriptors size = " << left_descriptors.size();
 
-  std::vector<Eigen::Vector2d> right_positions;
   std::vector<Eigen::BinaryVectorX> right_descriptors;
-  freak_extractor.ComputeDescriptors(right_image, right_keypoints,
-                                     &right_positions, &right_descriptors);
+  freak_extractor.ComputeDescriptors(right_image,
+                                     &right_keypoints,
+                                     &right_descriptors);
   VLOG(0) << "right descriptors size = " << right_descriptors.size();
 
   // Match descriptors!
@@ -111,7 +109,7 @@ int main(int argc, char *argv[]) {
   ImageCanvas image_canvas;
   image_canvas.AddImage(left_image);
   image_canvas.AddImage(right_image);
-  image_canvas.DrawMatchedFeatures(0, left_positions, 1, right_positions,
+  image_canvas.DrawMatchedFeatures(0, left_keypoints, 1, right_keypoints,
                                    matches, 0.1);
 
   image_canvas.Write(FLAGS_img_output_dir +
