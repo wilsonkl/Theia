@@ -73,4 +73,28 @@ TEST(SiftDescriptor, Sanity) {
                                                 &sift_descriptors));
 }
 
+TEST(SiftDescriptor, DifferentImageSizes) {
+  FloatImage input_img(img_filename);
+
+  // Use the same extractor for both images.
+  SiftDescriptorExtractor sift_extractor;
+
+  std::vector<Keypoint> keypoints;
+  std::vector<Eigen::VectorXf> descriptors;
+  EXPECT_TRUE(sift_extractor.DetectAndExtractDescriptors(input_img,
+                                                         &keypoints,
+                                                         &descriptors));
+
+  // Get the second image, which is a different size!
+  const std::string img2_filename =
+      THEIA_TEST_DATA_DIR + std::string("/image/test1.jpg");
+  FloatImage input_img2(img2_filename);
+  keypoints.clear();
+  descriptors.clear();
+  EXPECT_TRUE(sift_extractor.DetectAndExtractDescriptors(input_img2,
+                                                         &keypoints,
+                                                         &descriptors));
+
+}
+
 }  // namespace theia

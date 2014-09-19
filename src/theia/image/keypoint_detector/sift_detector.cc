@@ -55,17 +55,12 @@ bool SiftDetector::DetectKeypoints(const FloatImage& image,
   // width and height are different) then we must make a new filter. Adding this
   // statement will save the function from regenerating the filter for
   // successive calls with images of the same size (e.g. a video sequence).
-  if (sift_filter_ != nullptr && (sift_filter_->width != image.Cols() ||
+  if (sift_filter_ == nullptr || (sift_filter_->width != image.Cols() ||
                                   sift_filter_->height != image.Rows())) {
     vl_sift_delete(sift_filter_);
+    sift_filter_ = vl_sift_new(image.Cols(), image.Rows(), num_octaves_,
+                               num_levels_, first_octave_);
   }
-  // If the filter has not been set (or was deleted in the previous if), then we
-  // need to create a new filter.
-  if (sift_filter_ == nullptr)
-    sift_filter_ = vl_sift_new(image.Cols(), image.Rows(),
-                               num_octaves_,
-                               num_levels_,
-                               first_octave_);
 
   // The VLFeat functions take in a non-const image pointer so that it can
   // calculate gaussian pyramids. Obviously, we do not want to break our const

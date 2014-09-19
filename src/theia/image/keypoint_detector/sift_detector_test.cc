@@ -59,4 +59,21 @@ TEST(SiftDetector, Sanity) {
   ASSERT_TRUE(sift_detector.DetectKeypoints(input_img, &sift_keypoints));
 }
 
+TEST(SiftDetector, DifferentImageSizes) {
+  FloatImage input_img(img_filename);
+
+  // Use the same extractor for both images.
+  SiftDetector sift_extractor;
+
+  std::vector<Keypoint> keypoints;
+  EXPECT_TRUE(sift_extractor.DetectKeypoints(input_img, &keypoints));
+
+  // Get the second image, which is a different size!
+  const std::string img2_filename =
+      THEIA_TEST_DATA_DIR + std::string("/image/test1.jpg");
+  FloatImage input_img2(img2_filename);
+  keypoints.clear();
+  EXPECT_TRUE(sift_extractor.DetectKeypoints(input_img2, &keypoints));
+}
+
 }  // namespace theia
