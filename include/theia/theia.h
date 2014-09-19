@@ -72,6 +72,7 @@
 #include "theia/solvers/ransac.h"
 #include "theia/solvers/sample_consensus_estimator.h"
 #include "theia/solvers/sampler.h"
+#include "theia/util/filesystem.h"
 #include "theia/util/hash.h"
 #include "theia/util/map_util.h"
 #include "theia/util/random.h"
