@@ -53,6 +53,7 @@ SET(THEIA_SRC
   math/closed_form_polynomial_solver.cc
   math/polynomial.cc
   math/probability/sequential_probability_ratio.cc
+  util/filesystem.cc
   util/random.cc
   util/stringprintf.cc
   vision/sfm/camera/camera_pose.cc
