@@ -162,6 +162,7 @@ bool SiftDescriptorExtractor::DetectAndExtractDescriptors(
     vl_sift_delete(sift_filter_);
     sift_filter_ = vl_sift_new(image.Cols(), image.Rows(), num_octaves_,
                                num_levels_, first_octave_);
+    vl_sift_set_peak_thresh(sift_filter_, 0.5);
   }
 
   // The VLFeat functions take in a non-const image pointer so that it can
