@@ -70,8 +70,9 @@ void CreateRandomPointsInFrustum(const double near_plane_width,
 // Calculates Sampson distance for two correspondances and an essential or
 // fundamental matrix by eq. 11.9 in Hartley and Zisserman. // For an E or F
 // that is defined such that y^t * E * x = 0
-double SampsonDistance(const Eigen::Matrix3d& F, const Eigen::Vector2d& x,
-                       const Eigen::Vector2d& y);
+double SquaredSampsonDistance(const Eigen::Matrix3d& F,
+                              const Eigen::Vector2d& x,
+                              const Eigen::Vector2d& y);
 
 // Returns the cross product matrix of a vector: if cross_vec = [x y z] then
 //                        [ 0  -z   y]

@@ -65,9 +65,11 @@ SET(THEIA_SRC
   vision/sfm/pose/four_point_focal_length.cc
   vision/sfm/pose/four_point_focal_length_helper.cc
   vision/sfm/pose/four_point_homography.cc
+  vision/sfm/pose/four_point_relative_pose_partial_rotation.cc
   vision/sfm/pose/fundamental_matrix_util.cc
   vision/sfm/pose/estimate_global_rotations.cc
   vision/sfm/pose/perspective_three_point.cc
+  vision/sfm/pose/three_point_relative_pose_partial_rotation.cc
   vision/sfm/pose/util.cc
   vision/sfm/projection_matrix.cc
   vision/sfm/transformation/align_point_clouds.cc
@@ -149,11 +151,14 @@ IF (BUILD_TESTING)
   GTEST(vision/sfm/pose/five_point_relative_pose)
   GTEST(vision/sfm/pose/four_point_focal_length)
   GTEST(vision/sfm/pose/four_point_homography)
+  GTEST(vision/sfm/pose/four_point_relative_pose_partial_rotation)
   GTEST(vision/sfm/pose/fundamental_matrix_util)
   GTEST(vision/sfm/pose/estimate_global_rotations)
   GTEST(vision/sfm/pose/perspective_three_point)
+  GTEST(vision/sfm/pose/three_point_relative_pose_partial_rotation)
   GTEST(vision/sfm/transformation/align_point_clouds)
   GTEST(vision/sfm/transformation/gdls_similarity_transform)
   GTEST(vision/sfm/triangulation/triangulation)
   GTEST(vision/sfm/view_graph)
+
 ENDIF (BUILD_TESTING)

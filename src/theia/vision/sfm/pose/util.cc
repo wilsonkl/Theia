@@ -46,6 +46,7 @@ using Eigen::Matrix;
 using Eigen::Matrix3d;
 using Eigen::Vector2d;
 using Eigen::Vector3d;
+using Eigen::Vector4d;
 
 void ComposeProjectionMatrix(const double focal_length[2],
                              const double principle_point[2],
@@ -116,17 +117,18 @@ void CreateRandomPointsInFrustum(const double near_plane_width,
 }
 
 // For an E or F that is defined such that y^t * E * x = 0
-double SampsonDistance(const Matrix3d& F, const Vector2d& x,
-                       const Vector2d& y) {
+double SquaredSampsonDistance(const Matrix3d& F,
+                              const Vector2d& x,
+                              const Vector2d& y) {
   const Vector3d epiline_x = F * x.homogeneous();
-  const Vector3d epiline_y = F.transpose() * y.homogeneous();
-
   const double numerator_sqrt = y.homogeneous().dot(epiline_x);
-  const double denominator = epiline_x.hnormalized().squaredNorm() +
-                             epiline_y.hnormalized().squaredNorm();
+  const Vector4d denominator(y.homogeneous().dot(F.col(0)),
+                             y.homogeneous().dot(F.col(1)),
+                             epiline_x[0],
+                             epiline_x[1]);
 
   // Finally, return the complete Sampson distance.
-  return numerator_sqrt * numerator_sqrt / denominator;
+  return numerator_sqrt * numerator_sqrt / denominator.squaredNorm();
 }
 
 Eigen::Matrix3d CrossProductMatrix(const Vector3d& cross_vec) {
