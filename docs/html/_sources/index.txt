@@ -14,10 +14,27 @@ Mapping (SLAM) systems. The goal of this library is to provide researchers with 
 * Download the latest `release <https://github.com/kip622/Theia>`_ or clone the
   `repo <https://github.com/kip622/Theia>`_ for development.
 
-* Read the :ref:`chapter-documentation` and the :ref:`chapter-tutorials` guide
+* Read the :ref:`section-Documentation` and the :ref:`chapter-tutorials` guide
 
 * If you have questions, please email the `Theia mailing list <http://groups.google.com/group/theia-vision-library>`_.
 
+  .. NOTE ::
+
+     The full reconstruction pipeline will be available in late 2014!
+
+.. _section-Documentation:
+
+=============
+Documentation
+=============
+
+To use Theia, simply add the following line to your program:
+
+``#include <theia/theia.h>``
+
+We attempt to provide sufficient documentation but often further documentation can be found in the source code itself. You will likely find the :ref:`chapter-tutorials` useful as well. Additionally, (nearly) every file is covered by a unit test that can be viewed as an example use case of the various methods and classes in Theia. If you have looked at the documentation, the tutorials, the source code, and the unit tests and still have confusion please email `the Theia mailing list <http://groups.google.com/group/theia-vision-library>`_
+
+Finally, it should be noted that all the code in Theia is under the namespace theia, so you will have to reference that namespace in order to use functions from this library. duh
 
 Citation
 ========
@@ -31,15 +48,27 @@ manual. e.g., ::
           Organization = {University of California Santa Barbara.}
   }
 
+================
+Acknowledgements
+================
+
+Theia was originally developed to provide a centralized code base to the `Four Eyes Lab <http://ilab.cs.ucsb.edu>`_ at UC Santa Barbara, but has since been expanded to an open-source project for the vision community.
+
+The core of the original library is written by `Chris Sweeney <http://cs.ucsb.edu/~cmsweeney>`_. Funding for Theia was provided by his advisors `Tobias Hollerer <http://cs.ucsb.edu/~holl>`_ and `Matthew Turk <http://cs.ucsb.edu/~mturk>`_.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+   :glob:
    :hidden:
 
    building
-   documentation
+   image
+   features
+   ransac
+   pose
+   math
+   sfm
    tutorials
    contributions
-   acknowledgements
    bibliography
    license

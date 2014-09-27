@@ -11,20 +11,6 @@ Pose and Resectioning
 Theia contains efficient and robust implementations of the following pose and
 resectioning algorithms. We attempted to make each method as general as possible so that users were not tied to Theia data structures to use the methods. The interface for all pose methods uses Eigen types for feature positions, 3D positions, and pose rotations and translations.
 
-* :ref:`section-p3p`
-
-* :ref:`section-five_point_essential_matrix`
-
-* :ref:`section-four_point_homography`
-
-* :ref:`section-eight_point`
-
-* :ref:`section-dls_pnp`
-
-* :ref:`section-four_point_focal_length`
-
-* :ref:`section-five_point_focal_length_radial_distortion`
-
 .. _section-p3p:
 
 Perspective Three Point (P3P)
