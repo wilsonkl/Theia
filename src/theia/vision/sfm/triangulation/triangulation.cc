@@ -101,8 +101,8 @@ void FindOptimalImagePoints(const Matrix3d& ematrix,
 }  // namespace
 
 // Triangulates 2 posed views
-bool Triangulate(const ProjectionMatrix& pose1,
-                 const ProjectionMatrix& pose2,
+bool Triangulate(const Matrix3x4d& pose1,
+                 const Matrix3x4d& pose2,
                  const Vector2d& point_left,
                  const Vector2d& point_right,
                  Vector3d* triangulated_point) {
@@ -126,9 +126,10 @@ bool Triangulate(const ProjectionMatrix& pose1,
 }
 
 // Triangulates 2 posed views
-bool TriangulateDLT(const ProjectionMatrix& pose_left,
-                    const ProjectionMatrix& pose_right,
-                    const Vector2d& point_left, const Vector2d& point_right,
+bool TriangulateDLT(const Matrix3x4d& pose_left,
+                    const Matrix3x4d& pose_right,
+                    const Vector2d& point_left,
+                    const Vector2d& point_right,
                     Vector3d* triangulated_point) {
   Matrix4d design_matrix;
   design_matrix.row(0) = point_left[0] * pose_left.row(2) - pose_left.row(0);
@@ -148,7 +149,7 @@ bool TriangulateDLT(const ProjectionMatrix& pose_left,
 }
 
 // Triangulates N views by computing SVD that minimizes the error.
-bool TriangulateNViewSVD(const std::vector<ProjectionMatrix>& poses,
+bool TriangulateNViewSVD(const std::vector<Matrix3x4d>& poses,
                          const std::vector<Vector2d>& points,
                          Vector3d* triangulated_point) {
   CHECK_EQ(poses.size(), points.size());
@@ -172,7 +173,7 @@ bool TriangulateNViewSVD(const std::vector<ProjectionMatrix>& poses,
   }
 }
 
-bool TriangulateNView(const std::vector<ProjectionMatrix>& poses,
+bool TriangulateNView(const std::vector<Matrix3x4d>& poses,
                       const std::vector<Vector2d>& points,
                       Vector3d* triangulated_point) {
   CHECK_EQ(poses.size(), points.size());

@@ -1,4 +1,4 @@
-// Copyright (C) 2013 The Regents of the University of California (Regents).
+// Copyright (C) 2014 The Regents of the University of California (Regents).
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,16 +32,32 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#include "theia/vision/sfm/projection_matrix.h"
+#ifndef THEIA_VISION_SFM_FEATURE_H_
+#define THEIA_VISION_SFM_FEATURE_H_
+
+#include "theia/vision/sfm/types.h"
 
 namespace theia {
 
-TransformationMatrix TransformationMatrixFromRt(
-    const Eigen::Matrix3d& rotation, const Eigen::Vector3d& translation) {
-  TransformationMatrix transformation;
-  transformation.linear() = rotation;
-  transformation.translation() = translation;
-  return transformation;
-}
+// A small struct to hold the location of feature points in a view. We assume
+// that the Views, Tracks, and track builders will keep track of the
+// id. Features must correspond to a track (this helps with memory and
+// efficiency) but Features do not hold their descriptors for memory purposes
+// (typically descriptor information is disregarded after track generation).
+struct Feature {
+  Feature() {}
+  Feature(const TrackId track_id, const float x, const float y)
+      : track_id(track_id), x(x), y(y) {}
+
+  bool operator==(const Feature& feature) const {
+    return track_id == feature.track_id && x == feature.x && y == feature.y;
+  }
+
+  TrackId track_id = kInvalidTrackId;
+  float x;
+  float y;
+};
 
 }  // namespace theia
+
+#endif  // THEIA_VISION_SFM_FEATURE_H_

@@ -32,7 +32,7 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#include "theia/vision/sfm/view_graph.h"
+#include "theia/vision/sfm/view_graph/view_graph.h"
 
 #include <unordered_map>
 #include <unordered_set>

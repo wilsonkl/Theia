@@ -55,12 +55,12 @@ using Eigen::Vector2d;
 using Eigen::Vector3d;
 using Eigen::Vector4d;
 
-double ReprojectionError(const TransformationMatrix& pose,
+double ReprojectionError(const Matrix3x4d& pose,
                          const Vector3d& world_point,
                          const Vector2d& image_point) {
-  const Vector2d reprojected_point = (pose * world_point).hnormalized();
+  const Vector3d reprojected_point = pose * world_point.homogeneous();
   const double sq_reproj_error =
-      (reprojected_point - image_point).squaredNorm();
+      (reprojected_point.hnormalized() - image_point).squaredNorm();
   return sq_reproj_error;
 }
 
@@ -71,14 +71,16 @@ void TestTriangulationDLTBasic(const Vector3d& point_3d,
                                const double max_reprojection_error) {
   InitRandomGenerator();
 
-  const TransformationMatrix pose_left = TransformationMatrix::Identity();
-  const TransformationMatrix pose_right = TransformationMatrixFromRt(
-      rel_rotation.toRotationMatrix(), rel_translation);
+  const Matrix3x4d pose_left = Matrix3x4d::Identity();
+  Matrix3x4d pose_right;
+  pose_right << rel_rotation.toRotationMatrix(), rel_translation;
 
   // Reproject point into both image 2, assume image 1 is identity rotation at
   // the origin.
-  Vector2d image_point_1 = (pose_left * point_3d).hnormalized();
-  Vector2d image_point_2 = (pose_right * point_3d).hnormalized();
+  Vector2d image_point_1 =
+      (pose_left * point_3d.homogeneous()).eval().hnormalized();
+  Vector2d image_point_2 =
+      (pose_right * point_3d.homogeneous()).eval().hnormalized();
 
   // Add projection noise if required.
   if (projection_noise) {
@@ -108,14 +110,17 @@ void TestTriangulationBasic(const Vector3d& point_3d,
                             const double max_reprojection_error) {
   InitRandomGenerator();
 
-  const TransformationMatrix pose1 = TransformationMatrixFromRt(
-      rel_rotation.toRotationMatrix(), rel_translation.normalized());
-  const TransformationMatrix pose2 = TransformationMatrix::Identity();
+  Matrix3x4d pose1;
+  pose1 <<
+      rel_rotation.toRotationMatrix(), rel_translation.normalized();
+  const Matrix3x4d pose2 = Matrix3x4d::Identity();
 
   // Reproject point into both image 2, assume image 1 is identity rotation at
   // the origin.
-  Vector2d image_point1 = (pose1 * point_3d).hnormalized();
-  Vector2d image_point2 = (pose2 * point_3d).hnormalized();
+  Vector2d image_point1 =
+      (pose1 * point_3d.homogeneous()).eval().hnormalized();
+  Vector2d image_point2 =
+      (pose2 * point_3d.homogeneous()).eval().hnormalized();
 
   // Add projection noise if required.
   if (projection_noise) {
@@ -135,7 +140,6 @@ void TestTriangulationBasic(const Vector3d& point_3d,
   EXPECT_LE(
       ReprojectionError(pose2, triangulated_point, image_point2),
       max_reprojection_error);
-
 }
 
 void TestTriangulationManyPoints(const double projection_noise,
@@ -188,10 +192,9 @@ void TestTriangulationManyPoints(const double projection_noise,
   };
 
   // Set up pose matrices.
-  std::vector<ProjectionMatrix> poses(num_views);
+  std::vector<Matrix3x4d> poses(num_views);
   for (int i = 0; i < num_views; i++) {
-    poses[i] = TransformationMatrixFromRt(kRotations[i].toRotationMatrix(),
-                                          kTranslations[i]).matrix();
+    poses[i] << kRotations[i].toRotationMatrix(), kTranslations[i];
   }
 
   for (int j = 0; j < ARRAYSIZE(kTestPoints); j++) {
@@ -216,7 +219,7 @@ void TestTriangulationManyPoints(const double projection_noise,
 
     // Check the reprojection error.
     for (int i = 0; i < num_views; i++) {
-      EXPECT_LE(ReprojectionError(TransformationMatrix(poses[i]),
+      EXPECT_LE(ReprojectionError(poses[i],
                                   triangulated_point, image_points[i]),
                 max_reprojection_error);
     }

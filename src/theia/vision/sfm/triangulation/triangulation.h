@@ -38,7 +38,7 @@
 #include <Eigen/Core>
 #include <vector>
 
-#include "theia/vision/sfm/projection_matrix.h"
+#include "theia/vision/sfm/types.h"
 
 namespace theia {
 
@@ -47,8 +47,8 @@ namespace theia {
 // two view reconstructions where only an essential matrix or fundamental matrix
 // is available you can use ProjectionMatricesFromFundamentalMatrix in
 // theia/vision/sfm/pose/fundamental_matrix_utils.h
-bool Triangulate(const ProjectionMatrix& pose_left,
-                 const ProjectionMatrix& pose_right,
+bool Triangulate(const Matrix3x4d& pose_left,
+                 const Matrix3x4d& pose_right,
                  const Eigen::Vector2d& point_left,
                  const Eigen::Vector2d& point_right,
                  Eigen::Vector3d* triangulated_point);
@@ -56,8 +56,8 @@ bool Triangulate(const ProjectionMatrix& pose_left,
 // Triangulates 2 posed views using the DLT method from HZZ 12.2 p 312. The
 // inputs are the projection matrices and the unit image observations. Returns
 // true on success and false on failure (e.g., if the point is at infinity).
-bool TriangulateDLT(const ProjectionMatrix& pose_left,
-                    const ProjectionMatrix& pose_right,
+bool TriangulateDLT(const Matrix3x4d& pose_left,
+                    const Matrix3x4d& pose_right,
                     const Eigen::Vector2d& point_left,
                     const Eigen::Vector2d& point_right,
                     Eigen::Vector3d* triangulated_point);
@@ -67,7 +67,7 @@ bool TriangulateDLT(const ProjectionMatrix& pose_left,
 // unit image observations. Returns true on success and false on failure (e.g.,
 // if the point is at infinity).
 bool TriangulateNViewSVD(
-    const std::vector<ProjectionMatrix>& poses,
+    const std::vector<Matrix3x4d>& poses,
     const std::vector<Eigen::Vector2d>& points,
     Eigen::Vector3d* triangulated_point);
 
@@ -77,7 +77,7 @@ bool TriangulateNViewSVD(
 // and is significantly faster. The inputs are the projection matrices and the
 // unit image observations. Returns true on success and false on failure (e.g.,
 // if the point is at infinity).
-bool TriangulateNView(const std::vector<ProjectionMatrix>& poses,
+bool TriangulateNView(const std::vector<Matrix3x4d>& poses,
                       const std::vector<Eigen::Vector2d>& points,
                       Eigen::Vector3d* triangulated_point);
 

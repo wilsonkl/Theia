@@ -256,6 +256,36 @@ TEST(Polynomial, BothOutputArgumentsNullWorks) {
   RunPolynomialTestRealRoots(roots, false, false, kEpsilon);
 }
 
+TEST(Polynomial, FindRealRootIterativeTest) {
+  Eigen::VectorXd polynomial(6);
+  // (x - 3) * (x + 4) * (x + 5) * (x - 6) * (x + 7)
+  polynomial(0) = 1;
+  polynomial(1) = 7;
+  polynomial(2) = -43;
+  polynomial(3) = -319;
+  polynomial(4) = 234;
+  polynomial(5) = 2520;
+
+  const double kTolerance = 1e-10;
+  const double kEpsilon = 1e-8;
+  const int kMaxIter = 10;
+  EXPECT_NEAR(FindRealRootIterative(polynomial, 3.1, kEpsilon, kMaxIter),
+              3.0,
+              kTolerance);
+  EXPECT_NEAR(FindRealRootIterative(polynomial, -4.1, kEpsilon, kMaxIter),
+              -4.0,
+              kTolerance);
+  EXPECT_NEAR(FindRealRootIterative(polynomial, -5.1, kEpsilon, kMaxIter),
+              -5.0,
+              kTolerance);
+  EXPECT_NEAR(FindRealRootIterative(polynomial, 6.1, kEpsilon, kMaxIter),
+              6.0,
+              kTolerance);
+  EXPECT_NEAR(FindRealRootIterative(polynomial, -7.1, kEpsilon, kMaxIter),
+              -7.0,
+              kTolerance);
+}
+
 TEST(Polynomial, DifferentiateConstantPolynomial) {
   // p(x) = 1;
   Eigen::VectorXd polynomial(1);
