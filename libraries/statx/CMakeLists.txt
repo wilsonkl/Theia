@@ -116,7 +116,7 @@ ENDIF(WITH_CERES)
 
 # Include optimo headers
 SET(OPTIMO_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/libraries/optimo)
-FIND_PACKAGE(optimo)
+FIND_PACKAGE(OPTIMO)
 MESSAGE("-- Check for Optimo")
 IF(OPTIMO_FOUND)
   MESSAGE("-- Found optimo headers: ${OPTIMO_INCLUDE_DIR}")
