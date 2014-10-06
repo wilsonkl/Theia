@@ -45,8 +45,8 @@
 #include "theia/vision/sfm/pose/eight_point_fundamental_matrix.h"
 #include "theia/vision/sfm/pose/fundamental_matrix_util.h"
 #include "theia/vision/sfm/pose/util.h"
-#include "theia/vision/sfm/projection_matrix.h"
 #include "theia/vision/sfm/triangulation/triangulation.h"
+#include "theia/vision/sfm/types.h"
 
 namespace theia {
 namespace {
@@ -88,7 +88,7 @@ void CheckReprojectionError(const std::vector<Vector2d>& image_1_points,
                             const Matrix3d& fundamental_matrix,
                             const double max_reprojection_error) {
   // Compute the projection matrices.
-  ProjectionMatrix left_projection, right_projection;
+  Matrix3x4d left_projection, right_projection;
   ProjectionMatricesFromFundamentalMatrix(fundamental_matrix.data(),
                                           right_projection.data(),
                                           left_projection.data());

@@ -32,62 +32,83 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#include "theia/vision/sfm/pose/fundamental_matrix_util.h"
+#include "theia/vision/sfm/view.h"
 
-#include <cmath>
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+#include <string>
+#include <unordered_map>
 
-#include "gtest/gtest.h"
+#include "theia/util/map_util.h"
+#include "theia/vision/sfm/camera/camera.h"
 #include "theia/vision/sfm/types.h"
+#include "theia/vision/sfm/feature.h"
+#include "theia/vision/sfm/view_metadata.h"
 
 namespace theia {
 
-using Eigen::Matrix3d;
-using Eigen::Quaterniond;
-using Eigen::Vector3d;
+View::View() : name_(""), id_(kInvalidViewId), is_estimated_(false) {}
 
-TEST(FundamentalMatrixUtil, FocalLengths) {
-  // Caked example from Matlab
-  const double kFundamentalMatrix[3 * 3] = {
-    -0.6265377489527094,  -0.1392530208531561,  -1.0420378420644032,
-    -0.5139391647114737,   0.9541696721680205,  -0.1957198670050392,
-    -0.0250214759315877,   0.5815828325966529,   0.3205687368389822,
-  };
+View::View(const std::string& name, const ViewId id)
+    : name_(name), id_(id), is_estimated_(false) {}
 
-  double focal_length1, focal_length2;
-  EXPECT_TRUE(FocalLengthsFromFundamentalMatrix(
-      kFundamentalMatrix, &focal_length1, &focal_length2));
-  EXPECT_NEAR(focal_length1, 1.0 / 1.351, 3e-15);
-  EXPECT_NEAR(focal_length2, 1.0 / 0.971, 3e-15);
+const std::string& View::Name() const {
+  return name_;
 }
 
-TEST(FundamentalMatrixUtil, FundamentalMatrixFromProjectionMatrices) {
-  const double kTolerance = 1e-12;
+ViewId View::Id() const {
+  return id_;
+}
 
-  // Set up model points.
-  const Vector3d points_3d[2] = { Vector3d(5.0, 20.0, 23.0),
-                                  Vector3d(-6.0, 16.0, 33.0) };
+bool View::IsTrackVisible(const TrackId track_id) const {
+  return ContainsKey(features_, track_id);
+}
 
-  // Set up projection matrices.
-  const Quaterniond kRotation(Eigen::AngleAxisd(0.15, Vector3d(0.0, 1.0, 0.0)));
-  const Vector3d kTranslation(-3.0, 1.5, 11.0);
-  Matrix3x4d pmatrix1, pmatrix2;
-  pmatrix1 << Matrix3d::Identity(), Vector3d::Zero();
-  pmatrix2 << kRotation.toRotationMatrix(), kTranslation;
+void View::SetEstimated(bool is_estimated) {
+  is_estimated_ = is_estimated;
+}
 
-  // Get the fundamental matrix.
-  Matrix3d fmatrix;
-  FundamentalMatrixFromProjectionMatrices(pmatrix1.data(), pmatrix2.data(),
-                                          fmatrix.data());
+bool View::IsEstimated() const {
+  return is_estimated_;
+}
 
-  for (int i = 0; i < 2; i++) {
-    const Vector3d image_point1 = pmatrix1 * points_3d[i].homogeneous();
-    const Vector3d image_point2 = pmatrix2 * points_3d[i].homogeneous();
+const class Camera& View::Camera() const {
+  return camera_;
+}
 
-    EXPECT_LT(fabs(image_point1.transpose() * fmatrix * image_point2),
-              kTolerance);
+class Camera* View::MutableCamera() {
+  return &camera_;
+}
+
+const ViewMetadata& View::Metadata() const {
+  return metadata_;
+}
+
+ViewMetadata* View::MutableMetadata() {
+  return &metadata_;
+}
+
+int View::NumFeatures() const {
+  return features_.size();
+}
+
+std::vector<TrackId> View::TrackIds() const {
+  std::vector<TrackId> track_ids;
+  track_ids.reserve(features_.size());
+  for (const auto& track : features_) {
+    track_ids.push_back(track.first);
   }
+  return track_ids;
+}
+
+const Feature* View::GetFeature(const TrackId track_id) const {
+  return FindOrNull(features_, track_id);
+}
+
+void View::AddFeature(const Feature& feature) {
+  features_[feature.track_id] = feature;
+}
+
+bool View::RemoveFeature(const TrackId track_id) {
+  return features_.erase(track_id) > 0;
 }
 
 }  // namespace theia

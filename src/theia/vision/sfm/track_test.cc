@@ -1,4 +1,4 @@
-// Copyright (C) 2013 The Regents of the University of California (Regents).
+// Copyright (C) 2014 The Regents of the University of California (Regents).
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,23 +32,75 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_VISION_SFM_PROJECTION_MATRIX_H_
-#define THEIA_VISION_SFM_PROJECTION_MATRIX_H_
+#include <Eigen/Core>
+#include <vector>
+#include "gtest/gtest.h"
 
-#include <Eigen/Geometry>
+#include "theia/vision/sfm/types.h"
+#include "theia/vision/sfm/track.h"
 
 namespace theia {
 
-// Matrix representing [R | t]
-typedef Eigen::Transform<double, 3, Eigen::AffineCompact> TransformationMatrix;
+TEST(Track, Constructors) {
+  // Default constructor.
+  Track track;
+  EXPECT_EQ(track.Id(), kInvalidTrackId);
+  EXPECT_TRUE(!track.IsEstimated());
+  EXPECT_EQ(track.Point(), Eigen::Vector4d::Zero());
 
-// Matrix representing K * [R | t] where K is the camera calibration matrix.
-typedef Eigen::Matrix<double, 3, 4> ProjectionMatrix;
+  // With the id.
+  Track track2(1);
+  EXPECT_EQ(track2.Id(), 1);
 
-// Convenience function for creating a transformation matrix [R | t].
-TransformationMatrix TransformationMatrixFromRt(
-    const Eigen::Matrix3d& rotation, const Eigen::Vector3d& translation);
+  // Copy constructor.
+  Track track3(track2);
+  EXPECT_EQ(track3.Id(), 1);
+  // Change track 2 and make sure it does not change track 3.
+  track2.SetEstimated(true);
+  EXPECT_TRUE(track2.IsEstimated());
+  EXPECT_TRUE(!track3.IsEstimated());
+
+  // Assign operator.
+  Track track4 = track3;
+  EXPECT_EQ(track3.Id(), 1);
+  // Change track 3 and make sure it does not change track 4.
+  track3.SetEstimated(true);
+  EXPECT_TRUE(track3.IsEstimated());
+  EXPECT_TRUE(!track4.IsEstimated());
+}
+
+TEST(Track, GettersAndSetters) {
+  Track track(0);
+
+  EXPECT_EQ(track.Id(), 0);
+
+  track.SetEstimated(true);
+  EXPECT_TRUE(track.IsEstimated());
+
+  *track.MutablePoint() = Eigen::Vector4d::Ones();
+  EXPECT_EQ(track.Point(), Eigen::Vector4d::Ones());
+}
+
+TEST(Track, AddRemoveViews) {
+  Track track;
+
+  EXPECT_EQ(track.NumViews(), 0);
+
+  std::vector<ViewId> views = { 0, 1, 2 };
+
+  for (const ViewId& view_id : views) {
+    track.AddView(view_id);
+    EXPECT_TRUE(track.IsViewVisible(view_id));
+  }
+
+  EXPECT_EQ(track.NumViews(), 3);
+
+  for (const ViewId& view : views) {
+    EXPECT_TRUE(track.RemoveView(view));
+  }
+
+  EXPECT_EQ(track.NumViews(), 0);
+  EXPECT_TRUE(!track.RemoveView(kInvalidTrackId));
+}
 
 }  // namespace theia
-
-#endif  // THEIA_VISION_SFM_PROJECTION_MATRIX_H_

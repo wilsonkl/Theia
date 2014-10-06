@@ -98,6 +98,12 @@ bool FindPolynomialRoots(const Eigen::VectorXd& polynomial,
 bool FindRealPolynomialRoots(const Eigen::VectorXd& polynomial,
                              Eigen::VectorXd* real);
 
+// An iterative solver to find the closest root based on an initial guess.
+double FindRealRootIterative(const Eigen::VectorXd& polynomial,
+                             const double x0,
+                             const double epsilon,
+                             const int max_iter);
+
 // Evaluate the polynomial at x using the Horner scheme.
 inline double EvaluatePolynomial(const Eigen::VectorXd& polynomial, double x) {
   double v = 0.0;

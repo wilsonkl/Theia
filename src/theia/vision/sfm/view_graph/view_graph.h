@@ -32,8 +32,8 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_VISION_SFM_VIEW_GRAPH_H_
-#define THEIA_VISION_SFM_VIEW_GRAPH_H_
+#ifndef THEIA_VISION_SFM_VIEW_GRAPH_VIEW_GRAPH_H_
+#define THEIA_VISION_SFM_VIEW_GRAPH_VIEW_GRAPH_H_
 
 #include <unordered_map>
 #include <unordered_set>
@@ -105,4 +105,4 @@ class ViewGraph {
 
 }  // namespace theia
 
-#endif  // THEIA_VISION_SFM_VIEW_GRAPH_H_
+#endif  // THEIA_VISION_SFM_VIEW_GRAPH_VIEW_GRAPH_H_

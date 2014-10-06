@@ -72,6 +72,7 @@
 #define THEIA_UTIL_MAP_UTIL_H_
 
 #include <glog/logging.h>
+#include <iterator>
 #include <utility>
 
 namespace theia {

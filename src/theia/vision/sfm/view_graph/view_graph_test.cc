@@ -32,8 +32,6 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#include "theia/vision/sfm/view_graph.h"
-
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -45,6 +43,7 @@
 #include "theia/util/map_util.h"
 #include "theia/vision/sfm/twoview_info.h"
 #include "theia/vision/sfm/types.h"
+#include "theia/vision/sfm/view_graph/view_graph.h"
 
 namespace theia {
 

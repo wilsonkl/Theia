@@ -34,7 +34,7 @@
 
 #include "theia/image/image_canvas.h"
 
-#include <cimg/CImg.h>
+#include <cimg/cimg.h>
 #include <glog/logging.h>
 
 #include <cmath>

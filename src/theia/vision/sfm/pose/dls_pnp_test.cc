@@ -44,9 +44,9 @@
 #include "theia/test/benchmark.h"
 #include "theia/util/random.h"
 #include "theia/util/util.h"
-#include "theia/vision/sfm/projection_matrix.h"
 #include "theia/vision/sfm/pose/dls_pnp.h"
 #include "theia/vision/sfm/pose/util.h"
+#include "theia/vision/sfm/types.h"
 
 namespace theia {
 namespace {
@@ -68,15 +68,17 @@ void TestDlsPnpWithNoise(const std::vector<Vector3d>& world_points,
 
   const int num_points = world_points.size();
 
-  const TransformationMatrix expected_transform = TransformationMatrixFromRt(
-      expected_rotation.toRotationMatrix(), expected_translation);
+  Matrix3x4d expected_transform;
+  expected_transform << expected_rotation.toRotationMatrix(),
+      expected_translation;
 
   std::vector<Vector2d> feature_points;
   feature_points.reserve(num_points);
   for (int i = 0; i < num_points; i++) {
     // Reproject 3D points into camera frame.
-    feature_points.push_back((expected_transform * world_points[i])
-                                 .hnormalized());
+    feature_points.push_back(
+        (expected_transform * world_points[i].homogeneous())
+            .eval().hnormalized());
   }
 
   if (projection_noise_std_dev) {
@@ -97,12 +99,13 @@ void TestDlsPnpWithNoise(const std::vector<Vector3d>& world_points,
   bool matched_transform = false;
   for (int i = 0; i < num_solutions; i++) {
     // Check that reprojection errors are small.
-    const TransformationMatrix soln_transform = TransformationMatrixFromRt(
-        soln_rotation[i].toRotationMatrix(), soln_translation[i]);
+    Matrix3x4d soln_transform;
+    soln_transform <<
+        soln_rotation[i].toRotationMatrix(), soln_translation[i];
 
     for (int j = 0; j < num_points; j++) {
       const Vector2d reprojected_point =
-          (soln_transform * world_points[j]).hnormalized();
+          (soln_transform * world_points[j].homogeneous()).eval().hnormalized();
       const double reprojection_error =
           (feature_points[j] - reprojected_point).squaredNorm();
       ASSERT_LE(reprojection_error, max_reprojection_error);

@@ -32,26 +32,33 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_VISION_SFM_TYPES_H_
-#define THEIA_VISION_SFM_TYPES_H_
-
-#include <Eigen/Core>
-#include <cstdint>
-#include <limits>
-#include <utility>
+#ifndef THEIA_VISION_SFM_VIEW_METADATA_H_
+#define THEIA_VISION_SFM_VIEW_METADATA_H_
 
 namespace theia {
 
-typedef uint32_t ViewId;
-typedef uint32_t TrackId;
-typedef std::pair<ViewId, ViewId> ViewIdPair;
+// Metadata is not always available, so we need this helper struct to keep track
+// of which data fields have been set.
+struct Metadata {
+  bool is_set = false;
+  double value;
+};
 
-constexpr ViewId kInvalidViewId = std::numeric_limits<ViewId>::max();
-constexpr ViewId kInvalidTrackId = std::numeric_limits<TrackId>::max();
+// Priors/metadata information about a View. This is typically gathered from
+// EXIF or sensor data.
+//
+// NOTE: For now, this is very simple based on the "include what you use"
+// guideline. As the further functionality is added to this library it is
+// conceivable that other information like GPS data could be added.
+struct ViewMetadata {
+  // The image size *should* always be set, so we don't have to worry about
+  // making it a Metadata type.
+  int image_width;
+  int image_height;
 
-// Used as the projection matrix type.
-typedef Eigen::Matrix<double, 3, 4> Matrix3x4d;
+  Metadata focal_length;
+};
 
 }  // namespace theia
 
-#endif  // THEIA_VISION_SFM_TYPES_H_
+#endif  // THEIA_VISION_SFM_VIEW_METADATA_H_

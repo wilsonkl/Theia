@@ -72,6 +72,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include <glog/logging.h>
+#include <cmath>
 #include <complex>
 #include <vector>
 
@@ -296,6 +297,44 @@ bool FindRealPolynomialRoots(const Eigen::VectorXd& coeffs,
     return true;
   }
   return false;
+}
+
+// An iterative solver to find the closest root based on an initial guess. We
+// use Laguerre's method, which is a polynomial root finding method that
+// converges to a root with very high certainty. For multiple roots, the
+// convergence is linear, otherwise it is cubic.
+double FindRealRootIterative(const Eigen::VectorXd& polynomial,
+                             const double x0,
+                             const double epsilon,
+                             const int max_iter) {
+  const double kSmallestValue = 1e-10;
+
+  // Constant symbolic derivitives.
+  const Eigen::VectorXd f_prime = DifferentiatePolynomial(polynomial);
+  const Eigen::VectorXd f_prime_prime = DifferentiatePolynomial(f_prime);
+  const double k = static_cast<double>(polynomial.size());
+
+  double x = x0;
+
+  for (int i = 0; i < max_iter; i++) {
+    const double f_of_x = EvaluatePolynomial(polynomial, x);
+    if (std::abs(f_of_x) < kSmallestValue) {
+      break;
+    }
+
+    const double g = EvaluatePolynomial(f_prime, x) / f_of_x;
+    const double h = g * g - EvaluatePolynomial(f_prime_prime, x) / f_of_x;
+    const double denom_part = std::sqrt(std::abs((k - 1.0) * (k * h - g * g)));
+    const double denom = (g < 0) ? g - denom_part : g + denom_part;
+    const double delta =  k / denom;
+    if (std::abs(delta) < epsilon) {
+      break;
+    }
+
+    x -= delta;
+  }
+
+  return x;
 }
 
 Eigen::VectorXd DifferentiatePolynomial(const Eigen::VectorXd& polynomial) {

@@ -39,12 +39,12 @@
 #include "gtest/gtest.h"
 
 #include "theia/math/util.h"
-#include "theia/vision/sfm/pose/util.h"
-#include "theia/vision/sfm/projection_matrix.h"
 #include "theia/test/benchmark.h"
 #include "theia/test/test_utils.h"
 #include "theia/util/random.h"
 #include "theia/vision/sfm/pose/perspective_three_point.h"
+#include "theia/vision/sfm/pose/util.h"
+#include "theia/vision/sfm/types.h"
 
 namespace theia {
 
@@ -59,8 +59,8 @@ void PoseFromThreeCalibratedTest(const double noise) {
       (Eigen::AngleAxisd(15.0, Vector3d(1.0, 0.0, 0.0)) *
        Eigen::AngleAxisd(-10.0, Vector3d(0.0, 1.0, 0.0))).toRotationMatrix();
   const Vector3d gt_translation(0.3, -1.7, 1.15);
-  const TransformationMatrix projection_mat =
-      TransformationMatrixFromRt(gt_rotation, gt_translation);
+  Matrix3x4d projection_mat;
+  projection_mat << gt_rotation, gt_translation;
 
   // Points in the 3D scene.
   const Vector3d kPoints3d[3] = { Vector3d(-0.3001, -0.5840, 1.2271),
@@ -70,7 +70,8 @@ void PoseFromThreeCalibratedTest(const double noise) {
   // Points in the camera view.
   Vector2d kPoints2d[3];
   for (int i = 0; i < 3; i++) {
-    kPoints2d[i] = (projection_mat * kPoints3d[i]).hnormalized();
+    kPoints2d[i] =
+        (projection_mat * kPoints3d[i].homogeneous()).eval().hnormalized();
     if (noise) {
       AddNoiseToProjection(noise, &kPoints2d[i]);
     }
@@ -93,11 +94,11 @@ void PoseFromThreeCalibratedTest(const double noise) {
     if (rot_match && trans_match) {
       matched_transform = true;
 
-      TransformationMatrix soln_proj =
-          TransformationMatrixFromRt(rotations[i], translations[i]);
+      Matrix3x4d soln_proj;
+      soln_proj << rotations[i], translations[i];
       // Check the reprojection error.
       for (int j = 0; j < 3; j++) {
-        const Vector3d projected_pt = soln_proj * kPoints3d[j];
+        const Vector3d projected_pt = soln_proj * kPoints3d[j].homogeneous();
         EXPECT_LT((kPoints2d[j] - projected_pt.hnormalized()).norm() * 800.0,
                   2.0);
       }

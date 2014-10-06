@@ -46,8 +46,8 @@ SET(THEIA_SRC
   image/keypoint_detector/brisk_detector.cc
   image/keypoint_detector/brisk_impl.cc
   image/keypoint_detector/sift_detector.cc
-  io/bundler_binary_file.cc
-  io/bundler_text_file.cc
+#  io/bundler_binary_file.cc
+#  io/bundler_text_file.cc
   io/sift_binary_file.cc
   io/sift_text_file.cc
   math/closed_form_polynomial_solver.cc
@@ -56,7 +56,10 @@ SET(THEIA_SRC
   util/filesystem.cc
   util/random.cc
   util/stringprintf.cc
-  vision/sfm/camera/camera_pose.cc
+  vision/sfm/camera/camera.cc
+  vision/sfm/camera/projection_matrix_utils.cc
+  vision/sfm/camera/radial_distortion.cc
+  vision/sfm/model.cc
   vision/sfm/pose/dls_impl.cc
   vision/sfm/pose/dls_pnp.cc
   vision/sfm/pose/eight_point_fundamental_matrix.cc
@@ -71,11 +74,12 @@ SET(THEIA_SRC
   vision/sfm/pose/perspective_three_point.cc
   vision/sfm/pose/three_point_relative_pose_partial_rotation.cc
   vision/sfm/pose/util.cc
-  vision/sfm/projection_matrix.cc
+  vision/sfm/track.cc
   vision/sfm/transformation/align_point_clouds.cc
   vision/sfm/transformation/gdls_similarity_transform.cc
   vision/sfm/triangulation/triangulation.cc
-  vision/sfm/view_graph.cc
+  vision/sfm/view.cc
+  vision/sfm/view_graph/view_graph.cc
   )
 
 SET(THEIA_LIBRARY_DEPENDENCIES
@@ -135,30 +139,36 @@ IF (BUILD_TESTING)
   GTEST(image/keypoint_detector/sift_detector)
   GTEST(math/closed_form_polynomial_solver)
   GTEST(math/matrix/gauss_jordan)
+  GTEST(math/matrix/rq_decomposition)
   GTEST(math/polynomial)
   GTEST(math/probability/sprt)
   GTEST(solvers/arrsac)
+  GTEST(solvers/evsac)
   GTEST(solvers/mlesac)
   GTEST(solvers/prosac)
-  GTEST(solvers/evsac)
   GTEST(solvers/ransac)
-  GTEST(vision/matching/distance)
   GTEST(vision/matching/brute_force_feature_matcher)
-  GTEST(vision/sfm/camera/camera_pose)
+  GTEST(vision/matching/distance)
+  GTEST(vision/sfm/camera/camera)
+  GTEST(vision/sfm/camera/projection_matrix_utils)
+  GTEST(vision/sfm/camera/radial_distortion)
+  GTEST(vision/sfm/model)
   GTEST(vision/sfm/pose/dls_pnp)
   GTEST(vision/sfm/pose/eight_point_fundamental_matrix)
+  GTEST(vision/sfm/pose/estimate_global_rotations)
   GTEST(vision/sfm/pose/five_point_focal_length_radial_distortion)
   GTEST(vision/sfm/pose/five_point_relative_pose)
   GTEST(vision/sfm/pose/four_point_focal_length)
   GTEST(vision/sfm/pose/four_point_homography)
   GTEST(vision/sfm/pose/four_point_relative_pose_partial_rotation)
   GTEST(vision/sfm/pose/fundamental_matrix_util)
-  GTEST(vision/sfm/pose/estimate_global_rotations)
   GTEST(vision/sfm/pose/perspective_three_point)
   GTEST(vision/sfm/pose/three_point_relative_pose_partial_rotation)
+  GTEST(vision/sfm/track)
   GTEST(vision/sfm/transformation/align_point_clouds)
   GTEST(vision/sfm/transformation/gdls_similarity_transform)
   GTEST(vision/sfm/triangulation/triangulation)
-  GTEST(vision/sfm/view_graph)
+  GTEST(vision/sfm/view)
+  GTEST(vision/sfm/view_graph/view_graph)
 
 ENDIF (BUILD_TESTING)

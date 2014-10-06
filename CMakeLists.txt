@@ -37,6 +37,12 @@ IF (COMMAND cmake_policy)
   CMAKE_POLICY(SET CMP0003 NEW)
 ENDIF (COMMAND cmake_policy)
 
+# Disable warnings about rpath on MacOS X for now.
+# TODO(cmsweeney): Figure out the proper way to handle this!
+IF(POLICY CMP0042)
+  CMAKE_POLICY(SET CMP0042 NEW) # CMake 3.0
+ENDIF()
+
 PROJECT(THEIA C CXX)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
 
@@ -103,7 +109,7 @@ IF (SSE2_FOUND)
 ENDIF (SSE2_FOUND)
 
 # Eigen
-SET(MIN_EIGEN_VERSION 3.2.1)
+SET(MIN_EIGEN_VERSION 3.2.0)
 FIND_PACKAGE(Eigen ${MIN_EIGEN_VERSION} REQUIRED)
 IF (EIGEN_FOUND)
   MESSAGE("-- Found Eigen version ${EIGEN_VERSION}: ${EIGEN_INCLUDE_DIRS}")
@@ -236,7 +242,7 @@ INCLUDE("${CMAKE_MODULE_PATH}/OptimizeTheiaCompilerFlags.cmake")
 OptimizeTheiaCompilerFlags()
 
 ADD_SUBDIRECTORY(src/theia)
-ADD_SUBDIRECTORY(data_loader)
+#ADD_SUBDIRECTORY(data_loader)
 
 IF (BUILD_TUTORIALS)
   MESSAGE("-- Build the tutorials.")
