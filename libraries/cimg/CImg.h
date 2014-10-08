@@ -16605,7 +16605,7 @@ namespace cimg_library_suffixed {
                      cimg_instance,
                      INFO);
         assign(NRHS, N);
-        if (!INFO != 0)
+        if ((!INFO) != 0)
           cimg_forXY(*this,k,l) (*this)(k,l) = (T)lapB[k*M+l];
         else
           assign(A.get_pseudoinvert()*(*this));

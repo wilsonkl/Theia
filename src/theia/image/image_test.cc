@@ -32,7 +32,7 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#include <cimg/cimg.h>
+#include <cimg/CImg.h>
 #include <gflags/gflags.h>
 #include <stdio.h>
 #include <string>

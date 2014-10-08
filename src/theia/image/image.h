@@ -35,7 +35,7 @@
 #ifndef THEIA_IMAGE_IMAGE_H_
 #define THEIA_IMAGE_IMAGE_H_
 
-#include <cimg/cimg.h>
+#include <cimg/CImg.h>
 #include <glog/logging.h>
 
 #include <algorithm>
