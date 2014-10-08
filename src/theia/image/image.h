@@ -73,6 +73,8 @@ template <typename T> class Image {
   // Image information
   int Rows() const;
   int Cols() const;
+  int Width() const;
+  int Height() const;
   int Channels() const;
 
   // Returns the pixel value at (x, y). An optional third parameter can specify
@@ -103,6 +105,9 @@ template <typename T> class Image {
   // that the first row and column are all zeros.
   template <typename D = T>
   Image<D> Integrate() const;
+
+  // Computes a fast approximate gaussian blur of te image.
+  void ApproximateGaussianBlur(const double sigma);
 
   // Resize using a Lanczos 3 filter.
   void Resize(int new_rows, int new_cols);
@@ -145,6 +150,14 @@ template <typename T> int Image<T>::Rows() const {
 
 template <typename T> int Image<T>::Cols() const {
   return image_.width();
+}
+
+template <typename T> int Image<T>::Width() const {
+  return image_.width();
+}
+
+template <typename T> int Image<T>::Height() const {
+  return image_.height();
 }
 
 template <typename T> int Image<T>::Channels() const {
@@ -247,6 +260,11 @@ Image<D> Image<T>::Integrate() const {
   }
 
   return integral;
+}
+
+template <typename T>
+void Image<T>::ApproximateGaussianBlur(const double sigma) {
+  image_.blur(sigma);
 }
 
 template <typename T> void Image<T>::Resize(int new_rows, int new_cols) {

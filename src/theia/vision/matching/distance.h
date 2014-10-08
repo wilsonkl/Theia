@@ -91,6 +91,7 @@ struct Hamming {
          i < descriptor_a.size() / (8 * sizeof(unsigned char)); i++) {
       result += pop_count_table[char_a[i] ^ char_b[i]];
     }
+
     return result;
   }
 };

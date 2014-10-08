@@ -37,6 +37,7 @@ FILE(GLOB THEIA_HDRS *.h)
 
 # Add sources
 SET(THEIA_SRC
+  image/descriptor/brief_descriptor.cc
   image/descriptor/brisk_descriptor.cc
   image/descriptor/descriptor_extractor.cc
   image/descriptor/freak_descriptor.cc
@@ -130,6 +131,7 @@ IF (BUILD_TESTING)
       COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TEST_NAME}_test)
   ENDMACRO (GTEST)
 
+  GTEST(image/descriptor/brief_descriptor)
   GTEST(image/descriptor/brisk_descriptor)
   GTEST(image/descriptor/freak_descriptor)
   GTEST(image/descriptor/sift_descriptor)

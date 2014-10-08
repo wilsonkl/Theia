@@ -46,7 +46,7 @@ DEFINE_string(img_output_dir, "output", "Name of output image file.");
 using theia::BriskDetector;
 using theia::BruteForceFeatureMatcher;
 using theia::FloatImage;
-using theia::FreakDescriptorExtractor;
+using theia::BriefDescriptorExtractor;
 using theia::Hamming;
 using theia::ImageCanvas;
 using theia::FeatureMatcherOptions;
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
 
   // Detect keypoints.
   VLOG(0) << "detecting keypoints";
-  BriskDetector brisk_detector(70, 4);
+  BriskDetector brisk_detector;
   CHECK(brisk_detector.Initialize());
 
   std::vector<Keypoint> left_keypoints;
@@ -77,33 +77,35 @@ int main(int argc, char *argv[]) {
 
   // Extract descriptors.
   VLOG(0) << "extracting descriptors.";
-  FreakDescriptorExtractor freak_extractor;
-  CHECK(freak_extractor.Initialize());
+  BriefDescriptorExtractor brief_extractor;
+  CHECK(brief_extractor.Initialize());
 
+  clock_t t = clock();
   std::vector<Eigen::BinaryVectorX> left_descriptors;
-  freak_extractor.ComputeDescriptors(left_image,
+  brief_extractor.ComputeDescriptors(left_image,
                                      &left_keypoints,
                                      &left_descriptors);
-  VLOG(0) << "left descriptors size = " << left_descriptors.size();
 
   std::vector<Eigen::BinaryVectorX> right_descriptors;
-  freak_extractor.ComputeDescriptors(right_image,
+  brief_extractor.ComputeDescriptors(right_image,
                                      &right_keypoints,
                                      &right_descriptors);
-  VLOG(0) << "right descriptors size = " << right_descriptors.size();
+  t = clock() - t;
+  VLOG(0) << "It took " << (static_cast<float>(t) / CLOCKS_PER_SEC)
+          << " to extract BRIEF descriptors from both images";
 
   // Match descriptors!
   BruteForceFeatureMatcher<Hamming> brute_force_image_matcher;
   FeatureMatcherOptions options;
   std::vector<theia::FeatureMatch> matches;
-  clock_t t = clock();
+  t = clock();
   brute_force_image_matcher.Match(options,
                                   left_descriptors,
                                   right_descriptors,
                                   &matches);
   t = clock() - t;
   VLOG(0) << "It took " << (static_cast<float>(t) / CLOCKS_PER_SEC)
-          << " to match FREAK descriptors";
+          << " to match BRIEF descriptors";
 
   // Get an image canvas to draw the features on.
   ImageCanvas image_canvas;
@@ -113,5 +115,5 @@ int main(int argc, char *argv[]) {
                                    matches, 0.1);
 
   image_canvas.Write(FLAGS_img_output_dir +
-                     std::string("/freak_descriptors.png"));
+                     std::string("/brief_descriptors.png"));
 }

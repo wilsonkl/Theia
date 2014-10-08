@@ -36,6 +36,7 @@
 #define THEIA_THEIA_H_
 
 #include "theia/alignment/alignment.h"
+#include "theia/image/descriptor/brief_descriptor.h"
 #include "theia/image/descriptor/brisk_descriptor.h"
 #include "theia/image/descriptor/descriptor_extractor.h"
 #include "theia/image/descriptor/freak_descriptor.h"
