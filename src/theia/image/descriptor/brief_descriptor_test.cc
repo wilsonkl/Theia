@@ -96,4 +96,27 @@ TEST(BriefDescriptor, Sanity) {
   }
 }
 
+TEST(BriefDescriptor, TooCloseToBorder) {
+  FloatImage input_img(img_filename);
+
+  // Create keypoints that are too close to the border.
+  std::vector<Keypoint> brief_keypoints(4);
+  brief_keypoints[0].set_x(10);
+  brief_keypoints[0].set_y(10);
+  brief_keypoints[1].set_x(10);
+  brief_keypoints[1].set_y(input_img.Height() - 10);
+  brief_keypoints[2].set_x(input_img.Width() - 10);
+  brief_keypoints[2].set_y(10);
+  brief_keypoints[3].set_x(input_img.Width() - 10);
+  brief_keypoints[4].set_y(input_img.Height() - 10);
+
+  // For each keypoint, extract the brief descriptors.
+  BriefDescriptorExtractor brief_extractor;
+  brief_extractor.Initialize();
+  std::vector<Eigen::BinaryVectorX> brief_descriptors;
+  EXPECT_FALSE(brief_extractor.ComputeDescriptors(input_img,
+                                                  &brief_keypoints,
+                                                  &brief_descriptors));
+
+}
 }  // namespace theia

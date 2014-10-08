@@ -58,7 +58,7 @@ bool KeypointIsTooCloseToBorder(const Keypoint& keypoint,
                                 const int image_rows,
                                 const int image_cols,
                                 const int patch_sample_size) {
-  const int min_pixel_point = -patch_sample_size;
+  const int min_pixel_point = -patch_sample_size / 2;
   const int max_pixel_point = min_pixel_point + patch_sample_size;
 
   return keypoint.x() + min_pixel_point < 0 ||
@@ -76,7 +76,7 @@ bool BriefDescriptorExtractor::Initialize() {
       << "BRIEF currently only supports num_samples being a multiple of 128";
 
   // The boundaries of the patch to sample.
-  const int min_pixel_point = -patch_sample_size_;
+  const int min_pixel_point = -patch_sample_size_ / 2;
   const int max_pixel_point = min_pixel_point + patch_sample_size_;
 
   // Using a zero-mean guassian distribution with a sigma of S * S / 25 is
