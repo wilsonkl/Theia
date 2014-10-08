@@ -93,11 +93,7 @@
 // the authors, rather than train them ourselves).
 namespace theia {
 namespace {
-#ifdef THEIA_USE_SSE
-static const __m128i binMask =
-    _mm_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-                 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
-#endif
+
 static const double kLog2 = 0.693147180559945;
 static const int kNumOrientation = 256;
 static const int kNumPoints = 43;

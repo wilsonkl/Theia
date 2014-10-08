@@ -36,6 +36,7 @@
 
 #include <Eigen/Core>
 #include <algorithm>
+#include <bitset>
 #include <vector>
 
 #include "theia/alignment/alignment.h"

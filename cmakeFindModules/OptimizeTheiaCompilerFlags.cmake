@@ -100,7 +100,7 @@ macro(OptimizeTheiaCompilerFlags)
       ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")
       # Mac OS X
       IF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
-        SET (THEIA_CXX_FLAGS "${THEIA_CXX_FLAGS} -msse3")
+        SET (THEIA_CXX_FLAGS "${THEIA_CXX_FLAGS} -mssse3")
         # Use of -fast only applicable for Apple's GCC
         # Assume this is being used if GCC version < 4.3 on OSX
         EXECUTE_PROCESS(COMMAND ${CMAKE_C_COMPILER}
@@ -117,12 +117,12 @@ macro(OptimizeTheiaCompilerFlags)
       # well not be present / in use and without which files will compile, but
       # not link ('file not recognized') so explicitly check for support
       INCLUDE(CheckCXXCompilerFlag)
-      CHECK_CXX_COMPILER_FLAG("-O3" HAVE_LTO_SUPPORT)
+      CHECK_CXX_COMPILER_FLAG("-flto" HAVE_LTO_SUPPORT)
       IF (HAVE_LTO_SUPPORT)
-        MESSAGE(STATUS "Enabling link-time optimization (-O3)")
-        SET(THEIA_CXX_FLAGS "${THEIA_CXX_FLAGS} -O3")
+        MESSAGE(STATUS "Enabling link-time optimization (-flto)")
+        SET(THEIA_CXX_FLAGS "${THEIA_CXX_FLAGS} -flto")
       ELSE ()
-        MESSAGE(STATUS "Compiler/linker does not support link-time optimization (-O3), disabling.")
+        MESSAGE(STATUS "Compiler/linker does not support link-time optimization (-flto), disabling.")
       ENDIF (HAVE_LTO_SUPPORT)
     ENDIF ()
   ENDIF (CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -204,6 +204,16 @@ macro(OptimizeTheiaCompilerFlags)
     # GCC is not strict enough by default, so enable most of the warnings.
     SET(CMAKE_CXX_FLAGS
       "${CMAKE_CXX_FLAGS} -Werror=all -Werror=extra -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-missing-field-initializers")
+
+    # Newer versions of GCC are sometimes too strict!
+    IF (CMAKE_COMPILER_IS_GNUCXX)
+      # Linux
+      IF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+        IF (NOT GCC_VERSION VERSION_LESS 4.8)
+          SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-comment -Wno-unused-variable -Wno-unused-result -Wno-unused-but-set-variable")
+	ENDIF (CMAKE_SYSTEM_NAME MATCHES "Linux")
+      ENDIF (NOT GCC_VERSION VERSION_LESS 4.8)
+    ENDIF (CMAKE_COMPILER_IS_GNUCXX)
   ENDIF (UNIX)
 
 endmacro(OptimizeTheiaCompilerFlags)

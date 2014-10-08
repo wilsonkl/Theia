@@ -51,26 +51,9 @@
 #include "theia/image/keypoint_detector/keypoint.h"
 
 namespace theia {
-namespace {
+
 typedef unsigned char uchar;
 typedef Eigen::Matrix<uchar, Eigen::Dynamic, Eigen::Dynamic> MatrixXu;
-
-// this is needed to avoid aliasing issues with the __m128i data type:
-#ifdef __GNUC__
-typedef unsigned char __attribute__((__may_alias__)) UCHAR_ALIAS;
-typedef unsigned short __attribute__((__may_alias__)) UINT16_ALIAS;
-typedef unsigned int __attribute__((__may_alias__)) UINT32_ALIAS;
-typedef unsigned long int __attribute__((__may_alias__)) UINT64_ALIAS;
-typedef int __attribute__((__may_alias__)) INT32_ALIAS;
-typedef uint8_t __attribute__((__may_alias__)) U_INT8T_ALIAS;
-#endif
-#ifdef _MSC_VER
-// Todo: find the equivalent to may_alias
-#define UCHAR_ALIAS unsigned char  // __declspec(noalias)
-#define UINT32_ALIAS unsigned int  // __declspec(noalias)
-#define __inline__ __forceinline
-#endif
-}  // namespace
 
 const float BriskScaleSpace::safetyFactor_ = 1.0;
 const float BriskScaleSpace::basicSize_ = 12.0;
@@ -242,7 +225,6 @@ void BriskScaleSpace::getKeypoints(const uint8_t _threshold,
 inline int BriskScaleSpace::getScoreAbove(const uint8_t layer,
                                           const int x_layer,
                                           const int y_layer) {
-  CHECK_LT(layer, layers_ - 1);
   BriskLayer& l = pyramid_[layer + 1];
   if (layer % 2 == 0) {  // octave
     const int sixths_x = 4 * x_layer - 1;
@@ -282,7 +264,6 @@ inline int BriskScaleSpace::getScoreAbove(const uint8_t layer,
 inline int BriskScaleSpace::getScoreBelow(const uint8_t layer,
                                           const int x_layer,
                                           const int y_layer) {
-  CHECK_GT(layer, 0);
   BriskLayer& l = pyramid_[layer - 1];
   int sixth_x;
   int quarter_x;
@@ -661,7 +642,6 @@ inline float BriskScaleSpace::getScoreMaxAbove(const uint8_t layer,
   float y1;
 
   // the layer above
-  CHECK_LT(layer + 1, layers_);
   BriskLayer& layerAbove = pyramid_[layer + 1];
 
   if (layer % 2 == 0) {
@@ -827,7 +807,6 @@ inline float BriskScaleSpace::getScoreMaxBelow(const uint8_t layer,
   }
 
   // the layer below
-  CHECK_GT(layer, 0);
   BriskLayer& layerBelow = pyramid_[layer - 1];
 
   // check the first row
