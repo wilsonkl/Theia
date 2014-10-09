@@ -50,7 +50,7 @@ namespace theia {
 
 namespace {
 
-inline double ClampValue(const int min, const int max, const int val) {
+inline int ClampValue(const int min, const int max, const int val) {
   return std::max(std::min(val, max), min);
 }
 
@@ -59,7 +59,7 @@ bool KeypointIsTooCloseToBorder(const Keypoint& keypoint,
                                 const int image_cols,
                                 const int patch_sample_size) {
   const int min_pixel_point = -patch_sample_size / 2;
-  const int max_pixel_point = min_pixel_point + patch_sample_size;
+  const int max_pixel_point = min_pixel_point + patch_sample_size - 1;
 
   return keypoint.x() + min_pixel_point < 0 ||
          keypoint.x() + max_pixel_point >= image_cols ||
@@ -77,7 +77,7 @@ bool BriefDescriptorExtractor::Initialize() {
 
   // The boundaries of the patch to sample.
   const int min_pixel_point = -patch_sample_size_ / 2;
-  const int max_pixel_point = min_pixel_point + patch_sample_size_;
+  const int max_pixel_point = min_pixel_point + patch_sample_size_ - 1;
 
   // Using a zero-mean guassian distribution with a sigma of S * S / 25 is
   // reported to give good results in the paper.
@@ -88,8 +88,9 @@ bool BriefDescriptorExtractor::Initialize() {
   for (int i = 0; i < num_samples_; i++) {
     BriefSamplePair brief_sample_pair;
     for (int j = 0; j < 4; j++) {
-      brief_sample_pair.pixel_points[j] = ClampValue(
-          min_pixel_point, max_pixel_point, RandGaussian(0.0, sample_sigma));
+      brief_sample_pair.pixel_points[j] =
+          ClampValue(min_pixel_point, max_pixel_point,
+                     static_cast<int>(RandGaussian(0.0, sample_sigma)));
     }
     pixel_samples_.emplace_back(brief_sample_pair);
   }
@@ -101,6 +102,9 @@ bool BriefDescriptorExtractor::ComputeDescriptor(
     const FloatImage& image,
     const Keypoint& keypoint,
     Eigen::BinaryVectorX* descriptor) {
+  CHECK_NOTNULL(descriptor);
+  CHECK_GT(pixel_samples_.size(), 0) << "You must call Initialize() first!";
+
   // Smooth the image using a gaussian kernal of 2.
   FloatImage blurred_image = image.AsGrayscaleImage();
   blurred_image.ApproximateGaussianBlur(2.0);
@@ -115,6 +119,10 @@ bool BriefDescriptorExtractor::ComputeDescriptors(
     const FloatImage& image,
     std::vector<Keypoint>* keypoints,
     std::vector<Eigen::BinaryVectorX>* descriptors) {
+  CHECK_NOTNULL(keypoints);
+  CHECK_NOTNULL(descriptors)->clear();
+  CHECK_GT(pixel_samples_.size(), 0) << "You must call Initialize() first!";
+
   // Smooth the image using a gaussian kernal of 2.
   FloatImage blurred_image = image.AsGrayscaleImage();
   blurred_image.ApproximateGaussianBlur(2.0);

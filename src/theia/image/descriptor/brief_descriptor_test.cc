@@ -108,7 +108,7 @@ TEST(BriefDescriptor, TooCloseToBorder) {
   brief_keypoints[2].set_x(input_img.Width() - 10);
   brief_keypoints[2].set_y(10);
   brief_keypoints[3].set_x(input_img.Width() - 10);
-  brief_keypoints[4].set_y(input_img.Height() - 10);
+  brief_keypoints[3].set_y(input_img.Height() - 10);
 
   // For each keypoint, extract the brief descriptors.
   BriefDescriptorExtractor brief_extractor;
