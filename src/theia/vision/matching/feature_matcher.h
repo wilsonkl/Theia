@@ -77,7 +77,7 @@ template <class DistanceMetric> class FeatureMatcher {
   virtual bool Match(const FeatureMatcherOptions& options,
                      const std::vector<DescriptorType>& desc_1,
                      const std::vector<DescriptorType>& desc_2,
-                     std::vector<FeatureMatch>* matches) const = 0;
+                     std::vector<FeatureMatch>* matches) = 0;
 
   // Finds the nearest neighbor in desc_2 for each descriptor in desc_1.
   virtual bool Match(const FeatureMatcherOptions& options,
@@ -85,7 +85,7 @@ template <class DistanceMetric> class FeatureMatcher {
                      const std::vector<DescriptorType>& desc_1,
                      const std::vector<Keypoint>& keypoints_2,
                      const std::vector<DescriptorType>& desc_2,
-                     std::vector<FeatureMatch>* matches) const {
+                     std::vector<FeatureMatch>* matches) {
     return Match(options, desc_1, desc_2, matches);
   }
 

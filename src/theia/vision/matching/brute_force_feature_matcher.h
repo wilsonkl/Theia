@@ -61,7 +61,7 @@ class BruteForceFeatureMatcher : public FeatureMatcher<DistanceMetric> {
   bool Match(const FeatureMatcherOptions& options,
              const std::vector<DescriptorType>& desc_1,
              const std::vector<DescriptorType>& desc_2,
-             std::vector<FeatureMatch>* matches) const;
+             std::vector<FeatureMatch>* matches);
 
  private:
   void GetFilteredMatches(const FeatureMatcherOptions& options,
@@ -78,7 +78,7 @@ bool BruteForceFeatureMatcher<DistanceMetric>::Match(
     const FeatureMatcherOptions& options,
     const std::vector<DescriptorType>& desc_1,
     const std::vector<DescriptorType>& desc_2,
-    std::vector<FeatureMatch>* matches) const {
+    std::vector<FeatureMatch>* matches) {
   CHECK_NOTNULL(matches)->clear();
   matches->reserve(desc_1.size());
 
