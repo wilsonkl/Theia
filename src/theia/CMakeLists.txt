@@ -57,6 +57,7 @@ SET(THEIA_SRC
   util/filesystem.cc
   util/random.cc
   util/stringprintf.cc
+  vision/matching/feature_matcher_utils.cc
   vision/sfm/camera/camera.cc
   vision/sfm/camera/projection_matrix_utils.cc
   vision/sfm/camera/radial_distortion.cc
@@ -151,6 +152,7 @@ IF (BUILD_TESTING)
   GTEST(solvers/ransac)
   GTEST(vision/matching/brute_force_feature_matcher)
   GTEST(vision/matching/distance)
+  GTEST(vision/matching/feature_matcher_utils)
   GTEST(vision/sfm/camera/camera)
   GTEST(vision/sfm/camera/projection_matrix_utils)
   GTEST(vision/sfm/camera/radial_distortion)

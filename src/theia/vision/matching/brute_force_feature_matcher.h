@@ -35,10 +35,14 @@
 #ifndef THEIA_VISION_MATCHING_BRUTE_FORCE_FEATURE_MATCHER_H_
 #define THEIA_VISION_MATCHING_BRUTE_FORCE_FEATURE_MATCHER_H_
 
+#include <Eigen/Core>
+#include <glog/logging.h>
+
 #include <algorithm>
 #include <vector>
 
 #include "theia/vision/matching/feature_matcher.h"
+#include "theia/vision/matching/feature_matcher_utils.h"
 
 namespace theia {
 
@@ -53,28 +57,16 @@ class BruteForceFeatureMatcher : public FeatureMatcher<DistanceMetric> {
   BruteForceFeatureMatcher() {}
   ~BruteForceFeatureMatcher() {}
 
- protected:
   // Finds the nearest neighbor in desc_2 for each descriptor in desc_1.
-  virtual void MatchNearestNeighbor(
-      const std::vector<DescriptorType>& desc_1,
-      const std::vector<DescriptorType>& desc_2,
-      std::vector<FeatureMatch>* matches);
-
-  // The k-nearest neighbors are found for each descriptor in desc_1. Each entry
-  // of the output matches is a vector with the k-nearest-neighbors of the
-  // descriptor in desc_1. It is assumed that the matches are in ascending
-  // order, that is, the best match is first.
-  virtual void MatchKNearestNeighbors(
-      const int knn,
-      const std::vector<DescriptorType>& desc_1,
-      const std::vector<DescriptorType>& desc_2,
-      std::vector<std::vector<FeatureMatch> >* matches);
+  bool Match(const FeatureMatcherOptions& options,
+             const std::vector<DescriptorType>& desc_1,
+             const std::vector<DescriptorType>& desc_2,
+             std::vector<FeatureMatch>* matches) const;
 
  private:
-  bool CompareFeaturesByDistance(const FeatureMatch& lhs,
-                                 const FeatureMatch& rhs) {
-    return lhs.distance < rhs.distance;
-  }
+  void GetFilteredMatches(const FeatureMatcherOptions& options,
+                          const Eigen::MatrixXf& match_distances,
+                          std::vector<FeatureMatch>* matches) const;
 
   DISALLOW_COPY_AND_ASSIGN(BruteForceFeatureMatcher);
 };
@@ -82,61 +74,67 @@ class BruteForceFeatureMatcher : public FeatureMatcher<DistanceMetric> {
 // ---------------------- Implementation ------------------------ //
 
 template <class DistanceMetric>
-void BruteForceFeatureMatcher<DistanceMetric>::MatchNearestNeighbor(
+bool BruteForceFeatureMatcher<DistanceMetric>::Match(
+    const FeatureMatcherOptions& options,
     const std::vector<DescriptorType>& desc_1,
     const std::vector<DescriptorType>& desc_2,
-    std::vector<FeatureMatch>* matches) {
-  CHECK_NOTNULL(matches)->reserve(desc_1.size());
+    std::vector<FeatureMatch>* matches) const {
+  CHECK_NOTNULL(matches)->clear();
+  matches->reserve(desc_1.size());
 
   DistanceMetric distance;
+
+  // Compute all pairwise distances.
+  Eigen::MatrixXf match_distances(desc_1.size(), desc_2.size());
   for (int i = 0; i < desc_1.size(); i++) {
-    FeatureMatch best_match(i, 0, distance(desc_1[i], desc_2[0]));
-    for (int j = 1; j < desc_2.size(); j++) {
-      const DistanceType temp_dist = distance(desc_1[i], desc_2[j]);
-      if (temp_dist < best_match.distance) {
-        best_match.feature2_ind = j;
-        best_match.distance = temp_dist;
-      }
+    for (int j = 0; j < desc_2.size(); j++) {
+      match_distances(i, j) = distance(desc_1[i], desc_2[j]);
     }
-    matches->emplace_back(best_match);
   }
-}
 
-namespace brute_force_feature_matcher {
-inline bool CompareFeaturesByDistance(const FeatureMatch& feature1,
-                                      const FeatureMatch& feature2) {
-  return feature1.distance < feature2.distance;
-}
+  GetFilteredMatches(options, match_distances, matches);
 
-}  // namespace brute_force_feature_matcher
+  // Filter by symmetric, if applicable.
+  if (options.keep_only_symmetric_matches) {
+    std::vector<FeatureMatch> reverse_matches;
+    GetFilteredMatches(options, match_distances.transpose(), &reverse_matches);
+    IntersectMatches(reverse_matches, matches);
+  }
+  return true;
+}
 
 template <class DistanceMetric>
-void BruteForceFeatureMatcher<DistanceMetric>::MatchKNearestNeighbors(
-    const int knn,
-    const std::vector<DescriptorType>& desc_1,
-    const std::vector<DescriptorType>& desc_2,
-    std::vector<std::vector<FeatureMatch> >* matches) {
-  CHECK_NOTNULL(matches)->resize(desc_1.size());
-  DistanceMetric distance;
-
-  for (int i = 0; i < desc_1.size(); i++) {
-    std::vector<FeatureMatch> knn_matches(desc_2.size());
-    // Get all feature match distances to desc_1[i].
-    for (int j = 0; j < desc_2.size(); j++) {
-      knn_matches[j] = FeatureMatch(i, j, distance(desc_1[i], desc_2[j]));
+void BruteForceFeatureMatcher<DistanceMetric>::GetFilteredMatches(
+    const FeatureMatcherOptions& options,
+    const Eigen::MatrixXf& match_distances,
+    std::vector<FeatureMatch>* matches) const {
+  std::vector<std::vector<FeatureMatch> > knn_matches(match_distances.rows());
+  for (int i = 0; i < match_distances.rows(); i++) {
+    knn_matches[i].resize(match_distances.cols());
+    for (int j = 0; j < match_distances.cols(); j++) {
+      knn_matches[i][j] = FeatureMatch(i, j, match_distances(i, j));
     }
-
-    // Perform a partial sort on the elements to get the k min elements. This
-    // should be rather efficient.
-    std::partial_sort(knn_matches.begin(),
-                      knn_matches.begin() + knn,
-                      knn_matches.end(),
-                      brute_force_feature_matcher::CompareFeaturesByDistance);
-    // Resize so we only keep the first k elements.
-    knn_matches.resize(knn);
-
-    (*matches)[i] = knn_matches;
   }
+
+  // Find the best matches.
+  for (int i = 0; i < knn_matches.size(); i++) {
+    std::partial_sort(knn_matches[i].begin(),
+                      knn_matches[i].begin() + 2,
+                      knn_matches[i].end(),
+                      CompareFeaturesByDistance);
+  }
+
+  // Filter by Lowes ratio, if applicable.
+  if (options.use_lowes_ratio) {
+    FilterByLowesRatio(options, knn_matches, matches);
+  } else {
+    for (int i = 0; i < knn_matches.size(); i++) {
+      matches->push_back(knn_matches[i][0]);
+    }
+  }
+
+  // Filter by max distance.
+  RemoveMatchesAboveMaxMatchDistance(options.max_match_distance, matches);
 }
 
 }  // namespace theia

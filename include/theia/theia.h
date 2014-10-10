@@ -83,6 +83,7 @@
 #include "theia/vision/matching/brute_force_feature_matcher.h"
 #include "theia/vision/matching/distance.h"
 #include "theia/vision/matching/feature_matcher.h"
+#include "theia/vision/matching/feature_matcher_utils.h"
 #include "theia/vision/matching/feature_matcher_options.h"
 #include "theia/vision/sfm/camera/camera.h"
 #include "theia/vision/sfm/camera/project_point_to_image.h"
