@@ -117,6 +117,17 @@ inline double EvaluatePolynomial(const Eigen::VectorXd& polynomial, double x) {
 // the input polynomial is at least of degree zero.
 Eigen::VectorXd DifferentiatePolynomial(const Eigen::VectorXd& polynomial);
 
+// Multiplies the two polynoimals together.
+Eigen::VectorXd MultiplyPolynomials(const Eigen::VectorXd& poly1,
+                                    const Eigen::VectorXd& poly2);
+
+// Performs polynomial division such that
+// polynomial = divisor * quotient + remainder.
+void DividePolynomial(const Eigen::VectorXd& polynomial,
+                      const Eigen::VectorXd& divisor,
+                      Eigen::VectorXd* quotient,
+                      Eigen::VectorXd* remainder);
+
 // Find the minimum value of the polynomial in the interval [x_min,
 // x_max]. The minimum is obtained by computing all the roots of the
 // derivative of the input polynomial. All real roots within the

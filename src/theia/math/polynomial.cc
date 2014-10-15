@@ -78,16 +78,19 @@
 
 namespace theia {
 
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
+
 namespace {
 
 // Balancing function as described by B. N. Parlett and C. Reinsch,
 // "Balancing a Matrix for Calculation of Eigenvalues and Eigenvectors".
 // In: Numerische Mathematik, Volume 13, Number 4 (1969), 293-304,
 // Springer Berlin / Heidelberg. DOI: 10.1007/BF02165404
-void BalanceCompanionMatrix(Eigen::MatrixXd* companion_matrix_ptr) {
+void BalanceCompanionMatrix(MatrixXd* companion_matrix_ptr) {
   CHECK_NOTNULL(companion_matrix_ptr);
-  Eigen::MatrixXd& companion_matrix = *companion_matrix_ptr;
-  Eigen::MatrixXd companion_matrix_offdiagonal = companion_matrix;
+  MatrixXd& companion_matrix = *companion_matrix_ptr;
+  MatrixXd companion_matrix_offdiagonal = companion_matrix;
   companion_matrix_offdiagonal.diagonal().setZero();
 
   const int degree = companion_matrix.rows();
@@ -134,10 +137,10 @@ void BalanceCompanionMatrix(Eigen::MatrixXd* companion_matrix_ptr) {
   companion_matrix = companion_matrix_offdiagonal;
 }
 
-void BuildCompanionMatrix(const Eigen::VectorXd& polynomial,
-                          Eigen::MatrixXd* companion_matrix_ptr) {
+void BuildCompanionMatrix(const VectorXd& polynomial,
+                          MatrixXd* companion_matrix_ptr) {
   CHECK_NOTNULL(companion_matrix_ptr);
-  Eigen::MatrixXd& companion_matrix = *companion_matrix_ptr;
+  MatrixXd& companion_matrix = *companion_matrix_ptr;
 
   const int degree = polynomial.size() - 1;
 
@@ -148,7 +151,7 @@ void BuildCompanionMatrix(const Eigen::VectorXd& polynomial,
 }
 
 // Remove leading terms with zero coefficients.
-Eigen::VectorXd RemoveLeadingZeros(const Eigen::VectorXd& polynomial_in) {
+VectorXd RemoveLeadingZeros(const VectorXd& polynomial_in) {
   int i = 0;
   while (i < (polynomial_in.size() - 1) && polynomial_in(i) == 0) {
     ++i;
@@ -156,9 +159,9 @@ Eigen::VectorXd RemoveLeadingZeros(const Eigen::VectorXd& polynomial_in) {
   return polynomial_in.tail(polynomial_in.size() - i);
 }
 
-void FindLinearPolynomialRoots(const Eigen::VectorXd& polynomial,
-                               Eigen::VectorXd* real,
-                               Eigen::VectorXd* imaginary) {
+void FindLinearPolynomialRoots(const VectorXd& polynomial,
+                               VectorXd* real,
+                               VectorXd* imaginary) {
   CHECK_EQ(polynomial.size(), 2);
   if (real != NULL) {
     real->resize(1);
@@ -170,9 +173,9 @@ void FindLinearPolynomialRoots(const Eigen::VectorXd& polynomial,
   }
 }
 
-void FindQuadraticPolynomialRoots(const Eigen::VectorXd& polynomial,
-                                  Eigen::VectorXd* real,
-                                  Eigen::VectorXd* imaginary) {
+void FindQuadraticPolynomialRoots(const VectorXd& polynomial,
+                                  VectorXd* real,
+                                  VectorXd* imaginary) {
   CHECK_EQ(polynomial.size(), 3);
   const double a = polynomial(0);
   const double b = polynomial(1);
@@ -215,14 +218,14 @@ void FindQuadraticPolynomialRoots(const Eigen::VectorXd& polynomial,
 
 }  // namespace
 
-bool FindPolynomialRoots(const Eigen::VectorXd& polynomial_in,
-                         Eigen::VectorXd* real, Eigen::VectorXd* imaginary) {
+bool FindPolynomialRoots(const VectorXd& polynomial_in,
+                         VectorXd* real, VectorXd* imaginary) {
   if (polynomial_in.size() == 0) {
     LOG(ERROR) << "Invalid polynomial of size 0 passed to FindPolynomialRoots";
     return false;
   }
 
-  Eigen::VectorXd polynomial = RemoveLeadingZeros(polynomial_in);
+  VectorXd polynomial = RemoveLeadingZeros(polynomial_in);
   const int degree = polynomial.size() - 1;
 
   // Is the polynomial constant?
@@ -255,12 +258,12 @@ bool FindPolynomialRoots(const Eigen::VectorXd& polynomial_in,
   polynomial /= leading_term;
 
   // Build and balance the companion matrix to the polynomial.
-  Eigen::MatrixXd companion_matrix(degree, degree);
+  MatrixXd companion_matrix(degree, degree);
   BuildCompanionMatrix(polynomial, &companion_matrix);
   BalanceCompanionMatrix(&companion_matrix);
 
   // Find its (complex) eigenvalues.
-  Eigen::EigenSolver<Eigen::MatrixXd> solver(companion_matrix, false);
+  Eigen::EigenSolver<MatrixXd> solver(companion_matrix, false);
   if (solver.info() != Eigen::Success) {
     LOG(ERROR) << "Failed to extract eigenvalues from companion matrix.";
     return false;
@@ -280,10 +283,10 @@ bool FindPolynomialRoots(const Eigen::VectorXd& polynomial_in,
   return true;
 }
 
-bool FindRealPolynomialRoots(const Eigen::VectorXd& coeffs,
-                             Eigen::VectorXd* real_roots) {
-  Eigen::VectorXd real_roots_temp;
-  Eigen::VectorXd complex_roots;
+bool FindRealPolynomialRoots(const VectorXd& coeffs,
+                             VectorXd* real_roots) {
+  VectorXd real_roots_temp;
+  VectorXd complex_roots;
   if (FindPolynomialRoots(coeffs, &real_roots_temp, &complex_roots)) {
     int num_real_roots = 0;
     real_roots->resize(complex_roots.size());
@@ -303,15 +306,15 @@ bool FindRealPolynomialRoots(const Eigen::VectorXd& coeffs,
 // use Laguerre's method, which is a polynomial root finding method that
 // converges to a root with very high certainty. For multiple roots, the
 // convergence is linear, otherwise it is cubic.
-double FindRealRootIterative(const Eigen::VectorXd& polynomial,
+double FindRealRootIterative(const VectorXd& polynomial,
                              const double x0,
                              const double epsilon,
                              const int max_iter) {
   const double kSmallestValue = 1e-10;
 
   // Constant symbolic derivitives.
-  const Eigen::VectorXd f_prime = DifferentiatePolynomial(polynomial);
-  const Eigen::VectorXd f_prime_prime = DifferentiatePolynomial(f_prime);
+  const VectorXd f_prime = DifferentiatePolynomial(polynomial);
+  const VectorXd f_prime_prime = DifferentiatePolynomial(f_prime);
   const double k = static_cast<double>(polynomial.size());
 
   double x = x0;
@@ -337,7 +340,7 @@ double FindRealRootIterative(const Eigen::VectorXd& polynomial,
   return x;
 }
 
-Eigen::VectorXd DifferentiatePolynomial(const Eigen::VectorXd& polynomial) {
+VectorXd DifferentiatePolynomial(const VectorXd& polynomial) {
   const int degree = polynomial.rows() - 1;
   CHECK_GE(degree, 0);
 
@@ -345,10 +348,10 @@ Eigen::VectorXd DifferentiatePolynomial(const Eigen::VectorXd& polynomial) {
   // not result in a smaller degree polynomial, just a degree zero
   // polynomial with value zero.
   if (degree == 0) {
-    return Eigen::VectorXd::Zero(1);
+    return VectorXd::Zero(1);
   }
 
-  Eigen::VectorXd derivative(degree);
+  VectorXd derivative(degree);
   for (int i = 0; i < degree; ++i) {
     derivative(i) = (degree - i) * polynomial(i);
   }
@@ -356,7 +359,47 @@ Eigen::VectorXd DifferentiatePolynomial(const Eigen::VectorXd& polynomial) {
   return derivative;
 }
 
-void MinimizePolynomial(const Eigen::VectorXd& polynomial, const double x_min,
+VectorXd MultiplyPolynomials(const VectorXd& poly1, const VectorXd& poly2) {
+  VectorXd multiplied_poly = VectorXd::Zero(poly1.size() + poly2.size() - 1);;
+  for (int i = 0; i < poly1.size(); i++) {
+    for (int j = 0; j < poly2.size(); j++) {
+      multiplied_poly.reverse()(i + j) +=
+          poly1.reverse()(i) * poly2.reverse()(j);
+    }
+  }
+  return multiplied_poly;
+}
+
+void DividePolynomial(const VectorXd& polynomial,
+                      const VectorXd& divisor,
+                      VectorXd* quotient,
+                      VectorXd* remainder) {
+  // If the divisor is higher degree than the polynomial then it cannot be
+  // divided so we simply return the remainder.
+  if (polynomial.size() < divisor.size()) {
+    *quotient = VectorXd::Zero(1);
+    *remainder = polynomial;
+    return;
+  }
+
+  VectorXd numerator = polynomial;
+  VectorXd denominator;
+  *quotient = VectorXd::Zero(numerator.size() - divisor.size() + 1);
+  while (numerator.size() >= divisor.size()) {
+    denominator = VectorXd::Zero(numerator.size());
+    denominator.head(divisor.size()) = divisor;
+
+    const double quotient_scalar = numerator(0) / denominator(0);
+    quotient->reverse()(numerator.size() - divisor.size()) =
+        quotient_scalar;
+    denominator = denominator * quotient_scalar;
+    numerator = numerator - denominator;
+    numerator = RemoveLeadingZeros(numerator);
+  }
+  *remainder = numerator;
+}
+
+void MinimizePolynomial(const VectorXd& polynomial, const double x_min,
                         const double x_max, double* optimal_x,
                         double* optimal_value) {
   // Find the minimum of the polynomial at the two ends.
@@ -384,8 +427,8 @@ void MinimizePolynomial(const Eigen::VectorXd& polynomial, const double x_min,
     return;
   }
 
-  const Eigen::VectorXd derivative = DifferentiatePolynomial(polynomial);
-  Eigen::VectorXd roots_real;
+  const VectorXd derivative = DifferentiatePolynomial(polynomial);
+  VectorXd roots_real;
   if (!FindPolynomialRoots(derivative, &roots_real, NULL)) {
     LOG(WARNING) << "Unable to find the critical points of "
                  << "the interpolating polynomial.";

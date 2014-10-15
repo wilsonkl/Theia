@@ -77,6 +77,9 @@
 
 namespace theia {
 
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
+
 namespace {
 
 // For IEEE-754 doubles, machine precision is about 2e-16.
@@ -84,15 +87,15 @@ const double kEpsilon = 1e-13;
 const double kEpsilonLoose = 1e-9;
 
 // Return the constant polynomial p(x) = 1.23.
-Eigen::VectorXd ConstantPolynomial(double value) {
-  Eigen::VectorXd poly(1);
+VectorXd ConstantPolynomial(double value) {
+  VectorXd poly(1);
   poly(0) = value;
   return poly;
 }
 
 // Return the polynomial p(x) = poly(x) * (x - root).
-Eigen::VectorXd AddRealRoot(const Eigen::VectorXd& poly, double root) {
-  Eigen::VectorXd poly2(poly.size() + 1);
+VectorXd AddRealRoot(const VectorXd& poly, double root) {
+  VectorXd poly2(poly.size() + 1);
   poly2.setZero();
   poly2.head(poly.size()) += poly;
   poly2.tail(poly.size()) -= root * poly;
@@ -101,9 +104,9 @@ Eigen::VectorXd AddRealRoot(const Eigen::VectorXd& poly, double root) {
 
 // Return the polynomial
 // p(x) = poly(x) * (x - real - imag*i) * (x - real + imag*i).
-Eigen::VectorXd AddComplexRootPair(const Eigen::VectorXd& poly, double real,
+VectorXd AddComplexRootPair(const VectorXd& poly, double real,
                                    double imag) {
-  Eigen::VectorXd poly2(poly.size() + 2);
+  VectorXd poly2(poly.size() + 2);
   poly2.setZero();
   // Multiply poly by x^2 - 2real + abs(real,imag)^2
   poly2.head(poly.size()) += poly;
@@ -114,8 +117,8 @@ Eigen::VectorXd AddComplexRootPair(const Eigen::VectorXd& poly, double real,
 
 // Sort the entries in a vector.
 // Needed because the roots are not returned in sorted order.
-Eigen::VectorXd SortVector(const Eigen::VectorXd& in) {
-  Eigen::VectorXd out(in);
+VectorXd SortVector(const VectorXd& in) {
+  VectorXd out(in);
   std::sort(out.data(), out.data() + out.size());
   return out;
 }
@@ -127,14 +130,14 @@ Eigen::VectorXd SortVector(const Eigen::VectorXd& in) {
 template <int N>
 void RunPolynomialTestRealRoots(const double (&real_roots)[N], bool use_real,
                                 bool use_imaginary, double epsilon) {
-  Eigen::VectorXd real;
-  Eigen::VectorXd imaginary;
-  Eigen::VectorXd poly = ConstantPolynomial(1.23);
+  VectorXd real;
+  VectorXd imaginary;
+  VectorXd poly = ConstantPolynomial(1.23);
   for (int i = 0; i < N; ++i) {
     poly = AddRealRoot(poly, real_roots[i]);
   }
-  Eigen::VectorXd* const real_ptr = use_real ? &real : NULL;
-  Eigen::VectorXd* const imaginary_ptr = use_imaginary ? &imaginary : NULL;
+  VectorXd* const real_ptr = use_real ? &real : NULL;
+  VectorXd* const imaginary_ptr = use_imaginary ? &imaginary : NULL;
   bool success = FindPolynomialRoots(poly, real_ptr, imaginary_ptr);
 
   EXPECT_EQ(success, true);
@@ -145,27 +148,28 @@ void RunPolynomialTestRealRoots(const double (&real_roots)[N], bool use_real,
   }
   if (use_imaginary) {
     EXPECT_EQ(imaginary.size(), N);
-    const Eigen::VectorXd zeros = Eigen::VectorXd::Zero(N);
+    const VectorXd zeros = VectorXd::Zero(N);
     test::ExpectArraysNear(N, imaginary.data(), zeros.data(), epsilon);
   }
 }
+
 }  // namespace
 
 TEST(Polynomial, InvalidPolynomialOfZeroLengthIsRejected) {
   // Vector poly(0) is an ambiguous constructor call, so
   // use the constructor with explicit column count.
-  Eigen::VectorXd poly(0, 1);
-  Eigen::VectorXd real;
-  Eigen::VectorXd imag;
+  VectorXd poly(0, 1);
+  VectorXd real;
+  VectorXd imag;
   bool success = FindPolynomialRoots(poly, &real, &imag);
 
   EXPECT_EQ(success, false);
 }
 
 TEST(Polynomial, ConstantPolynomialReturnsNoRoots) {
-  Eigen::VectorXd poly = ConstantPolynomial(1.23);
-  Eigen::VectorXd real;
-  Eigen::VectorXd imag;
+  VectorXd poly = ConstantPolynomial(1.23);
+  VectorXd real;
+  VectorXd imag;
   bool success = FindPolynomialRoots(poly, &real, &imag);
 
   EXPECT_EQ(success, true);
@@ -204,10 +208,10 @@ TEST(Polynomial, QuadraticPolynomialWithCloseRootsWorks) {
 }
 
 TEST(Polynomial, QuadraticPolynomialWithComplexRootsWorks) {
-  Eigen::VectorXd real;
-  Eigen::VectorXd imag;
+  VectorXd real;
+  VectorXd imag;
 
-  Eigen::VectorXd poly = ConstantPolynomial(1.23);
+  VectorXd poly = ConstantPolynomial(1.23);
   poly = AddComplexRootPair(poly, 42.42, 4.2);
   bool success = FindPolynomialRoots(poly, &real, &imag);
 
@@ -257,7 +261,7 @@ TEST(Polynomial, BothOutputArgumentsNullWorks) {
 }
 
 TEST(Polynomial, FindRealRootIterativeTest) {
-  Eigen::VectorXd polynomial(6);
+  VectorXd polynomial(6);
   // (x - 3) * (x + 4) * (x + 5) * (x - 6) * (x + 7)
   polynomial(0) = 1;
   polynomial(1) = 7;
@@ -288,29 +292,106 @@ TEST(Polynomial, FindRealRootIterativeTest) {
 
 TEST(Polynomial, DifferentiateConstantPolynomial) {
   // p(x) = 1;
-  Eigen::VectorXd polynomial(1);
+  VectorXd polynomial(1);
   polynomial(0) = 1.0;
-  const Eigen::VectorXd derivative = DifferentiatePolynomial(polynomial);
+  const VectorXd derivative = DifferentiatePolynomial(polynomial);
   EXPECT_EQ(derivative.rows(), 1);
   EXPECT_EQ(derivative(0), 0);
 }
 
 TEST(Polynomial, DifferentiateQuadraticPolynomial) {
   // p(x) = x^2 + 2x + 3;
-  Eigen::VectorXd polynomial(3);
+  VectorXd polynomial(3);
   polynomial(0) = 1.0;
   polynomial(1) = 2.0;
   polynomial(2) = 3.0;
 
-  const Eigen::VectorXd derivative = DifferentiatePolynomial(polynomial);
+  const VectorXd derivative = DifferentiatePolynomial(polynomial);
   EXPECT_EQ(derivative.rows(), 2);
   EXPECT_EQ(derivative(0), 2.0);
   EXPECT_EQ(derivative(1), 2.0);
 }
 
+TEST(Polynomial, MultiplyPolynomials) {
+  VectorXd poly1(3);
+  poly1[0] = 2;
+  poly1[1] = 1;
+  poly1[2] = 1;
+
+  VectorXd poly2 = VectorXd::Zero(3);
+  poly2[0] = 1;
+
+  const VectorXd multiplied_poly = MultiplyPolynomials(poly1, poly2);
+  VectorXd expected_poly(5);
+  expected_poly.setZero();
+  expected_poly[0] = 2;
+  expected_poly[1] = 1;
+  expected_poly[2] = 1;
+
+  const double kTolerance = 1e-12;
+  test::ExpectMatricesNear(expected_poly, multiplied_poly, kTolerance);
+}
+
+TEST(Polynomial, DividePolynomialSameDegree) {
+  VectorXd poly1(3);
+  poly1[0] = 2;
+  poly1[1] = 1;
+  poly1[2] = 1;
+
+  VectorXd poly2 = VectorXd::Zero(3);
+  poly2[0] = 1;
+
+  VectorXd quotient, remainder;
+  DividePolynomial(poly1, poly2, &quotient, &remainder);
+  VectorXd reconstructed_poly =
+      MultiplyPolynomials(quotient, poly2);
+  reconstructed_poly.tail(remainder.size()) += remainder;
+
+  const double kTolerance = 1e-12;
+  test::ExpectMatricesNear(poly1, reconstructed_poly, kTolerance);
+}
+
+TEST(Polynomial, DividePolynomialLowerDegree) {
+  VectorXd poly1(3);
+  poly1[0] = 2;
+  poly1[1] = 1;
+  poly1[2] = 1;
+
+  VectorXd poly2 = VectorXd::Zero(2);
+  poly2[0] = 1;
+
+  VectorXd quotient, remainder;
+  DividePolynomial(poly1, poly2, &quotient, &remainder);
+  VectorXd reconstructed_poly =
+      MultiplyPolynomials(quotient, poly2);
+  reconstructed_poly.tail(remainder.size()) += remainder;
+
+  const double kTolerance = 1e-12;
+  test::ExpectMatricesNear(poly1, reconstructed_poly, kTolerance);
+}
+
+TEST(Polynomial, DividePolynomialHigherDegree) {
+  VectorXd poly1(3);
+  poly1[0] = 2;
+  poly1[1] = 1;
+  poly1[2] = 1;
+
+  VectorXd poly2 = VectorXd::Zero(3);
+  poly2[0] = 1;
+
+  VectorXd quotient, remainder;
+  DividePolynomial(poly1, poly2, &quotient, &remainder);
+  VectorXd reconstructed_poly =
+      MultiplyPolynomials(quotient, poly2);
+  reconstructed_poly.tail(remainder.size()) += remainder;
+
+  const double kTolerance = 1e-12;
+  test::ExpectMatricesNear(poly1, reconstructed_poly, kTolerance);
+}
+
 TEST(Polynomial, MinimizeConstantPolynomial) {
   // p(x) = 1;
-  Eigen::VectorXd polynomial(1);
+  VectorXd polynomial(1);
   polynomial(0) = 1.0;
 
   double optimal_x = 0.0;
@@ -326,7 +407,7 @@ TEST(Polynomial, MinimizeConstantPolynomial) {
 
 TEST(Polynomial, MinimizeLinearPolynomial) {
   // p(x) = x - 2
-  Eigen::VectorXd polynomial(2);
+  VectorXd polynomial(2);
 
   polynomial(0) = 1.0;
   polynomial(1) = 2.0;
@@ -345,7 +426,7 @@ TEST(Polynomial, MinimizeQuadraticPolynomial) {
   // p(x) = x^2 - 3 x + 2
   // min_x = 3/2
   // min_value = -1/4;
-  Eigen::VectorXd polynomial(3);
+  VectorXd polynomial(3);
   polynomial(0) = 1.0;
   polynomial(1) = -3.0;
   polynomial(2) = 2.0;
