@@ -117,12 +117,11 @@ bool Triangulate(const Matrix3x4d& pose1,
 
   // Now the two points are guaranteed to intersect. We can use the DLT method
   // since it is easy to construct.
-  TriangulateDLT(pose1 ,
-                 pose2,
-                 corrected_point_left,
-                 corrected_point_right,
-                 triangulated_point);
-  return true;
+  return TriangulateDLT(pose1 ,
+                        pose2,
+                        corrected_point_left,
+                        corrected_point_right,
+                        triangulated_point);
 }
 
 // Triangulates 2 posed views
@@ -140,12 +139,12 @@ bool TriangulateDLT(const Matrix3x4d& pose_left,
   // Extract nullspace.
   Eigen::Vector4d homog_triangulated_point =
       design_matrix.jacobiSvd(Eigen::ComputeFullV).matrixV().rightCols<1>();
-  if (homog_triangulated_point[3] != 0) {
-    *triangulated_point = homog_triangulated_point.hnormalized();
-    return true;
-  } else {
+  if (homog_triangulated_point[3] == 0) {
     return false;
   }
+
+  *triangulated_point = homog_triangulated_point.hnormalized();
+  return true;
 }
 
 // Triangulates N views by computing SVD that minimizes the error.
@@ -165,12 +164,12 @@ bool TriangulateNViewSVD(const std::vector<Matrix3x4d>& poses,
   Eigen::Vector4d homog_triangulated_point =
       (design_matrix.transpose() * design_matrix).jacobiSvd(Eigen::ComputeFullV)
           .matrixV().rightCols<1>().head(4);
-  if (homog_triangulated_point[3] != 0) {
-    *triangulated_point = homog_triangulated_point.hnormalized();
-    return true;
-  } else {
+  if (homog_triangulated_point[3] == 0) {
     return false;
   }
+
+  *triangulated_point = homog_triangulated_point.hnormalized();
+  return true;
 }
 
 bool TriangulateNView(const std::vector<Matrix3x4d>& poses,
@@ -189,12 +188,12 @@ bool TriangulateNView(const std::vector<Matrix3x4d>& poses,
 
   Eigen::SelfAdjointEigenSolver<Matrix4d> eigen_solver(design_matrix);
   Eigen::Vector4d homog_triangulated_point = eigen_solver.eigenvectors().col(0);
-  if (homog_triangulated_point[3] != 0) {
-    *triangulated_point = homog_triangulated_point.hnormalized();
-    return true;
-  } else {
+  if (homog_triangulated_point[3] == 0) {
     return false;
   }
+
+  *triangulated_point = homog_triangulated_point.hnormalized();
+  return true;
 }
 
 }  // namespace theia
