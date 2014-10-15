@@ -281,7 +281,7 @@ Similarity Transformation
     align the left points to the right such that :math:`Right = s * R * Left +
     t`.
 
-  .. cpp:function:: void gDlsSimilarityTransform(const std::vector<Eigen::Vector3d>& ray_origin, const std::vector<Eigen::Vector3d>& ray_direction, const std::vector<Eigen::Vector3d>& world_point, std::vector<Eigen::Quaterniond>* solution_rotation, std::vector<Eigen::Vector3d>* solution_translation, std::vector<double>* solution_scale)
+  .. cpp:function:: void GdlsSimilarityTransform(const std::vector<Eigen::Vector3d>& ray_origin, const std::vector<Eigen::Vector3d>& ray_direction, const std::vector<Eigen::Vector3d>& world_point, std::vector<Eigen::Quaterniond>* solution_rotation, std::vector<Eigen::Vector3d>* solution_translation, std::vector<double>* solution_scale)
 
     Computes the solution to the generalized pose and scale problem based on the
     paper "gDLS: A Scalable Solution to the Generalized Pose and Scale Problem"
