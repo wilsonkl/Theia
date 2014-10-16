@@ -43,7 +43,9 @@
 #include "theia/util/random.h"
 
 namespace theia {
-// Random sampler used for RANSAC.
+
+// Random sampler used for RANSAC. This is guaranteed to generate a unique
+// sample by performing a Fisher-Yates sampling.
 template <class Datum> class RandomSampler : public Sampler<Datum> {
  public:
   explicit RandomSampler(const int min_num_samples)
@@ -59,17 +61,16 @@ template <class Datum> class RandomSampler : public Sampler<Datum> {
   // random samples.
   bool Sample(const std::vector<Datum>& data, std::vector<Datum>* subset) {
     subset->resize(this->min_num_samples_);
-    std::vector<int> random_numbers;
-    for (int i = 0; i < this->min_num_samples_; i++) {
-      int rand_number;
-      // Generate a random number that has not already been used.
-      while (std::find(random_numbers.begin(), random_numbers.end(),
-                       (rand_number = RandInt(0, data.size() - 1))) !=
-             random_numbers.end()) {}
-
-      random_numbers.push_back(rand_number);
-      subset->at(i) = data[rand_number];
+    std::vector<int> random_numbers(data.size());
+    for (int i = 0; i < data.size(); i++) {
+      random_numbers = i;
     }
+
+    for (int i = 0; i < this->min_num_samples_) {
+      std::swap(random_numbers[i], RandInt(i, data.size() - 1));
+      subset->push_back(data[random_numbers[i]]);
+    }
+
     return true;
   }
 };
