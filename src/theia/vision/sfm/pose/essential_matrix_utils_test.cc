@@ -1,4 +1,4 @@
-// Copyright (C) 2014 The Regents of the University of California (Regents).
+// Copyright (C) 2013 The Regents of the University of California (Regents).
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,40 +32,50 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_MATH_STURM_CHAIN_H_
-#define THEIA_MATH_STURM_CHAIN_H_
-
-#include <vector>
 #include <Eigen/Core>
+#include <Eigen/Geometry>
+#include <glog/logging.h>
+#include <algorithm>
+
+#include "gtest/gtest.h"
+#include "theia/vision/sfm/pose/essential_matrix_utils.h"
+#include "theia/vision/sfm/pose/util.h"
 
 namespace theia {
 
-// A Sturm Chain (http://en.wikipedia.org/wiki/Sturm's_theorem) is a sequence of
-// polynomials that reveals the GCD of polynomial p and its derivitive that is
-// used to determine where the real polynomial roots lie.
-class SturmChain {
- public:
-  // Create a sturm chain from the polynomial.
-  explicit SturmChain(const Eigen::VectorXd& polynomial);
+using Eigen::Matrix3d;
+using Eigen::Vector3d;
 
-  // Compute the number of sign changes when evaluating the sturm chain at
-  // x. For an interval (a, b) the number of real roots in that interval is
-  // NumSignChanges(a) - NumSignChanges(b).
-  int NumSignChanges(const double x) const;
+TEST(DecomposeEssentialMatrix, BasicTest) {
+  const double kTranslationTolerance = 1e-6;
+  const double kRotationTolerance = 1e-4;
 
-  // Compute the bounds of the real polynomial roots using Sameulson's
-  // inequality.
-  void ComputeRootBounds(double* lower_bound, double* upper_bound);
+  for (int i = 0; i < 100; i++) {
+    const Matrix3d gt_rotation = ProjectToRotationMatrix(Matrix3d::Random());
+    const Vector3d gt_translation = Vector3d::Random().normalized();
+    const Matrix3d essential_matrix =
+        CrossProductMatrix(gt_translation) * gt_rotation;
 
-  // The difference in the number of sign changes at infinity tell us the
-  // theoretical number of real roots.
-  int NumSignChangesAtInfinity() const;
-  int NumSignChangesAtNegativeInfinity() const;
+    Matrix3d rotation1, rotation2;
+    Vector3d translation;
+    DecomposeEssentialMatrix(essential_matrix,
+                             &rotation1,
+                             &rotation2,
+                             &translation);
 
- private:
-  std::vector<Eigen::VectorXd> sturm_chain_;
-};
+    const double translation_dist =
+        std::min((translation - gt_translation).norm(),
+                 (translation + gt_translation).norm());
+
+    const double rotation1_dist =
+        Eigen::AngleAxisd(gt_rotation.transpose() * rotation1).angle();
+    const double rotation2_dist =
+        Eigen::AngleAxisd(gt_rotation.transpose() * rotation2).angle();
+
+    EXPECT_TRUE(translation_dist < kTranslationTolerance &&
+                (rotation1_dist < kRotationTolerance ||
+                 rotation2_dist < kRotationTolerance));
+  }
+}
 
 }  // namespace theia
-
-#endif  // THEIA_MATH_STURM_CHAIN_H_

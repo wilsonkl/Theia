@@ -47,8 +47,6 @@ SET(THEIA_SRC
   image/keypoint_detector/brisk_detector.cc
   image/keypoint_detector/brisk_impl.cc
   image/keypoint_detector/sift_detector.cc
-#  io/bundler_binary_file.cc
-#  io/bundler_text_file.cc
   io/sift_binary_file.cc
   io/sift_text_file.cc
   math/closed_form_polynomial_solver.cc
@@ -66,6 +64,8 @@ SET(THEIA_SRC
   vision/sfm/pose/dls_impl.cc
   vision/sfm/pose/dls_pnp.cc
   vision/sfm/pose/eight_point_fundamental_matrix.cc
+  vision/sfm/pose/essential_matrix_utils.cc
+  vision/sfm/pose/estimate_global_rotations.cc
   vision/sfm/pose/five_point_focal_length_radial_distortion.cc
   vision/sfm/pose/five_point_relative_pose.cc
   vision/sfm/pose/four_point_focal_length.cc
@@ -73,7 +73,6 @@ SET(THEIA_SRC
   vision/sfm/pose/four_point_homography.cc
   vision/sfm/pose/four_point_relative_pose_partial_rotation.cc
   vision/sfm/pose/fundamental_matrix_util.cc
-  vision/sfm/pose/estimate_global_rotations.cc
   vision/sfm/pose/perspective_three_point.cc
   vision/sfm/pose/three_point_relative_pose_partial_rotation.cc
   vision/sfm/pose/util.cc
@@ -83,6 +82,8 @@ SET(THEIA_SRC
   vision/sfm/triangulation/triangulation.cc
   vision/sfm/view.cc
   vision/sfm/view_graph/view_graph.cc
+#  io/bundler_binary_file.cc
+#  io/bundler_text_file.cc
   )
 
 SET(THEIA_LIBRARY_DEPENDENCIES
@@ -160,6 +161,7 @@ IF (BUILD_TESTING)
   GTEST(vision/sfm/model)
   GTEST(vision/sfm/pose/dls_pnp)
   GTEST(vision/sfm/pose/eight_point_fundamental_matrix)
+  GTEST(vision/sfm/pose/essential_matrix_utils)
   GTEST(vision/sfm/pose/estimate_global_rotations)
   GTEST(vision/sfm/pose/five_point_focal_length_radial_distortion)
   GTEST(vision/sfm/pose/five_point_relative_pose)

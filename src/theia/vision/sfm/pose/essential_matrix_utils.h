@@ -1,4 +1,4 @@
-// Copyright (C) 2014 The Regents of the University of California (Regents).
+// Copyright (C) 2013 The Regents of the University of California (Regents).
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,40 +32,23 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_MATH_STURM_CHAIN_H_
-#define THEIA_MATH_STURM_CHAIN_H_
+#ifndef THEIA_VISION_SFM_POSE_ESSENTIAL_MATRIX_UTILS_H_
+#define THEIA_VISION_SFM_POSE_ESSENTIAL_MATRIX_UTILS_H_
 
-#include <vector>
 #include <Eigen/Core>
 
 namespace theia {
 
-// A Sturm Chain (http://en.wikipedia.org/wiki/Sturm's_theorem) is a sequence of
-// polynomials that reveals the GCD of polynomial p and its derivitive that is
-// used to determine where the real polynomial roots lie.
-class SturmChain {
- public:
-  // Create a sturm chain from the polynomial.
-  explicit SturmChain(const Eigen::VectorXd& polynomial);
+// Decomposes the essential matrix into the rotation R and translation t such
+// that E can be any of the four candidate solutions: [rotation1 | translation],
+// [rotation1 | -translation], [rotation2 | translation], [rotation2 |
+// -translation].
 
-  // Compute the number of sign changes when evaluating the sturm chain at
-  // x. For an interval (a, b) the number of real roots in that interval is
-  // NumSignChanges(a) - NumSignChanges(b).
-  int NumSignChanges(const double x) const;
-
-  // Compute the bounds of the real polynomial roots using Sameulson's
-  // inequality.
-  void ComputeRootBounds(double* lower_bound, double* upper_bound);
-
-  // The difference in the number of sign changes at infinity tell us the
-  // theoretical number of real roots.
-  int NumSignChangesAtInfinity() const;
-  int NumSignChangesAtNegativeInfinity() const;
-
- private:
-  std::vector<Eigen::VectorXd> sturm_chain_;
-};
+void DecomposeEssentialMatrix(const Eigen::Matrix3d& essential_matrix,
+                              Eigen::Matrix3d* rotation1,
+                              Eigen::Matrix3d* rotation2,
+                              Eigen::Vector3d* translation);
 
 }  // namespace theia
 
-#endif  // THEIA_MATH_STURM_CHAIN_H_
+#endif  // THEIA_VISION_SFM_POSE_ESSENTIAL_MATRIX_UTILS_H_

@@ -214,137 +214,13 @@ Matrix<double, 9, 4> EfficientNullspaceExtraction(
   return null_space.transpose();
 }
 
-void EfficientSVDDecomp(const Matrix3d& essential_mat,
-                        Vector3d* null_space,
-                        Matrix3d rotation[4],
-                        Vector3d translation[4]) {
-  Matrix3d d;
-  d << 0, 1, 0,
-      -1, 0, 0,
-      0, 0, 1;
-
-  const Vector3d& ea = essential_mat.row(0);
-  const Vector3d& eb = essential_mat.row(1);
-  const Vector3d& ec = essential_mat.row(2);
-
-  // Generate cross products.
-  Matrix3d cross_products;
-  cross_products << ea.cross(eb), ea.cross(ec), eb.cross(ec);
-
-  // Choose the cross product with the largest norm (for numerical accuracy).
-  const Vector3d cf_scales(cross_products.col(0).squaredNorm(),
-                           cross_products.col(1).squaredNorm(),
-                           cross_products.col(2).squaredNorm());
-  int max_index;
-  cf_scales.maxCoeff(&max_index);
-
-  // For index 0, 1, we want ea and for index 2 we want eb.
-  const int max_e_index = max_index / 2;
-
-  // Construct v of the SVD.
-  Matrix3d v = Matrix3d::Zero();
-  v.col(2) = cross_products.col(max_index).normalized();
-  v.col(0) = essential_mat.row(max_e_index).normalized();
-  v.col(1) = v.col(2).cross(v.col(0));
-
-  // Construct U of the SVD.
-  Matrix3d u = Matrix3d::Zero();
-  u.col(0) = (essential_mat * v.col(0)).normalized();
-  u.col(1) = (essential_mat * v.col(1)).normalized();
-  u.col(2) = u.col(0).cross(u.col(1));
-
-  // Possible rotation configurations.
-  const RowMatrix3d ra =
-      Eigen::Quaterniond(u * d * v.transpose()).normalized().toRotationMatrix();
-  const RowMatrix3d rb = Eigen::Quaterniond(u * d.transpose() * v.transpose())
-      .normalized().toRotationMatrix();
-
-  // Scale t to be proper magnitude. Scale factor is derived from the fact that
-  // U*diag*V^t = E. We simply choose to scale it such that the last terms will
-  // be equal.
-  const Vector3d t = u.col(2).normalized();
-  const Vector3d t_neg = -t;
-
-  // Copy the 4 possible decompositions into the output arrays.
-  rotation[0] = ra;
-  translation[0] = t;
-  rotation[1] = ra;
-  translation[1] = t_neg;
-  rotation[2] = rb;
-  translation[2] = t;
-  rotation[3] = rb;
-  translation[3] = t_neg;
-
-  *null_space = v.col(2);
-}
-
-void DecomposeWithIdealCorrespondence(const Vector2d& image_point1,
-                                      const Vector2d& image_point2,
-                                      const Matrix3d& essential_mat,
-                                      Matrix3d* rotation,
-                                      Vector3d* translation) {
-  const Vector3d image_point1_homog = image_point1.homogeneous();
-  const Vector3d image_point2_homog = image_point2.homogeneous();
-
-  // Map the image points to vectors.
-  Matrix3d candidate_rotation[4];
-  Vector3d candidate_translation[4];
-  Vector3d null_space;
-  EfficientSVDDecomp(essential_mat, &null_space, candidate_rotation,
-                     candidate_translation);
-
-  Matrix<double, 3, 4> projection_mat;
-  projection_mat.block<3, 3>(0, 0) = candidate_rotation[0];
-  projection_mat.block<3, 1>(0, 3) = candidate_translation[0];
-
-  // Compute c.
-  Matrix3d temp_diag = Matrix3d::Identity();
-  temp_diag(2, 2) = 0.0;
-  const Vector3d c =
-      image_point2_homog.cross(temp_diag * essential_mat * image_point1_homog);
-
-  // Compute C.
-  const Vector4d C = projection_mat.transpose() * c;
-  const Vector4d Q(image_point1_homog(0) * C(3),
-                   image_point1_homog(1) * C(3),
-                   image_point1_homog(2) * C(3),
-                   -(image_point1_homog.dot(C.head<3>())));
-  // We only care about the sign of the depth because it informs us of the
-  // direction of the point (i.e. if it is in front of the camera). Use a
-  // multiply instead of divide for speed.
-  const double scaled_depth_1  = Q(2) * Q(3);
-  const double scaled_depth_2 = projection_mat.row(2).dot(Q) * Q(3);
-
-  // Create the twisted pair transformation.
-  const Vector4d twisted_transformation(-2.0 * null_space(0),
-                                        -2.0 * null_space(1),
-                                        -2.0 * null_space(2),
-                                        -1.0);
-
-  // Determine the proper configuration for the R,t decomposition.
-  int best_index;
-  if (scaled_depth_1 > 0 && scaled_depth_2 > 0) {
-    best_index = 0;
-  } else if (scaled_depth_1 < 0 && scaled_depth_2 < 0) {
-    best_index = 1;
-  } else if (Q(2) * twisted_transformation.dot(Q) > 0) {
-    best_index = 2;
-  } else {
-    best_index = 3;
-  }
-
-  *rotation = candidate_rotation[best_index];
-  *translation = candidate_translation[best_index];
-}
-
 }  // namespace
 
 // Implementation of Nister from "An Efficient Solution to the Five-Point
 // Relative Pose Problem"
 bool FivePointRelativePose(const Vector2d image1_points[5],
                            const Vector2d image2_points[5],
-                           std::vector<Matrix3d>* rotation,
-                           std::vector<Vector3d>* translation) {
+                           std::vector<Matrix3d>* essential_matrices) {
   // Step 1. Create the 5x9 matrix containing epipolar constraints.
   //   Essential matrix is a linear combination of the 4 vectors spanning the
   //   null space of this matrix (found by SVD).
@@ -440,8 +316,7 @@ bool FivePointRelativePose(const Vector2d image1_points[5],
   Eigen::VectorXd roots;
   FindRealPolynomialRoots(n.transpose().reverse(), &roots);
 
-  rotation->reserve(roots.size());
-  translation->reserve(roots.size());
+  essential_matrices->reserve(roots.size());
   static const double kTolerance = 1e-12;
   for (int i = 0; i < roots.size(); i++) {
     // We only want non-zero roots
@@ -458,15 +333,7 @@ bool FivePointRelativePose(const Vector2d image1_points[5],
     Matrix3d candidate_essential_mat;
     candidate_essential_mat << temp_sum.head<3>().transpose(),
         temp_sum.segment(3, 3).transpose(), temp_sum.tail(3).transpose();
-
-    Matrix3d rotation_soln;
-    Vector3d translation_soln;
-    // Decompose into R, t using the first point correspondence.
-    DecomposeWithIdealCorrespondence(image1_points[0], image2_points[0],
-                                     candidate_essential_mat, &rotation_soln,
-                                     &translation_soln);
-    rotation->push_back(rotation_soln);
-    translation->push_back(translation_soln);
+    essential_matrices->emplace_back(candidate_essential_mat);
   }
   return (roots.size() > 0);
 }

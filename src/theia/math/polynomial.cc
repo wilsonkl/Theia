@@ -317,55 +317,35 @@ bool FindRealPolynomialRoots(const VectorXd& coeffs,
 
 bool FindRealPolynomialRootsSturm(const VectorXd& coeffs,
                                   VectorXd* real_roots) {
-  CHECK_NOTNULL(real_roots);
-  if (coeffs.size() == 0) {
-    return false;
+  VectorXd polynomial = RemoveLeadingZeros(coeffs);
+  const int degree = polynomial.size() - 1;
+  if (degree <= 4) {
+    return FindRealPolynomialRoots(coeffs, real_roots);
   }
 
   InitRandomGenerator();
 
   // Create the sturm chain.
-  SturmChain sturm_chain(coeffs);
-
-  const int neg_infinity_changes =
-      sturm_chain.NumSignChangesAtNegativeInfinity();
-  const int pos_infinity_changes = sturm_chain.NumSignChangesAtInfinity();
+  polynomial = polynomial / polynomial(0);
+  SturmChain sturm_chain(polynomial);
 
   // Find finite bounds.
   SturmBound initial_bound;
-  initial_bound.lower_bound = -1;
-  initial_bound.upper_bound = 1;
-
-  static const double kUpperBound = 1e20;
-  static const double kLowerBound = -1e20;
-
-  // Exponentially grow the lower bound until it reaches its min point.
-  while (initial_bound.lower_bound > kLowerBound &&
-         initial_bound.lower_sturm_number != neg_infinity_changes) {
-    initial_bound.lower_bound *= 100;
-    initial_bound.lower_sturm_number =
-       sturm_chain.NumSignChanges(initial_bound.lower_bound);
-  }
-
-  // Exponentially grow the upper bound until it reaches its max point.
-  while (initial_bound.upper_bound < kUpperBound &&
-         initial_bound.upper_sturm_number != pos_infinity_changes) {
-    initial_bound.upper_bound *= 100;
-    initial_bound.upper_sturm_number =
-        sturm_chain.NumSignChanges(initial_bound.upper_bound);
-  }
-
-  real_roots->resize(initial_bound.lower_sturm_number -
-                     initial_bound.upper_sturm_number);
+  sturm_chain.ComputeRootBounds(&initial_bound.lower_bound,
+                                &initial_bound.upper_bound);
+  initial_bound.lower_sturm_number =
+      sturm_chain.NumSignChanges(initial_bound.lower_bound);
+  initial_bound.upper_sturm_number =
+      sturm_chain.NumSignChanges(initial_bound.upper_bound);
 
   // Explore all intervals using a simple bisection method. Refine the intervals
   // until there is exactly one root within the interval, then use a root
   // finding method to extract that roo.
-  static const double kEpsilon = 1e-12;
+  static const double kEpsilon = 1e-8;
   static const double kMaxIter = 10;
   std::queue<SturmBound> bounds;
   bounds.emplace(initial_bound);
-  int current_root_index = 0;
+  std::vector<double> computed_roots;
   while (!bounds.empty()) {
     const SturmBound& current_interval = bounds.front();
     const double midpoint =
@@ -373,21 +353,7 @@ bool FindRealPolynomialRootsSturm(const VectorXd& coeffs,
     const int num_roots = current_interval.lower_sturm_number -
                           current_interval.upper_sturm_number;
 
-    if (num_roots > 1) {
-      const int midpoint_sturm_number = sturm_chain.NumSignChanges(midpoint);
-
-      // Split the interval in half and add the new roots.
-      SturmBound new_lower_interval = current_interval;
-      new_lower_interval.upper_bound = midpoint;
-      new_lower_interval.upper_sturm_number = midpoint_sturm_number;
-      bounds.emplace(new_lower_interval);
-
-      SturmBound new_upper_interval = current_interval;
-      new_upper_interval.lower_bound = midpoint;
-      new_upper_interval.lower_sturm_number = midpoint_sturm_number;
-      bounds.emplace(new_upper_interval);
-
-    } else if (num_roots == 1) {
+    if (num_roots == 1 || current_interval.upper_bound - midpoint < kEpsilon) {
       // Try to find the root with a starting point at the middle of the
       // interval.
       double root = FindRealRootIterative(coeffs, midpoint, kEpsilon, kMaxIter);
@@ -401,11 +367,26 @@ bool FindRealPolynomialRootsSturm(const VectorXd& coeffs,
                                                 current_interval.upper_bound),
                                      kEpsilon, kMaxIter);
       }
-      (*real_roots)[current_root_index] = root;
-      current_root_index++;
+      computed_roots.emplace_back(root);
+    } else if (num_roots > 1) {
+      const int midpoint_sturm_number = sturm_chain.NumSignChanges(midpoint);
+
+      // Split the interval in half and add the new roots.
+      SturmBound new_lower_interval = current_interval;
+      new_lower_interval.upper_bound = midpoint;
+      new_lower_interval.upper_sturm_number = midpoint_sturm_number;
+      bounds.emplace(new_lower_interval);
+
+      SturmBound new_upper_interval = current_interval;
+      new_upper_interval.lower_bound = midpoint;
+      new_upper_interval.lower_sturm_number = midpoint_sturm_number;
+      bounds.emplace(new_upper_interval);
     }
     bounds.pop();
   }
+
+  *real_roots =
+      Eigen::Map<VectorXd>(computed_roots.data(), computed_roots.size());
 
   return true;
 }
@@ -502,6 +483,9 @@ void DividePolynomial(const VectorXd& polynomial,
         quotient_scalar;
     denominator = denominator * quotient_scalar;
     numerator = numerator - denominator;
+    // Sometimes there are floating point errors that result in a non-zero first
+    // value.
+    numerator(0) = 0;
     numerator = RemoveLeadingZeros(numerator);
   }
   *remainder = numerator;

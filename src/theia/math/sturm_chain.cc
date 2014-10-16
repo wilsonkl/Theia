@@ -36,6 +36,7 @@
 
 #include <Eigen/Core>
 #include <glog/logging.h>
+#include <cmath>
 #include <vector>
 
 #include "theia/math/polynomial.h"
@@ -68,7 +69,7 @@ SturmChain::SturmChain(const Eigen::VectorXd& polynomial) {
                      sturm_chain_[sturm_chain_.size() - 1],
                      &quotient,
                      &remainder);
-    sturm_chain_.push_back(-remainder);
+    sturm_chain_.emplace_back(-remainder);
   }
 }
 
@@ -78,6 +79,22 @@ int SturmChain::NumSignChanges(const double x) const {
     sturm_chain_sign[i] = EvaluatePolynomial(sturm_chain_[i], x) > 0;
   }
   return CountSignChanges(sturm_chain_sign);
+}
+
+void SturmChain::ComputeRootBounds(double* lower_bound,
+                                   double* upper_bound) {
+  const auto& poly = sturm_chain_[0];
+  const int n = poly.size();
+  CHECK_GE(n, 3);
+  const double sqrt_part =
+      sqrt(poly[1] * poly[1] - (2.0 * n * poly[0] * poly[2]) / (n - 1.0));
+  const double first_part = -poly[1] / (n * poly[0]);
+  const double second_part = (n - 1.0) / (n * poly[0]);
+  *lower_bound = first_part - second_part * sqrt_part;
+  *upper_bound = first_part + second_part * sqrt_part;
+  if (*lower_bound > *upper_bound) {
+    std::swap(*lower_bound, *upper_bound);
+  }
 }
 
 int SturmChain::NumSignChangesAtInfinity() const {

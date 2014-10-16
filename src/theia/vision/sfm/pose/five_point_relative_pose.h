@@ -44,7 +44,7 @@ namespace theia {
 // points. Algorithm is implemented based on "An Efficient Solution to the
 // Five-Point Relative Pose Problem" by Nister. The relative pose is computed
 // such that y * E * x = 0, where E = t_x * R and t_x is the cross product
-// matrix of t. The returned rotation and translation are R and t accordingly.
+// matrix of t.
 //
 // Params:
 //   image1_points: Location of features on the image plane of image 1.
@@ -52,8 +52,7 @@ namespace theia {
 // Return: true if a valid solution was found.
 bool FivePointRelativePose(const Eigen::Vector2d image1_points[5],
                            const Eigen::Vector2d image2_points[5],
-                           std::vector<Eigen::Matrix3d>* rotation,
-                           std::vector<Eigen::Vector3d>* translation);
+                           std::vector<Eigen::Matrix3d>* essential_matrices);
 }  // namespace theia
 
 #endif  // THEIA_VISION_SFM_POSE_FIVE_POINT_RELATIVE_POSE_H_

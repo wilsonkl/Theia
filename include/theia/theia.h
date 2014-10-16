@@ -95,6 +95,7 @@
 #include "theia/vision/sfm/pose/dls_impl.h"
 #include "theia/vision/sfm/pose/dls_pnp.h"
 #include "theia/vision/sfm/pose/eight_point_fundamental_matrix.h"
+#include "theia/vision/sfm/pose/essential_matrix_utils.h"
 #include "theia/vision/sfm/pose/estimate_global_rotations.h"
 #include "theia/vision/sfm/pose/five_point_focal_length_radial_distortion.h"
 #include "theia/vision/sfm/pose/five_point_relative_pose.h"

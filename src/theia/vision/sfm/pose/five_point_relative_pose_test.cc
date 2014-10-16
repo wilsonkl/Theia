@@ -44,6 +44,7 @@
 #include "theia/vision/sfm/pose/five_point_relative_pose.h"
 #include "theia/vision/sfm/pose/util.h"
 #include "theia/test/benchmark.h"
+#include "theia/test/test_utils.h"
 
 namespace theia {
 namespace {
@@ -54,25 +55,15 @@ using Eigen::Quaterniond;
 using Eigen::Vector2d;
 using Eigen::Vector3d;
 
-double RotationAngularDistance(const Matrix3d& rot1, const Matrix3d& rot2) {
-  const Matrix3d relative_rotation = rot1.transpose() * rot2;
-  return acos((relative_rotation.trace() - 1.0) / 2.0);
-}
-
-// Tests that the three point pose works correctly by taking the passed
-// points_3d, projecting them to get image one rays, transforming by
-// (expected_rotation, expected_translation) to get image two rays and then
-// verifying that the ThreePointEssentialMatrix function returns
-// (test_rotation, test_translation_direction) among its solutions.
-// Noise can be added to the image projections by setting projection_noise.
-// The thresholds for rotation and translation similarity can be controlled
-// by max_rotation_difference and max_difference_between_translation.
+// Tests that the five point algorithm works correctly be checking the epipolar
+// errors of the returned solutions and ensuring that at least one of the
+// candidate solutions corresponds to the essential matrix we used to construct
+// the problem.
 void TestFivePointResultWithNoise(const Vector3d points_3d[5],
                                   const double projection_noise_std_dev,
                                   const Matrix3d& expected_rotation,
                                   const Vector3d& expected_translation,
-                                  const double max_rotation_difference,
-                                  const double max_angle_between_translation) {
+                                  const double ematrix_tolerance) {
   InitRandomGenerator();
 
   // Calculates the image points in both views.
@@ -96,35 +87,29 @@ void TestFivePointResultWithNoise(const Vector3d points_3d[5],
   }
 
   // Calculates the essential matrix, this may return multiple solutions.
-  std::vector<Matrix3d> soln_rotations;
-  std::vector<Vector3d> soln_translations;
-  EXPECT_TRUE(FivePointRelativePose(view_one_points, view_two_points,
-                                    &soln_rotations, &soln_translations));
-  CHECK_GT(soln_rotations.size(), 0);
+  const Matrix3d gt_ematrix =
+      CrossProductMatrix(expected_translation) * expected_rotation;
+  std::vector<Matrix3d> soln_ematrices;
+  EXPECT_TRUE(FivePointRelativePose(view_one_points,
+                                    view_two_points,
+                                    &soln_ematrices));
+  CHECK_GT(soln_ematrices.size(), 0);
 
   // Among the returned solutions verify that at least one is close to the
   // expected translation and rotation.
   bool matched_transform = false;
-  for (int n = 0; n < soln_rotations.size(); ++n) {
-    double rotation_difference =
-        RotationAngularDistance(expected_rotation, soln_rotations[n]);
+  const double kEpipolarTolerance = 1e-8;
+  for (int n = 0; n < soln_ematrices.size(); ++n) {
+    // All solutions should have valid epipolar constraints.
+    for (int i = 0; i < 5; i++) {
+      EXPECT_LT(SquaredSampsonDistance(soln_ematrices[n],
+                                       view_one_points[i],
+                                       view_two_points[i]),
+                kEpipolarTolerance);
+    }
 
-    bool matched_rotation = (rotation_difference < max_rotation_difference);
-
-    // The translation is only known up to scale so this verifies that the
-    // translations have matching directions.
-    double translation_angle_difference =
-        fabs(expected_translation.dot(soln_translations[n]) /
-             (expected_translation.norm() * soln_translations[n].norm()));
-    // Occasionally there is an odd floating point error that causes a nan in
-    // the acos below, so we explicitly cap the angle values to be valid.
-    translation_angle_difference =
-        acos(std::min(1.0, std::max(0.0, translation_angle_difference)));
-
-    bool matched_translation =
-        (translation_angle_difference < max_angle_between_translation);
-
-    if (matched_translation && matched_rotation) {
+    if (test::ArraysEqualUpToScale(9, soln_ematrices[n].data(), gt_ematrix.data(),
+                                   ematrix_tolerance)) {
       matched_transform = true;
     }
   }
@@ -143,15 +128,12 @@ void BasicTest() {
       AngleAxisd(DegToRad(13.0), Vector3d(0.0, 0.0, 1.0))).toRotationMatrix();
   const Vector3d soln_translation(1.0, 1.0, 1.0);
   const double kNoise = 0.0 / 512.0;
-  const double kMaxAllowedRotationDifference = DegToRad(1e-2);
-  const double kMaxAllowedAngleBetweenTranslations = DegToRad(1e-2);
-
+  const double kEMatrixTolerance = 1e-4;
   TestFivePointResultWithNoise(points_3d,
                                kNoise,
                                soln_rotation,
                                soln_translation,
-                               kMaxAllowedRotationDifference,
-                               kMaxAllowedAngleBetweenTranslations);
+                               kEMatrixTolerance);
 }
 
 TEST(FivePointRelativePose, Basic) {
@@ -174,15 +156,12 @@ TEST(FivePointRelativePose, NoiseTest) {
 
   const Vector3d soln_translation(1.0, 1.0, 1.0);
   const double kNoise = 1.0 / 512.0;
-  const double kMaxAllowedRotationDifference = DegToRad(1.0);
-  const double kMaxAllowedAngleBetweenTranslations = DegToRad(1.0);
-
+  const double kEMatrixTolerance = 1e-2;
   TestFivePointResultWithNoise(points_3d,
                                kNoise,
                                soln_rotation,
                                soln_translation,
-                               kMaxAllowedRotationDifference,
-                               kMaxAllowedAngleBetweenTranslations);
+                               kEMatrixTolerance);
 }
 
 TEST(FivePointRelativePose, ForwardMotion) {
@@ -197,15 +176,12 @@ TEST(FivePointRelativePose, ForwardMotion) {
 
   const Vector3d soln_translation(0.0, 0.0, 1.0);
   const double kNoise = 1.0 / 512.0;
-  const double kMaxAllowedRotationDifference = DegToRad(2.0);
-  const double kMaxAllowedAngleBetweenTranslations = DegToRad(5.0);
-
+  const double kEMatrixTolerance = 0.15;
   TestFivePointResultWithNoise(points_3d,
                                kNoise,
                                soln_rotation,
                                soln_translation,
-                               kMaxAllowedRotationDifference,
-                               kMaxAllowedAngleBetweenTranslations);
+                               kEMatrixTolerance);
 }
 
 TEST(FivePointRelativePose, NoRotation) {
@@ -220,15 +196,12 @@ TEST(FivePointRelativePose, NoRotation) {
 
   const Vector3d soln_translation(1.0, 1.0, 1.0);
   const double kNoise = 1.0 / 512.0;
-  const double kMaxAllowedRotationDifference = DegToRad(1.0);
-  const double kMaxAllowedAngleBetweenTranslations = DegToRad(1.0);
-
+  const double kEMatrixTolerance = 0.01;
   TestFivePointResultWithNoise(points_3d,
                                kNoise,
                                soln_rotation,
                                soln_translation,
-                               kMaxAllowedRotationDifference,
-                               kMaxAllowedAngleBetweenTranslations);
+                               kEMatrixTolerance);
 }
 
 }  // namespace
