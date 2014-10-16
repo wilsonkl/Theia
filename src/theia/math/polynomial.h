@@ -98,6 +98,10 @@ bool FindPolynomialRoots(const Eigen::VectorXd& polynomial,
 bool FindRealPolynomialRoots(const Eigen::VectorXd& polynomial,
                              Eigen::VectorXd* real);
 
+// Finds all real roots to a polynomial by computing the sturm chain.
+bool FindRealPolynomialRootsSturm(const Eigen::VectorXd& coeffs,
+                                  Eigen::VectorXd* real_roots);
+
 // An iterative solver to find the closest root based on an initial guess.
 double FindRealRootIterative(const Eigen::VectorXd& polynomial,
                              const double x0,

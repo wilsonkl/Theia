@@ -59,6 +59,7 @@
 #include "theia/math/matrix/rq_decomposition.h"
 #include "theia/math/polynomial.h"
 #include "theia/math/probability/sequential_probability_ratio.h"
+#include "theia/math/sturm_chain.h"
 #include "theia/math/util.h"
 #include "theia/solvers/arrsac.h"
 #include "theia/solvers/estimator.h"

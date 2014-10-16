@@ -74,7 +74,11 @@
 #include <glog/logging.h>
 #include <cmath>
 #include <complex>
+#include <queue>
 #include <vector>
+
+#include "theia/math/sturm_chain.h"
+#include "theia/util/random.h"
 
 namespace theia {
 
@@ -82,6 +86,15 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 namespace {
+
+// Holds an interval for sturm chains. The difference between the lower and
+// upper sturm number is the number of roots contained in that interval.
+struct SturmBound {
+  double lower_bound;
+  int lower_sturm_number;
+  double upper_bound;
+  int upper_sturm_number;
+};
 
 // Balancing function as described by B. N. Parlett and C. Reinsch,
 // "Balancing a Matrix for Calculation of Eigenvalues and Eigenvectors".
@@ -302,6 +315,101 @@ bool FindRealPolynomialRoots(const VectorXd& coeffs,
   return false;
 }
 
+bool FindRealPolynomialRootsSturm(const VectorXd& coeffs,
+                                  VectorXd* real_roots) {
+  CHECK_NOTNULL(real_roots);
+  if (coeffs.size() == 0) {
+    return false;
+  }
+
+  InitRandomGenerator();
+
+  // Create the sturm chain.
+  SturmChain sturm_chain(coeffs);
+
+  const int neg_infinity_changes =
+      sturm_chain.NumSignChangesAtNegativeInfinity();
+  const int pos_infinity_changes = sturm_chain.NumSignChangesAtInfinity();
+
+  // Find finite bounds.
+  SturmBound initial_bound;
+  initial_bound.lower_bound = -1;
+  initial_bound.upper_bound = 1;
+
+  static const double kUpperBound = 1e20;
+  static const double kLowerBound = -1e20;
+
+  // Exponentially grow the lower bound until it reaches its min point.
+  while (initial_bound.lower_bound > kLowerBound &&
+         initial_bound.lower_sturm_number != neg_infinity_changes) {
+    initial_bound.lower_bound *= 100;
+    initial_bound.lower_sturm_number =
+       sturm_chain.NumSignChanges(initial_bound.lower_bound);
+  }
+
+  // Exponentially grow the upper bound until it reaches its max point.
+  while (initial_bound.upper_bound < kUpperBound &&
+         initial_bound.upper_sturm_number != pos_infinity_changes) {
+    initial_bound.upper_bound *= 100;
+    initial_bound.upper_sturm_number =
+        sturm_chain.NumSignChanges(initial_bound.upper_bound);
+  }
+
+  real_roots->resize(initial_bound.lower_sturm_number -
+                     initial_bound.upper_sturm_number);
+
+  // Explore all intervals using a simple bisection method. Refine the intervals
+  // until there is exactly one root within the interval, then use a root
+  // finding method to extract that roo.
+  static const double kEpsilon = 1e-12;
+  static const double kMaxIter = 10;
+  std::queue<SturmBound> bounds;
+  bounds.emplace(initial_bound);
+  int current_root_index = 0;
+  while (!bounds.empty()) {
+    const SturmBound& current_interval = bounds.front();
+    const double midpoint =
+        (current_interval.upper_bound + current_interval.lower_bound) / 2.0;
+    const int num_roots = current_interval.lower_sturm_number -
+                          current_interval.upper_sturm_number;
+
+    if (num_roots > 1) {
+      const int midpoint_sturm_number = sturm_chain.NumSignChanges(midpoint);
+
+      // Split the interval in half and add the new roots.
+      SturmBound new_lower_interval = current_interval;
+      new_lower_interval.upper_bound = midpoint;
+      new_lower_interval.upper_sturm_number = midpoint_sturm_number;
+      bounds.emplace(new_lower_interval);
+
+      SturmBound new_upper_interval = current_interval;
+      new_upper_interval.lower_bound = midpoint;
+      new_upper_interval.lower_sturm_number = midpoint_sturm_number;
+      bounds.emplace(new_upper_interval);
+
+    } else if (num_roots == 1) {
+      // Try to find the root with a starting point at the middle of the
+      // interval.
+      double root = FindRealRootIterative(coeffs, midpoint, kEpsilon, kMaxIter);
+
+      // If the root ends up not being within the bounds then retry with a
+      // random initialization.
+      while (root < current_interval.lower_bound ||
+             root > current_interval.upper_bound) {
+        root = FindRealRootIterative(coeffs,
+                                     RandDouble(current_interval.lower_bound,
+                                                current_interval.upper_bound),
+                                     kEpsilon, kMaxIter);
+      }
+      (*real_roots)[current_root_index] = root;
+      current_root_index++;
+    }
+    bounds.pop();
+  }
+
+  return true;
+}
+
 // An iterative solver to find the closest root based on an initial guess. We
 // use Laguerre's method, which is a polynomial root finding method that
 // converges to a root with very high certainty. For multiple roots, the
@@ -382,7 +490,7 @@ void DividePolynomial(const VectorXd& polynomial,
     return;
   }
 
-  VectorXd numerator = polynomial;
+  VectorXd numerator = RemoveLeadingZeros(polynomial);
   VectorXd denominator;
   *quotient = VectorXd::Zero(numerator.size() - divisor.size() + 1);
   while (numerator.size() >= divisor.size()) {
