@@ -61,6 +61,7 @@ TEST(RandomSampler, UniqueMinimalSample) {
     EXPECT_TRUE(sampler.Sample(data_points, &subset));
 
     // Make sure that the sampling is unique.
+    EXPECT_EQ(subset.size(), kMinNumSamples);
     EXPECT_TRUE(IsUnique(subset));
   }
 }
