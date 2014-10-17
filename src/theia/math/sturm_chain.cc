@@ -64,12 +64,16 @@ SturmChain::SturmChain(const Eigen::VectorXd& polynomial) {
   sturm_chain_.push_back(polynomial);
   sturm_chain_.push_back(DifferentiatePolynomial(polynomial));
   while (sturm_chain_.back().size() > 1) {
-    VectorXd quotient, remainder;
-    DividePolynomial(sturm_chain_[sturm_chain_.size() - 2],
-                     sturm_chain_[sturm_chain_.size() - 1],
-                     &quotient,
-                     &remainder);
-    sturm_chain_.emplace_back(-remainder);
+    const VectorXd& poly1 = sturm_chain_[sturm_chain_.size() - 2];
+    const VectorXd& poly2 = sturm_chain_[sturm_chain_.size() - 1];
+    VectorXd remainder1 = poly1.tail(poly1.size() - 1);
+    remainder1.head(remainder1.size() - 1) -=
+        poly1(0) / poly2(0) * poly2.tail(poly2.size() - 1);
+
+    const VectorXd remainder2 =
+        remainder1.tail(remainder1.size() - 1) -
+        remainder1(0) / poly2(0) * poly2.tail(poly2.size() - 1);
+    sturm_chain_.emplace_back(-remainder2);
   }
 }
 
@@ -85,7 +89,6 @@ void SturmChain::ComputeRootBounds(double* lower_bound,
                                    double* upper_bound) {
   const auto& poly = sturm_chain_[0];
   const int n = poly.size();
-  CHECK_GE(n, 3);
   const double sqrt_part =
       sqrt(poly[1] * poly[1] - (2.0 * n * poly[0] * poly[2]) / (n - 1.0));
   const double first_part = -poly[1] / (n * poly[0]);
