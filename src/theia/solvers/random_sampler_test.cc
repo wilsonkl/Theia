@@ -1,4 +1,4 @@
-// Copyright (C) 2013 The Regents of the University of California (Regents).
+// Copyright (C) 2014 The Regents of the University of California (Regents).
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,49 +32,37 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#ifndef THEIA_SOLVERS_RANDOM_SAMPLER_H_
-#define THEIA_SOLVERS_RANDOM_SAMPLER_H_
-
-#include <stdlib.h>
+#include <glog/logging.h>
 #include <algorithm>
 #include <vector>
 
-#include "theia/solvers/sampler.h"
-#include "theia/util/random.h"
+#include "gtest/gtest.h"
+#include "theia/solvers/random_sampler.h"
 
 namespace theia {
 
-// Random sampler used for RANSAC. This is guaranteed to generate a unique
-// sample by performing a Fisher-Yates sampling.
-template <class Datum> class RandomSampler : public Sampler<Datum> {
- public:
-  explicit RandomSampler(const int min_num_samples)
-      : Sampler<Datum>(min_num_samples) {}
-  ~RandomSampler() {}
+namespace {
 
-  bool Initialize() {
-    InitRandomGenerator();
-    return true;
+bool IsUnique(const std::vector<int>& vec) {
+  std::vector<int> sorted_vec = vec;
+  std::sort(sorted_vec.begin(), sorted_vec.end());
+  return std::unique(sorted_vec.begin(), sorted_vec.end()) == sorted_vec.end();
+}
+
+}  // namespace
+
+TEST(RandomSampler, UniqueMinimalSample) {
+  static const int kMinNumSamples = 3;
+  const std::vector<int> data_points = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+  RandomSampler<int> sampler(kMinNumSamples);
+  CHECK(sampler.Initialize());
+  for (int i = 0; i < 100; i++) {
+    std::vector<int> subset;
+    EXPECT_TRUE(sampler.Sample(data_points, &subset));
+
+    // Make sure that the sampling is unique.
+    EXPECT_TRUE(IsUnique(subset));
   }
-
-  // Samples the input variable data and fills the vector subset with the
-  // random samples.
-  bool Sample(const std::vector<Datum>& data, std::vector<Datum>* subset) {
-    subset->resize(this->min_num_samples_);
-    std::vector<int> random_numbers(data.size());
-    for (int i = 0; i < data.size(); i++) {
-      random_numbers[i] = i;
-    }
-
-    for (int i = 0; i < this->min_num_samples_; i++) {
-      std::swap(random_numbers[i], random_numbers[RandInt(i, data.size() - 1)]);
-      (*subset)[i] = data[random_numbers[i]];
-    }
-
-    return true;
-  }
-};
+}
 
 }  // namespace theia
-
-#endif  // THEIA_SOLVERS_RANDOM_SAMPLER_H_
