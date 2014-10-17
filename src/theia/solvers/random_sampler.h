@@ -63,11 +63,11 @@ template <class Datum> class RandomSampler : public Sampler<Datum> {
     subset->resize(this->min_num_samples_);
     std::vector<int> random_numbers(data.size());
     for (int i = 0; i < data.size(); i++) {
-      random_numbers = i;
+      random_numbers[i] = i;
     }
 
-    for (int i = 0; i < this->min_num_samples_) {
-      std::swap(random_numbers[i], RandInt(i, data.size() - 1));
+    for (int i = 0; i < this->min_num_samples_; i++) {
+      std::swap(random_numbers[i], random_numbers[RandInt(i, data.size() - 1)]);
       subset->push_back(data[random_numbers[i]]);
     }
 
