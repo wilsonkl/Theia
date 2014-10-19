@@ -32,69 +32,55 @@
 // Please contact the author of this library if you have any questions.
 // Author: Chris Sweeney (cmsweeney@cs.ucsb.edu)
 
-#include "theia/vision/matching/feature_matcher_utils.h"
+#include "theia/vision/matching/cascade_hashing_feature_matcher.h"
 
+#include <Eigen/Core>
 #include <glog/logging.h>
-#include <unordered_map>
+
+#include <algorithm>
+
+#include <type_traits>
 #include <vector>
 
-#include "theia/util/map_util.h"
+#include "theia/vision/matching/cascade_hasher.h"
+#include "theia/vision/matching/feature_matcher.h"
+#include "theia/vision/matching/feature_matcher_utils.h"
 
 namespace theia {
 
-void FilterByLowesRatio(
+bool CascadeHashingFeatureMatcher::Match(
     const FeatureMatcherOptions& options,
-    const std::vector<std::vector<FeatureMatch> >& knn_matches,
+    const std::vector<Eigen::VectorXf>& desc_1,
+    const std::vector<Eigen::VectorXf>& desc_2,
     std::vector<FeatureMatch>* matches) {
+  typedef Eigen::Matrix<int, 128, 1> Vector128i;
+
   CHECK_NOTNULL(matches)->clear();
-  matches->reserve(knn_matches.size());
+  matches->reserve(desc_1.size());
 
-  for (int i = 0; i < knn_matches.size(); i++) {
-    if (knn_matches[i][0].distance <
-        knn_matches[i][1].distance * options.lowes_ratio) {
-      matches->push_back(knn_matches[i][0]);
-    }
-  }
-}
+  CascadeHasher hasher;
+  CHECK(hasher.Initialize());
 
-void RemoveMatchesAboveMaxMatchDistance(
-    const float max_allowed_match_distance,
-    std::vector<FeatureMatch>* matches) {
-  auto match_iterator = matches->begin();
-  while (match_iterator != matches->end()) {
-    if (match_iterator->distance >= max_allowed_match_distance) {
-      match_iterator = matches->erase(match_iterator);
-    } else {
-      ++match_iterator;
-    }
-  }
-}
+  HashedImage hashed_desc_1, hashed_desc_2;
+  hasher.CreateHashedSiftDescriptors(desc_1, &hashed_desc_1);
+  hasher.CreateHashedSiftDescriptors(desc_2, &hashed_desc_2);
 
-// Modifies forward matches so that it removes all matches that are not
-// contained in the backwards matches.
-void IntersectMatches(const std::vector<FeatureMatch>& backwards_matches,
-                      std::vector<FeatureMatch>* forward_matches) {
-  std::unordered_map<int, int> index_map;
-  index_map.reserve(backwards_matches.size());
-  // Add all feature2 -> feature1 matches to the map.
-  for (const FeatureMatch& feature_match : backwards_matches) {
-    InsertOrDie(&index_map,
-                feature_match.feature1_ind,
-                feature_match.feature2_ind);
+  hasher.MatchImages(hashed_desc_1,
+                     hashed_desc_2,
+                     options.lowes_ratio,
+                     matches);
+
+  // Perform symmetric matching if appropriate.
+  if (options.keep_only_symmetric_matches) {
+    std::vector<FeatureMatch> backwards_matches;
+    hasher.MatchImages(hashed_desc_2,
+                       hashed_desc_1,
+                       options.lowes_ratio,
+                       &backwards_matches);
+    IntersectMatches(backwards_matches, matches);
   }
 
-  // Search the map for feature1 -> feature2 matches that are also present in
-  // the feature2 -> feature1 matches.
-  auto match_iterator = forward_matches->begin();
-  while (match_iterator != forward_matches->end()) {
-    if (match_iterator->feature1_ind !=
-        FindWithDefault(index_map, match_iterator->feature2_ind, -1)) {
-      match_iterator = forward_matches->erase(match_iterator);
-      continue;
-    }
-
-    ++match_iterator;
-  }
+  return true;
 }
 
 }  // namespace theia

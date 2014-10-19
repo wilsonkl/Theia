@@ -82,6 +82,8 @@
 #include "theia/util/stringprintf.h"
 #include "theia/util/util.h"
 #include "theia/vision/matching/brute_force_feature_matcher.h"
+#include "theia/vision/matching/cascade_hasher.h"
+#include "theia/vision/matching/cascade_hashing_feature_matcher.h"
 #include "theia/vision/matching/distance.h"
 #include "theia/vision/matching/feature_matcher.h"
 #include "theia/vision/matching/feature_matcher_utils.h"

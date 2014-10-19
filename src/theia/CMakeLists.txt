@@ -57,6 +57,8 @@ SET(THEIA_SRC
   util/random.cc
   util/stringprintf.cc
   vision/matching/feature_matcher_utils.cc
+  vision/matching/cascade_hasher.cc
+  vision/matching/cascade_hashing_feature_matcher.cc
   vision/sfm/camera/camera.cc
   vision/sfm/camera/projection_matrix_utils.cc
   vision/sfm/camera/radial_distortion.cc

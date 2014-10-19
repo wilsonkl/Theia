@@ -42,7 +42,7 @@
 DEFINE_string(img_input_dir, "input", "Directory of two input images.");
 DEFINE_string(img_output_dir, "output", "Name of output image file.");
 
-using theia::BruteForceFeatureMatcher;
+using theia::CascadeHashingFeatureMatcher;
 using theia::FloatImage;
 using theia::FeatureMatcherOptions;
 using theia::ImageCanvas;
@@ -88,14 +88,14 @@ int main(int argc, char *argv[]) {
           << " descriptors in right image.";
 
   // Match descriptors!
-  BruteForceFeatureMatcher<L2> brute_force_image_matcher;
+  CascadeHashingFeatureMatcher image_matcher;
   FeatureMatcherOptions options;
   std::vector<theia::FeatureMatch> matches;
   clock_t t = clock();
-  brute_force_image_matcher.Match(options,
-                                  left_descriptors,
-                                  right_descriptors,
-                                  &matches);
+  image_matcher.Match(options,
+                      left_descriptors,
+                      right_descriptors,
+                      &matches);
   t = clock() - t;
   VLOG(0) << "It took " << (static_cast<float>(t)/CLOCKS_PER_SEC)
           << " to match SIFT descriptors";
