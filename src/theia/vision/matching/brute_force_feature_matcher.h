@@ -39,6 +39,7 @@
 #include <glog/logging.h>
 
 #include <algorithm>
+#include <mutex>
 #include <thread>
 #include <vector>
 

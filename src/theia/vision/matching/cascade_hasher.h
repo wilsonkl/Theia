@@ -68,7 +68,8 @@ struct HashedImage {
 // matches.
 //
 // Implementation is based on the paper "Fast and Accurate Image Matching with
-// Cascade Hashing for 3D Reconstruction" by Cheng et al (CVPR 2014).
+// Cascade Hashing for 3D Reconstruction" by Cheng et al (CVPR 2014). When using
+// this class we ask that you please cite this paper.
 class CascadeHasher {
  public:
   CascadeHasher() {}

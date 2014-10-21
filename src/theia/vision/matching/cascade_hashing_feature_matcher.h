@@ -36,6 +36,7 @@
 #define THEIA_VISION_MATCHING_CASCADE_HASHING_FEATURE_MATCHER_H_
 
 #include <Eigen/Core>
+#include <mutex>
 #include <vector>
 
 #include "theia/vision/matching/distance.h"
