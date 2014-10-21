@@ -44,11 +44,11 @@ namespace theia {
 
 struct FeatureMatch;
 
-typedef Eigen::Matrix<int, 128, 1> Vector128i;
+typedef Eigen::Matrix<float, 128, 1> Vector128f;
 typedef std::vector<int> Bucket;
 
 struct HashedSiftDescriptor {
-  Vector128i sift_desc;
+  Vector128f sift_desc;
   std::bitset<128> hash_code;
   // Each bucket_ids[x] = y means the descriptor belongs to bucket y in bucket
   // group x.
@@ -110,9 +110,9 @@ class CascadeHasher {
   static constexpr int kNumBucketsPerGroup = 1 << kNumBucketBits;
 
   // Projection matrix of the primary hashing function
-  Vector128i primary_hash_projection[kDimHashData];
+  Vector128f primary_hash_projection[kDimHashData];
   // Projection matrix of the secondary hashing function
-  Vector128i secondary_hash_projection[kNumBucketGroups][kNumBucketBits];
+  Vector128f secondary_hash_projection[kNumBucketGroups][kNumBucketBits];
 };
 
 }  // namespace theia

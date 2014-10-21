@@ -66,9 +66,9 @@ void ConvertToZeroMeanDescriptor(
     std::vector<HashedSiftDescriptor>* zero_mean_desc) {
   // Convert to integers.
   zero_mean_desc->resize(sift_desc.size());
-  Vector128i mean = Vector128i::Zero(128);
+  Vector128f mean = Vector128f::Zero();
   for (int i = 0; i < sift_desc.size(); i++) {
-    zero_mean_desc->at(i).sift_desc = (sift_desc[i] * 255).cast<int>();
+    zero_mean_desc->at(i).sift_desc = (sift_desc[i] * 255.0);
     mean += zero_mean_desc->at(i).sift_desc;
   }
   mean /= sift_desc.size();
@@ -85,7 +85,7 @@ bool CascadeHasher::Initialize() {
   // Initialize primary hash projection.
   for (int i = 0; i < kDimHashData; i++) {
     for (int j = 0; j < 128; j++) {
-      primary_hash_projection[i][j] = static_cast<int>(GetNormRand() * 1000);
+      primary_hash_projection[i][j] = GetNormRand() * 1000;
     }
   }
 
@@ -93,8 +93,7 @@ bool CascadeHasher::Initialize() {
   for (int i = 0; i < kNumBucketGroups; i++) {
     for (int j = 0; j < kNumBucketBits; j++) {
       for (int k = 0; k < 128; k++) {
-        secondary_hash_projection[i][j][k] =
-            static_cast<int>(GetNormRand() * 1000);
+        secondary_hash_projection[i][j][k] = GetNormRand() * 1000;
       }
     }
   }
@@ -110,7 +109,7 @@ void CascadeHasher::CreateHashedDescriptors(HashedImage* hashed_image) const {
 
     // Compute hash code.
     for (int j = 0; j < kDimHashData; j++) {
-      const int sum = sift.dot(primary_hash_projection[j]);
+      const float sum = sift.dot(primary_hash_projection[j]);
       hash_code[j] = sum > 0;
     }
 
@@ -118,7 +117,7 @@ void CascadeHasher::CreateHashedDescriptors(HashedImage* hashed_image) const {
     for (int j = 0; j < kNumBucketGroups; j++) {
       uint16_t bucket_id = 0;
       for (int k = 0; k < kNumBucketBits; k++) {
-        const int sum = sift.dot(secondary_hash_projection[j][k]);
+        const float sum = sift.dot(secondary_hash_projection[j][k]);
         bucket_id = (bucket_id << 1) + (sum > 0 ? 1 : 0);
       }
       hashed_image->hashed_desc[i].bucket_ids[j] = bucket_id;
