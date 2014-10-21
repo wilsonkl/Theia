@@ -44,6 +44,7 @@ namespace theia {
 
 class Keypoint;
 
+// Holds feature matches between two images.
 struct FeatureMatch {
   FeatureMatch() {}
   FeatureMatch(int f1_ind, int f2_ind, float dist)
@@ -63,6 +64,13 @@ struct FeatureMatch {
   float distance;
 };
 
+// Holds all the feature matches between a pair of images.
+struct ImagePairMatch {
+  int image1_ind;
+  int image2_ind;
+  std::vector<FeatureMatch> matches;
+};
+
 // Class for matching features between images. The matches and match quality
 // depend on the options passed to the feature matching.
 template <class DistanceMetric> class FeatureMatcher {
@@ -79,15 +87,12 @@ template <class DistanceMetric> class FeatureMatcher {
                      const std::vector<DescriptorType>& desc_2,
                      std::vector<FeatureMatch>* matches) = 0;
 
-  // Finds the nearest neighbor in desc_2 for each descriptor in desc_1.
-  virtual bool Match(const FeatureMatcherOptions& options,
-                     const std::vector<Keypoint>& keypoints_1,
-                     const std::vector<DescriptorType>& desc_1,
-                     const std::vector<Keypoint>& keypoints_2,
-                     const std::vector<DescriptorType>& desc_2,
-                     std::vector<FeatureMatch>* matches) {
-    return Match(options, desc_1, desc_2, matches);
-  }
+  // Matches all image pairs using num_threads to accelerate matching.
+  virtual bool MatchAllPairs(
+      const FeatureMatcherOptions& options,
+      const int num_threads,
+      const std::vector<std::vector<DescriptorType> >& descriptors,
+      std::vector<ImagePairMatch>* image_pair_matches)  = 0;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(FeatureMatcher);

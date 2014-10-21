@@ -102,7 +102,7 @@ bool CascadeHasher::Initialize() {
   return true;
 }
 
-void CascadeHasher::CreateHashedDescriptors(HashedImage* hashed_image) {
+void CascadeHasher::CreateHashedDescriptors(HashedImage* hashed_image) const {
   for (int i = 0; i < hashed_image->hashed_desc.size(); i++) {
     // Get references for cleanliness.
     const auto& sift = hashed_image->hashed_desc[i].sift_desc;
@@ -126,7 +126,7 @@ void CascadeHasher::CreateHashedDescriptors(HashedImage* hashed_image) {
   }
 }
 
-void CascadeHasher::BuildBuckets(HashedImage* hashed_image) {
+void CascadeHasher::BuildBuckets(HashedImage* hashed_image) const {
   hashed_image->buckets.resize(kNumBucketGroups);
   for (int i = 0; i < kNumBucketGroups; i++) {
     hashed_image->buckets[i].resize(kNumBucketsPerGroup);
@@ -145,7 +145,7 @@ void CascadeHasher::BuildBuckets(HashedImage* hashed_image) {
 //   3) Construct buckets.
 void CascadeHasher::CreateHashedSiftDescriptors(
     const std::vector<Eigen::VectorXf>& sift_desc,
-    HashedImage* hashed_image) {
+    HashedImage* hashed_image) const {
   ConvertToZeroMeanDescriptor(sift_desc, &hashed_image->hashed_desc);
 
   // Allocate space for hash codes and bucket ids.
@@ -168,7 +168,7 @@ void CascadeHasher::CreateHashedSiftDescriptors(
 void CascadeHasher::MatchImages(const HashedImage& hashed_image1,
                                 const HashedImage& hashed_image2,
                                 const double lowes_ratio,
-                                std::vector<FeatureMatch>* matches) {
+                                std::vector<FeatureMatch>* matches) const {
   const int kNumTopCandidates = 10;
 
   for (int i = 0; i < hashed_image1.hashed_desc.size(); i++) {

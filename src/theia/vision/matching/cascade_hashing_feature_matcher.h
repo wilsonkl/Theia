@@ -43,6 +43,9 @@
 
 namespace theia {
 
+class CascadeHasher;
+struct HashedImage;
+
 // Performs features matching between two sets of features using a cascade
 // hashing approach. This hashing does not require any training and is extremely
 // efficient but can only be used with float features like SIFT.
@@ -57,7 +60,22 @@ class CascadeHashingFeatureMatcher : public FeatureMatcher<L2> {
              const std::vector<Eigen::VectorXf>& desc_2,
              std::vector<FeatureMatch>* matches);
 
+  bool MatchAllPairs(
+      const FeatureMatcherOptions& options,
+      const int num_threads,
+      const std::vector<std::vector<Eigen::VectorXf> >& descriptors,
+      std::vector<ImagePairMatch>* image_pair_matches);
+
  private:
+  void MatchWithMutex(
+    const std::vector<HashedImage>& descriptors,
+    const FeatureMatcherOptions& options,
+    const int thread_id,
+    const int num_threads,
+    std::mutex* matcher_mutex,
+    CascadeHasher* hasher,
+    std::vector<ImagePairMatch>* image_pair_matches);
+
   DISALLOW_COPY_AND_ASSIGN(CascadeHashingFeatureMatcher);
 };
 

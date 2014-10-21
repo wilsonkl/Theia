@@ -39,6 +39,7 @@
 #include <glog/logging.h>
 
 #include <algorithm>
+#include <thread>
 #include <vector>
 
 #include "theia/vision/matching/feature_matcher.h"
@@ -63,7 +64,22 @@ class BruteForceFeatureMatcher : public FeatureMatcher<DistanceMetric> {
              const std::vector<DescriptorType>& desc_2,
              std::vector<FeatureMatch>* matches);
 
+   bool MatchAllPairs(
+       const FeatureMatcherOptions& options,
+       const int num_threads,
+       const std::vector<std::vector<DescriptorType> >& descriptors,
+       std::vector<ImagePairMatch>* image_pair_matches);
+
  private:
+  void MatchWithMutex(
+    const std::vector<std::vector<DescriptorType> >&
+        descriptors,
+    const FeatureMatcherOptions& options,
+    const int thread_id,
+    const int num_threads,
+    std::mutex* matcher_mutex,
+    std::vector<ImagePairMatch>* image_pair_matches);
+
   void GetFilteredMatches(const FeatureMatcherOptions& options,
                           const Eigen::MatrixXf& match_distances,
                           std::vector<FeatureMatch>* matches) const;
@@ -99,6 +115,62 @@ bool BruteForceFeatureMatcher<DistanceMetric>::Match(
     std::vector<FeatureMatch> reverse_matches;
     GetFilteredMatches(options, match_distances.transpose(), &reverse_matches);
     IntersectMatches(reverse_matches, matches);
+  }
+  return true;
+}
+
+template <class DistanceMetric>
+void BruteForceFeatureMatcher<DistanceMetric>::MatchWithMutex(
+    const std::vector<std::vector<DescriptorType> >&
+        descriptors,
+    const FeatureMatcherOptions& options,
+    const int thread_id,
+    const int num_threads,
+    std::mutex* matcher_mutex,
+    std::vector<ImagePairMatch>* image_pair_matches) {
+  for (int i = 0; i < descriptors.size(); i++) {
+    for (int j = i + 1 + thread_id; j < descriptors.size(); j += num_threads) {
+      ImagePairMatch image_pair_match;
+      image_pair_match.image1_ind = i;
+      image_pair_match.image2_ind = j;
+      CHECK(Match(options,
+                  descriptors[i],
+                  descriptors[j],
+                  &image_pair_match.matches));
+      // Lock mutex.
+      matcher_mutex->lock();
+      image_pair_matches->emplace_back(image_pair_match);
+      matcher_mutex->unlock();
+      VLOG(2) << "Matched images (" << i << ", " << j << ") in thread "
+              << std::this_thread::get_id();
+    }
+  }
+}
+
+template <class DistanceMetric>
+bool BruteForceFeatureMatcher<DistanceMetric>::MatchAllPairs(
+    const FeatureMatcherOptions& options,
+    const int num_threads,
+    const std::vector<std::vector<DescriptorType> >& descriptors,
+    std::vector<ImagePairMatch>* image_pair_matches) {
+  CHECK_NOTNULL(image_pair_matches)->clear();
+  image_pair_matches->reserve(descriptors.size() * descriptors.size() / 2);
+
+  std::vector<std::thread> threads(num_threads);
+  std::mutex mutex_lock;
+  for (int i = 0; i < num_threads; i++) {
+    threads[i] = std::thread(
+        &BruteForceFeatureMatcher::MatchWithMutex,
+        this,
+        descriptors,
+        options,
+        i,
+        num_threads,
+        &mutex_lock,
+        image_pair_matches);
+  }
+  for (int i = 0; i < num_threads; ++i) {
+    threads[i].join();
   }
   return true;
 }

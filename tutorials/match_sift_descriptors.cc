@@ -36,76 +36,81 @@
 #include <gflags/gflags.h>
 #include <time.h>
 #include <theia/theia.h>
+#include <chrono>
 #include <string>
 #include <vector>
 
-DEFINE_string(img_input_dir, "input", "Directory of two input images.");
-DEFINE_string(img_output_dir, "output", "Name of output image file.");
-
-using theia::CascadeHashingFeatureMatcher;
-using theia::FloatImage;
-using theia::FeatureMatcherOptions;
-using theia::ImageCanvas;
-using theia::Keypoint;
-using theia::L2;
-using theia::SiftDescriptorExtractor;
+DEFINE_string(
+    input_imgs, "",
+    "Filepath of the images you want to extract features and compute matches "
+    "for. The filepath should be a wildcard to match multiple images.");
+DEFINE_int32(num_threads, 1,
+             "Number of threads to use for feature extraction and matching.");
+DEFINE_string(img_output_dir, ".", "Name of output image file.");
 
 int main(int argc, char *argv[]) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
 
-  FloatImage left_image(FLAGS_img_input_dir + std::string("/img1.png"));
-  FloatImage right_image(FLAGS_img_input_dir + std::string("/img2.png"));
+  // Get image filenames.
+  std::vector<std::string> img_filepaths;
+  CHECK(theia::GetFilepathsFromWildcard(FLAGS_input_imgs, &img_filepaths));
 
-  ImageCanvas image_canvas;
-  LOG(INFO) << "adding left image";
-  image_canvas.AddImage(left_image);
-  LOG(INFO) << "adding right image";
-  image_canvas.AddImage(right_image);
-  LOG(INFO) << "writing";
-  image_canvas.Write(FLAGS_img_output_dir +
-                     std::string("/sift_descriptors.png"));
+  // Load images and extract features
+  const int num_images = img_filepaths.size();
+  std::vector<theia::FloatImage> images(num_images);
+  std::vector<std::vector<theia::Keypoint> > keypoints(num_images);
+  std::vector<std::vector<Eigen::VectorXf> > descriptors(num_images);
+  theia::SiftDescriptorExtractor sift_extractor;
 
-  // Detect keypoints.
-  VLOG(0) << "detecting keypoints";
-  SiftDescriptorExtractor sift_detector;
-  CHECK(sift_detector.Initialize());
-  std::vector<Keypoint> left_keypoints;
-  std::vector<Eigen::VectorXf> left_descriptors;
-  sift_detector.DetectAndExtractDescriptors(left_image,
-                                            &left_keypoints,
-                                            &left_descriptors);
-  VLOG(0) << "detected " << left_descriptors.size()
-          << " descriptors in left image.";
+  double time_to_read_images = 0;
+  for (int i = 0; i < num_images; i++) {
+    auto start = std::chrono::system_clock::now();
+    images[i].Read(img_filepaths[i]);
+    sift_extractor.DetectAndExtractDescriptors(images[i],
+                                               &keypoints[i],
+                                               &descriptors[i]);
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now() - start);
+    time_to_read_images += duration.count();
+    LOG(INFO) << "Extracted features for image: " << img_filepaths[i];
+  }
 
-  VLOG(0) << "detecting keypoints";
-  std::vector<Keypoint> right_keypoints;
-  std::vector<Eigen::VectorXf> right_descriptors;
-  sift_detector.DetectAndExtractDescriptors(right_image,
-                                            &right_keypoints,
-                                            &right_descriptors);
-  VLOG(0) << "detected " << right_descriptors.size()
-          << " descriptors in right image.";
+  // Match all image pairs.
+  theia::FeatureMatcherOptions options;
+  theia::CascadeHashingFeatureMatcher image_matcher;
+  std::vector<theia::ImagePairMatch> image_pair_matches;
+  auto start_matching = std::chrono::system_clock::now();
+  image_matcher.MatchAllPairs(options,
+                              FLAGS_num_threads,
+                              descriptors,
+                              &image_pair_matches);
+  auto duration_matching =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now() - start_matching);
+  const double time_for_matching = duration_matching.count();
 
-  // Match descriptors!
-  CascadeHashingFeatureMatcher image_matcher;
-  FeatureMatcherOptions options;
-  std::vector<theia::FeatureMatch> matches;
-  clock_t t = clock();
-  image_matcher.Match(options,
-                      left_descriptors,
-                      right_descriptors,
-                      &matches);
-  t = clock() - t;
-  VLOG(0) << "It took " << (static_cast<float>(t)/CLOCKS_PER_SEC)
-          << " to match SIFT descriptors";
+  LOG(INFO) << "It took " << (time_to_read_images / 1000.0)
+            << " seconds to extract descriptors from " << num_images
+            << " images and " << (time_for_matching / 1000.0)
+            << " seconds to match all image pairs ("
+            << image_pair_matches.size() << " pairs).";
 
-  // Get an image canvas to draw the features on.
-  image_canvas.DrawMatchedFeatures(0, left_keypoints,
-                                   1, right_keypoints,
-                                   matches,
-                                   0.1);
-  LOG(INFO) << "writing";
-  image_canvas.Write(FLAGS_img_output_dir +
-                     std::string("/sift_descriptors_matched.png"));
+  for (int i = 0; i < image_pair_matches.size(); i++) {
+    theia::ImageCanvas image_canvas;
+    const int img1_index = image_pair_matches[i].image1_ind;
+    const int img2_index = image_pair_matches[i].image2_ind;
+    image_canvas.AddImage(images[img1_index]);
+    image_canvas.AddImage(images[img2_index]);
+    const std::string match_output = theia::StringPrintf(
+        "%s/matches_%i_%i.png",
+        FLAGS_img_output_dir.c_str(),
+        img1_index,
+        img2_index);
+    image_canvas.DrawMatchedFeatures(0, keypoints[img1_index],
+                                     1, keypoints[img2_index],
+                                     image_pair_matches[i].matches,
+                                     0.1);
+    image_canvas.Write(match_output);
+  }
 }

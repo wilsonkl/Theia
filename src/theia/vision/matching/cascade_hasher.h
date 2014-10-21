@@ -78,23 +78,23 @@ class CascadeHasher {
   // information.
   void CreateHashedSiftDescriptors(
       const std::vector<Eigen::VectorXf>& sift_desc,
-      HashedImage* hashed_image);
+      HashedImage* hashed_image) const;
 
   // Matches images with a fast matching scheme based on the hash codes
   // previously generated.
   void MatchImages(const HashedImage& desc1,
                    const HashedImage& desc2,
                    const double lowes_ratio,
-                   std::vector<FeatureMatch>* matches);
+                   std::vector<FeatureMatch>* matches) const;
 
  private:
   // Creates the hash code for each descriptor and determines which buckets each
   // descriptor belongs to.
-  void CreateHashedDescriptors(HashedImage* hashed_image);
+  void CreateHashedDescriptors(HashedImage* hashed_image) const;
 
   // Builds the buckets for an image based on the bucket ids and groups of the
   // sift descriptors.
-  void BuildBuckets(HashedImage* hashed_image);
+  void BuildBuckets(HashedImage* hashed_image) const;
 
   // the number of dimensions of Hash code
   static const int kDimHashData = 128;

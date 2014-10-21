@@ -41,6 +41,7 @@
 
 #include <type_traits>
 #include <vector>
+#include <thread>
 
 #include "theia/vision/matching/cascade_hasher.h"
 #include "theia/vision/matching/feature_matcher.h"
@@ -53,8 +54,6 @@ bool CascadeHashingFeatureMatcher::Match(
     const std::vector<Eigen::VectorXf>& desc_1,
     const std::vector<Eigen::VectorXf>& desc_2,
     std::vector<FeatureMatch>* matches) {
-  typedef Eigen::Matrix<int, 128, 1> Vector128i;
-
   CHECK_NOTNULL(matches)->clear();
   matches->reserve(desc_1.size());
 
@@ -80,6 +79,68 @@ bool CascadeHashingFeatureMatcher::Match(
     IntersectMatches(backwards_matches, matches);
   }
 
+  return true;
+}
+
+void CascadeHashingFeatureMatcher::MatchWithMutex(
+    const std::vector<HashedImage>& descriptors,
+    const FeatureMatcherOptions& options,
+    const int thread_id,
+    const int num_threads,
+    std::mutex* matcher_mutex,
+    CascadeHasher* hasher,
+    std::vector<ImagePairMatch>* image_pair_matches) {
+  for (int i = 0; i < descriptors.size(); i++) {
+    for (int j = i + 1 + thread_id; j < descriptors.size(); j += num_threads) {
+      ImagePairMatch image_pair_match;
+      image_pair_match.image1_ind = i;
+      image_pair_match.image2_ind = j;
+      hasher->MatchImages(descriptors[i],
+                          descriptors[j],
+                          options.lowes_ratio,
+                          &image_pair_match.matches);
+      // Lock mutex.
+      matcher_mutex->lock();
+      image_pair_matches->emplace_back(image_pair_match);
+      matcher_mutex->unlock();
+      VLOG(2) << "Matched images (" << i << ", " << j << ") in thread "
+              << std::this_thread::get_id();
+    }
+  }
+}
+
+bool CascadeHashingFeatureMatcher::MatchAllPairs(
+      const FeatureMatcherOptions& options,
+      const int num_threads,
+      const std::vector<std::vector<Eigen::VectorXf> >& descriptors,
+      std::vector<ImagePairMatch>* image_pair_matches) {
+  CHECK_NOTNULL(image_pair_matches)->clear();
+  image_pair_matches->reserve(descriptors.size() * descriptors.size() / 2);
+
+  CascadeHasher hasher;
+  CHECK(hasher.Initialize());
+
+  std::vector<HashedImage> hashed_images(descriptors.size());
+  for (int i = 0; i < hashed_images.size(); i++) {
+    hasher.CreateHashedSiftDescriptors(descriptors[i], &hashed_images[i]);
+  }
+
+  std::vector<std::thread> threads(num_threads);
+  std::mutex mutex_lock;
+  for (int i = 0; i < num_threads; i++) {
+    threads[i] = std::thread(&CascadeHashingFeatureMatcher::MatchWithMutex,
+                             this,
+                             hashed_images,
+                             options,
+                             i,
+                             num_threads,
+                             &mutex_lock,
+                             &hasher,
+                             image_pair_matches);
+  }
+  for (int i = 0; i < num_threads; ++i) {
+    threads[i].join();
+  }
   return true;
 }
 
